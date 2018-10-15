@@ -1,10 +1,12 @@
 <?php
-namespace Localizationteam\L10nmgr\Cli;
+
+namespace Localizationteam\L10nmgr\Command;
 
 /***************************************************************
  * Copyright notice
  * (c) 2008 Daniel Zielinski (d.zielinski@l10ntech.de)
  * (c) 2011 Francois Suter (typo3@cobweb.ch)
+ * (c) 2018 B13
  * All rights reserved
  * This script is part of the TYPO3 project. The TYPO3 project is
  * free software; you can redistribute it and/or modify
@@ -19,35 +21,55 @@ namespace Localizationteam\L10nmgr\Cli;
  * GNU General Public License for more details.
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
-use Localizationteam\L10nmgr\Model\CatXmlImportManager;
-use Localizationteam\L10nmgr\Model\L10nBaseService;
-use Localizationteam\L10nmgr\Model\L10nConfiguration;
-use Localizationteam\L10nmgr\Model\MkPreviewLinkService;
-use Localizationteam\L10nmgr\Model\TranslationData;
-use Localizationteam\L10nmgr\Model\TranslationDataFactory;
-use Localizationteam\L10nmgr\Zip;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
-use TYPO3\CMS\Core\Controller\CommandLineController;
-use TYPO3\CMS\Core\Database\DatabaseConnection;
-use TYPO3\CMS\Core\Exception;
-use TYPO3\CMS\Core\Mail\MailMessage;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Lang\LanguageService;
 
-if (!defined('TYPO3_REQUESTTYPE_CLI')) {
-    die('You cannot run this script directly!');
-}
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
-/**
- * Class for handling import of translations from the command-line
- *
- * @author Daniel Zielinski <d.zielinski@l10ntech.de>
- * @author Francois Suter <typo3@cobweb.ch>
- * @package TYPO3
- * @subpackage tx_l10nmgr
- */
-class Import extends CommandLineController
+class Import extends Command
 {
+    /**
+     * Configure the command by defining the name, options and arguments
+     */
+    protected function configure()
+    {
+        $this->setDescription('Import the translations as file')
+            ->setHelp('With this command you can import translation')
+            ->addOption(
+                'file',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Path to the file to import. Can be XML or ZIP archive. If both XML string and import file are not defined, will import from FTP server (if defined).'
+            )
+            ->addOption('importAsDefaultLanguage', 'd', InputOption::VALUE_NONE, 'Import as default language')
+            ->addOption('preview', 'p', InputOption::VALUE_NONE, 'Preview flag')
+            ->addOption('server', null, InputOption::VALUE_OPTIONAL, 'Server link for the preview URL.')
+            ->addOption(
+                'srcPID',
+                'P',
+                InputOption::VALUE_OPTIONAL,
+                'UID of the page used during export. Needs configuration depth to be set to "current page" Default = 0'
+            )
+            ->addOption('string', 's', InputOption::VALUE_OPTIONAL, 'XML string to import.')
+            ->addOption(
+                'task',
+                't',
+                InputOption::VALUE_OPTIONAL,
+                "The values can be:\n importString = Import a XML string\n importFile = Import a XML file\n preview = Generate a preview of the source from a XML string\n"
+            );
+    }
+    /**
+     * Executes the command for straigthening content elements
+     *
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     * @return int|void|null
+     */
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+    }
+
     /**
      * @var LanguageService
      */
@@ -80,7 +102,6 @@ class Import extends CommandLineController
      * @var array List of error messages
      */
     protected $errors = array();
-
     /**
      * Constructor
      */
@@ -90,42 +111,7 @@ class Import extends CommandLineController
         parent::__construct();
         // Load the extension's configuration
         $this->extensionConfiguration = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['l10nmgr']);
-        // Adding specific CLI options
-        $this->cli_options[] = array(
-            '--task',
-            'The task to execute',
-            "The values can be:\n importString = Import a XML string\n importFile = Import a XML file\n preview = Generate a preview of the source from a XML string\n"
-        );
-        $this->cli_options[] = array(
-            '--preview',
-            'Preview flag',
-            "Set to 1 in case of preview, 0 otherwise. Defaults to 0.\n"
-        );
-        $this->cli_options[] = array('--string', 'XML string', "XML string to import.\n");
-        $this->cli_options[] = array(
-            '--file',
-            'Import file',
-            "Path to the file to import. Can be XML or ZIP archive. If both XML string and import file are not defined, will import from FTP server (if defined).\n"
-        );
-        $this->cli_options[] = array('--server', 'Server link', "Server link for the preview URL.\n");
-        $this->cli_options[] = array(
-            '--importAsDefaultLanguage',
-            'Import as default language',
-            "If set this setting will overwrite the default language during the import.\nThe values can be: \n TRUE = Content will be imported as default language.\n FALSE = Content will be imported as translation (default).\n"
-        );
-        $this->cli_options[] = array(
-            '--srcPID',
-            'Source page ID',
-            "UID of the page used during export. Needs configuration depth to be set to \"current page\" Default = 0\n"
-        );
-        // Setting help texts
-        $this->cli_help['name'] = 'Localization Manager importer';
-        $this->cli_help['synopsis'] = '###OPTIONS###';
-        $this->cli_help['description'] = 'Class with import functionality for l10nmgr';
-        $this->cli_help['examples'] = "/.../cli_dispatch.phpsh l10nmgr_import --task=importFile --file=foo/bar/translation.xml\nOld syntax was preserved for backwards compatibility:\n/.../cli_dispatch.phpsh l10nmgr_import import|importPreview|preview CATXML serverlink";
-        $this->cli_help['author'] = "Daniel Zielinski - L10Ntech.de, (c) 2008\nFrancois Suter - Cobweb, (c) 2011";
     }
-
     /**
      * Main method called during the CLI run
      *
@@ -183,7 +169,6 @@ class Import extends CommandLineController
         // May not be absolutely necessary, but cleaner in case anything gets executed after this script
         $this->getBackendUser()->user['admin'] = $formerAdminState;
     }
-
     /**
      * This method reads the command-line arguments and prepares a list of call parameters
      * It takes care of backwards-compatibility with the old way of calling the import script
@@ -264,7 +249,6 @@ class Import extends CommandLineController
         }
         $this->callParameters['sourcePid'] = $sourcePid;
     }
-
     /**
      * Gets the current backend user.
      *
@@ -274,7 +258,6 @@ class Import extends CommandLineController
     {
         return $GLOBALS['BE_USER'];
     }
-
     /**
      * Get workspace ID from XML (quick & dirty)
      *
@@ -292,7 +275,6 @@ class Import extends CommandLineController
             throw new Exception('No workspace id found', 1322475562);
         }
     }
-
     /**
      * Imports a CATXML string
      *
@@ -365,7 +347,6 @@ class Import extends CommandLineController
             return ($out);
         }
     }
-
     /**
      * getter/setter for LanguageService object
      *
@@ -383,7 +364,6 @@ class Import extends CommandLineController
         }
         return $this->languageService;
     }
-
     /**
      * Previews the source to import
      *
@@ -415,7 +395,6 @@ class Import extends CommandLineController
         // Output
         return ($out);
     }
-
     /**
      * Imports data from one or more XML files
      * Several files may be contained in a ZIP archive
@@ -530,7 +509,6 @@ class Import extends CommandLineController
         // Output
         return $out;
     }
-
     /**
      * Gather all the files to be imported, depending on the call parameters
      *
@@ -562,7 +540,6 @@ class Import extends CommandLineController
         }
         return $files;
     }
-
     /**
      * Gets all available XML or ZIP files from the FTP server
      *
@@ -645,7 +622,6 @@ class Import extends CommandLineController
         }
         return $files;
     }
-
     /**
      * Check file types from a list of files
      *
@@ -664,7 +640,6 @@ class Import extends CommandLineController
         }
         return $passed;
     }
-
     /**
      * Extracts the header of a CATXML file
      *
@@ -694,7 +669,6 @@ class Import extends CommandLineController
         }
         return $headerInformationNodes;
     }
-
     /**
      * Cleans up after the import process, as needed
      *
@@ -709,7 +683,6 @@ class Import extends CommandLineController
             $unzip->removeDir($this->directoryToCleanUp);
         }
     }
-
     /**
      * Sends reporting mail about which files were imported
      *
@@ -796,7 +769,6 @@ class Import extends CommandLineController
             }
         }
     }
-
     /**
      * Get DatabaseConnection instance - $GLOBALS['TYPO3_DB']
      *
@@ -812,8 +784,3 @@ class Import extends CommandLineController
         return $GLOBALS['TYPO3_DB'];
     }
 }
-
-// Call the functionality
-/** @var Import $importObject */
-$importObject = GeneralUtility::makeInstance(Import::class);
-$importObject->cli_main($_SERVER['argv']);

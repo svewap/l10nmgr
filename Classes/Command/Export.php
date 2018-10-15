@@ -1,31 +1,63 @@
 <?php
-namespace Localizationteam\L10nmgr\Cli;
+
+namespace Localizationteam\L10nmgr\Command;
 
 /***************************************************************
  * Copyright notice
- * (c) 2009 Daniel Zielinski (d.zielinski
- *
- * @l10ntech.de)
+ * (c) 2008 Daniel Zielinski (d.zielinski@l10ntech.de)
+ * (c) 2018 B13
  * All rights reserved
- * [...]
- */
-use Localizationteam\L10nmgr\Model\L10nConfiguration;
-use Localizationteam\L10nmgr\View\CatXmlView;
-use Localizationteam\L10nmgr\View\ExcelXmlView;
-use TYPO3\CMS\Backend\Utility\BackendUtility;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
-use TYPO3\CMS\Core\Controller\CommandLineController;
-use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Core\Utility\MathUtility;
-use TYPO3\CMS\Lang\LanguageService;
+ * This script is part of the TYPO3 project. The TYPO3 project is
+ * free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * The GNU General Public License can be found at
+ * http://www.gnu.org/copyleft/gpl.html.
+ * This script is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ * This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
 
-if (!defined('TYPO3_REQUESTTYPE_CLI')) {
-    die('You cannot run this script directly!');
-}
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
-class Export extends CommandLineController
+class Export extends Command
 {
+    /**
+     * Configure the command by defining the name, options and arguments
+     */
+    protected function configure()
+    {
+        $this->setDescription('Export the translations as file')
+            ->setHelp('With this command you can Export translation')
+            ->addOption('check-exports', null, InputOption::VALUE_NONE, 'Check for already exported content')
+            ->addOption('config', 'c', InputOption::VALUE_OPTIONAL, "UIDs of the localization manager configurations to be used for export. Comma seperated values, no spaces.\nDefault is EXTCONF which means values are taken from extension configuration.")
+            ->addOption('forcedSourceLanguage', 'f', InputOption::VALUE_OPTIONAL, 'UID of the already translated language used as overlaid source language during export.')
+            ->addOption('format', null, InputOption::VALUE_OPTIONAL, "Format for export of translatable data can be:\n CATXML = XML for translation tools (default)\n EXCEL = Microsoft XML format")
+            ->addOption('hidden', null, InputOption::VALUE_NONE, 'Do not export hidden contents')
+            ->addOption('srcPID', 'p', InputOption::VALUE_OPTIONAL, 'UID of the page used during export. Needs configuration depth to be set to "current page" Default = 0')
+            ->addOption('target', 't', InputOption::VALUE_OPTIONAL, 'UIDs for the target languages used during export. Comma seperated values, no spaces. Default is 0. In that case UIDs are taken from extension configuration.')
+            ->addOption('updated', 'u', InputOption::VALUE_NONE, 'Export only new/updated contents')
+            ->addOption('workspace', 'w', InputOption::VALUE_OPTIONAL, 'UID of the workspace used during export. Default = 0')
+            ;
+    }
+
+    /**
+     * Executes the command for straigthening content elements
+     *
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     * @return int|void|null
+     */
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+    }
+
     /**
      * @var array $lConf Extension configuration
      */
@@ -34,7 +66,6 @@ class Export extends CommandLineController
      * @var LanguageService
      */
     protected $languageService;
-
     /**
      * Constructor
      */
@@ -42,62 +73,8 @@ class Export extends CommandLineController
     {
         // Running parent class constructor
         parent::__construct();
-        // Adding options to help archive:
-        $this->cli_options[] = array(
-            '--format',
-            'Format for export of translatable data',
-            "The value can be:\n CATXML = XML for translation tools (default)\n EXCEL = Microsoft XML format \n"
-        );
-        $this->cli_options[] = array(
-            '--config',
-            'Localization Manager configurations',
-            "UIDs of the localization manager configurations to be used for export. Comma seperated values, no spaces.\nDefault is EXTCONF which means values are taken from extension configuration.\n"
-        );
-        $this->cli_options[] = array(
-            '--target',
-            'Target languages',
-            "UIDs for the target languages used during export. Comma seperated values, no spaces. Default is 0. In that case UIDs are taken from extension configuration.\n"
-        );
-        $this->cli_options[] = array(
-            '--workspace',
-            'Workspace ID',
-            "UID of the workspace used during export. Default = 0\n"
-        );
-        $this->cli_options[] = array(
-            '--srcPID',
-            'Source page ID',
-            "UID of the page used during export. Needs configuration depth to be set to \"current page\" Default = 0\n"
-        );
-        $this->cli_options[] = array(
-            '--forcedSourceLanguage',
-            'Forced Source Language ID',
-            "UID of the already translated language used as overlaid source language during export."
-        );
-        $this->cli_options[] = array(
-            '--hidden',
-            'Do not export hidden contents',
-            "The values can be: \n TRUE = Hidden content is skipped\n FALSE = Hidden content is exported. Default is FALSE.\n"
-        );
-        $this->cli_options[] = array(
-            '--updated',
-            'Export only new/updated contents',
-            "The values can be: \n TRUE = Only new/updated content is exported\n FALSE = All content is exported (default)\n"
-        );
-        $this->cli_options[] = array(
-            '--check-exports',
-            'Check for already exported content',
-            "The values can be: \n TRUE = Check if content has already been exported\n FALSE = Don't check, just create a new export (default)\n"
-        );
-        $this->cli_options[] = array('--help', 'Show help', "");
-        $this->cli_options[] = array('-h', 'Same as --help', "");
-        // Setting help texts:
-        $this->cli_help['name'] = 'Localization Manager exporter';
-        $this->cli_help['synopsis'] = '###OPTIONS###';
-        $this->cli_help['description'] = 'Class with export functionality for l10nmgr';
-        $this->cli_help['examples'] = '/.../cli_dispatch.phpsh l10nmgr_export --format=CATXML --config=l10ncfg --target=tlangs --workspace=wsid --hidden=TRUE --updated=FALSE';
-        $this->cli_help['author'] = 'Daniel Zielinski - L10Ntech.de, (c) 2009';
-    }
 
+    }
     /**
      * CLI engine
      *
@@ -192,7 +169,6 @@ class Export extends CommandLineController
         $this->cli_echo($msg . LF);
         $this->cli_echo(sprintf($this->getLanguageService()->getLL('export.process.duration.message'), $time) . LF);
     }
-
     /**
      * The function loadExtConf loads the extension configuration.
      *
@@ -203,7 +179,6 @@ class Export extends CommandLineController
         // Load the configuration
         $this->lConf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['l10nmgr']);
     }
-
     /**
      * getter/setter for LanguageService object
      *
@@ -221,7 +196,6 @@ class Export extends CommandLineController
         }
         return $this->languageService;
     }
-
     /**
      * Gets the current backend user.
      *
@@ -231,7 +205,6 @@ class Export extends CommandLineController
     {
         return $GLOBALS['BE_USER'];
     }
-
     /**
      * exportCATXML which is called over cli
      *
@@ -316,7 +289,6 @@ class Export extends CommandLineController
         }
         return ($error);
     }
-
     /**
      * The function ftpUpload puts an export on a remote FTP server for further processing
      *
@@ -348,7 +320,6 @@ class Export extends CommandLineController
         }
         return $error;
     }
-
     /**
      * exportEXCELXML which is called over cli
      *
@@ -431,7 +402,6 @@ class Export extends CommandLineController
         }
         return ($error);
     }
-
     /**
      * The function emailNotification sends an email with a translation job to the recipient specified in the extension config.
      *
@@ -498,8 +468,3 @@ class Export extends CommandLineController
         $email->send($this->lConf['email_recipient']);
     }
 }
-
-// Call the functionality
-/** @var Export $cleanerObj */
-$cleanerObj = GeneralUtility::makeInstance(Export::class);
-$cleanerObj->cli_main($_SERVER['argv']);
