@@ -27,6 +27,8 @@ use Localizationteam\L10nmgr\Model\Tools\Tools;
 use TYPO3\CMS\Backend\Module\BaseScriptClass;
 use TYPO3\CMS\Backend\Template\DocumentTemplate;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -48,12 +50,13 @@ class TranslationTasks extends BaseScriptClass
 
     /**
      * main action to be registered in ext_tables.php
+     * @return HtmlResponse
      */
-    public function mainAction()
+    public function mainAction(): HtmlResponse
     {
         $this->init();
         $this->main();
-        $this->printContent();
+        return new HtmlResponse($this->getContent());
     }
 
     public function init()
@@ -84,12 +87,9 @@ class TranslationTasks extends BaseScriptClass
 	</script>
 	';
         // Setting up the context sensitive menu:
-        $CMparts = $this->module->getContextMenuCode();
-        $this->module->JScode .= $CMparts[0];
-        $this->module->bodyTagAdditions = $CMparts[1];
-        $this->module->postCode .= $CMparts[2];
+        $this->getPageRenderer()->loadJquery();
+        $this->getPageRenderer()->loadRequireJsModule('TYPO3/CMS/Backend/ClickMenu');
         $this->content .= $this->module->startPage($this->getLanguageService()->getLL("title"));
-        $this->content .= $this->module->header($this->getLanguageService()->getLL("title"));
         $this->content .= '<div class="topspace5"></div>';
         // Render content:
         $this->moduleContent();
@@ -108,9 +108,13 @@ class TranslationTasks extends BaseScriptClass
      */
     protected function moduleContent()
     {
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_l10nmgr_priorities');
         // Selecting priorities:
-        $priorities = $this->getDatabaseConnection()->exec_SELECTgetRows('*', 'tx_l10nmgr_priorities',
-            '1=1' . BackendUtility::deleteClause('tx_l10nmgr_priorities'), '', 'sorting');
+        $priorities = $queryBuilder->select('*')
+            ->from('tx_l10nmgr_priorities')
+            ->orderBy('sorting')
+            ->execute()
+            ->fetchAll();
         $tRows = array();
         $c = 0;
         foreach ($priorities as $priorityRecord) {
@@ -228,12 +232,12 @@ class TranslationTasks extends BaseScriptClass
     /**
      * Prints out the module HTML
      *
-     * @return void
+     * @return string
      */
-    protected function printContent()
+    protected function getContent(): string
     {
         $this->content .= $this->module->endPage();
-        echo $this->content;
+        return $this->content;
     }
 
     /**
@@ -246,5 +250,3 @@ class TranslationTasks extends BaseScriptClass
         parent::menuConfig();
     }
 }
-
-?>
