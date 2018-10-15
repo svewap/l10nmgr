@@ -28,6 +28,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Module\BaseScriptClass;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -208,8 +209,12 @@ class ConfigurationManager extends BaseScriptClass
     protected function getAllConfigurations()
     {
         // Read all l10nmgr configurations from the database
-        $configurations = $this->getDatabaseConnection()->exec_SELECTgetRows('*', 'tx_l10nmgr_cfg',
-            '1=1' . BackendUtility::deleteClause('tx_l10nmgr_cfg'), '', 'title');
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_l10nmgr_cfg');
+        $configurations = $queryBuilder->select('*')
+            ->from('tx_l10nmgr_cfg')
+            ->orderBy('title')
+            ->execute()
+            ->fetchAll();
         // Filter out the configurations which the user is allowed to see, base on the page access rights
         $pagePermissionsClause = $this->getBackendUser()->getPagePermsClause(1);
         $allowedConfigurations = array();

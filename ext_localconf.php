@@ -20,7 +20,7 @@ if (TYPO3_MODE == 'BE') {
 //! increase with every change to XML Format
 define('L10NMGR_FILEVERSION', '1.2');
 define('L10NMGR_VERSION', '7.0.0');
-$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['lowlevel']['cleanerModules']['tx_l10nmgr_index'] = array(\Localizationteam\L10nmgr\Index::class);
+$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['lowlevel']['cleanerModules']['tx_l10nmgr_index'] = array('EXT:l10nmgr/Classes/Index.php:Index');
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processDatamapClass']['tx_l10nmgr'] = \Localizationteam\L10nmgr\Hooks\Tcemain::class;
 $_EXTCONF_ARRAY = unserialize($_EXTCONF);
 if ($_EXTCONF_ARRAY['enable_stat_hook']) {
