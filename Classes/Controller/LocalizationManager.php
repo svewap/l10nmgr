@@ -45,6 +45,7 @@ use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageRendererResolver;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Utility\DebuggerUtility;
 
 /**
  * l10nmgr module Configuration Manager
@@ -414,6 +415,7 @@ return false;
             case 'export_xml': // XML import/export
                 $prefs['utf8'] = GeneralUtility::_POST('check_utf8');
                 $prefs['noxmlcheck'] = GeneralUtility::_POST('no_check_xml');
+                $prefs['check_exports'] = GeneralUtility::_POST('check_exports');
                 $this->getBackendUser()->pushModuleData('l10nmgr/cm1/prefs', $prefs);
                 $subcontent = $this->catXMLExportImportAction($l10ncfgObj) . '</div></div></div></div>';
                 break;
