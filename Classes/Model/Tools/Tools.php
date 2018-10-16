@@ -29,7 +29,10 @@ use TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\DatabaseConnection;
+use TYPO3\CMS\Core\Database\Query\Restriction\BackendWorkspaceRestriction;
+use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Utility\DiffUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -647,62 +650,120 @@ class Tools
         $selFieldList = '',
         $previewLanguage = 0
     ) {
-        if ($GLOBALS['TCA'][$table] && $uid) {
-            if ($row === null) {
-                $row = BackendUtility::getRecordWSOL($table, $uid);
-            }
-            if (is_array($row)) {
-                $trTable = $this->t8Tools->getTranslationTable($table);
-                if ($trTable) {
-                    if ($trTable !== $table || $row[$GLOBALS['TCA'][$table]['ctrl']['languageField']] <= 0 || $row[$GLOBALS['TCA'][$table]['ctrl']['languageField']] == $previewLanguage) {
-                        if ($trTable !== $table || $row[$GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField']] == 0) {
-                            // Look for translations of this record, index by language field value:
-                            $translationsTemp = $this->getDatabaseConnection()->exec_SELECTgetRows(
-                                $selFieldList ? $selFieldList : 'uid,' . $GLOBALS['TCA'][$trTable]['ctrl']['languageField'],
-                                $trTable,
-                                '((' . $GLOBALS['TCA'][$trTable]['ctrl']['transOrigPointerField'] . '=' . (int)$uid .
-                                ' AND pid=' . (int)($table === 'pages' ? $row['uid'] : $row['pid']) .
-                                ' AND ' . $GLOBALS['TCA'][$trTable]['ctrl']['languageField'] . (!$sys_language_uid ? '>0' : '=' . (int)$sys_language_uid) . ')' .
-                                ($previewLanguage > 0 && $table !== 'pages' ?
-                                    ' OR (' . $GLOBALS['TCA'][$trTable]['ctrl']['transOrigPointerField'] . '=0' .
-                                    ' AND uid=' . (int)($uid) .
-                                    ' AND pid=' . (int)$row['pid'] .
-                                    ' AND ' . $GLOBALS['TCA'][$trTable]['ctrl']['languageField'] . '=' . $previewLanguage . ')' : '') . ')' .
-                                BackendUtility::deleteClause($trTable) .
-                                BackendUtility::versioningPlaceholderClause($trTable));
-                            $translations = array();
-                            $translations_errors = array();
-                            foreach ($translationsTemp as $r) {
-                                if (!isset($translations[$r[$GLOBALS['TCA'][$trTable]['ctrl']['languageField']]])) {
-                                    $translations[$r[$GLOBALS['TCA'][$trTable]['ctrl']['languageField']]] = $r;
-                                } else {
-                                    $translations_errors[$r[$GLOBALS['TCA'][$trTable]['ctrl']['languageField']]][] = $r;
-                                }
-                            }
-                            return array(
-                                'table' => $table,
-                                'uid' => $uid,
-                                'CType' => $row['CType'],
-                                'sys_language_uid' => $row[$GLOBALS['TCA'][$table]['ctrl']['languageField']],
-                                'translation_table' => $trTable,
-                                'translations' => $translations,
-                                'excessive_translations' => $translations_errors
-                            );
-                        } else {
-                            return 'Record "' . $table . '_' . $uid . '" seems to be a translation already (has a relation to record "' . $row[$GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField']] . '")';
-                        }
-                    } else {
-                        return 'Record "' . $table . '_' . $uid . '" seems to be a translation already (has a language value "' . $row[$GLOBALS['TCA'][$table]['ctrl']['languageField']] . '", relation to record "' . $row[$GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField']] . '")';
-                    }
-                } else {
-                    return 'Translation is not supported for this table!';
-                }
-            } else {
-                return 'Record "' . $table . '_' . $uid . '" was not found';
-            }
-        } else {
+        if (!$GLOBALS['TCA'][$table] || !$uid) {
             return 'No table "' . $table . '" or no UID value';
         }
+
+        if ($row === null) {
+            $row = BackendUtility::getRecordWSOL($table, $uid);
+        }
+        if (!is_array($row)) {
+            return 'Record "' . $table . '_' . $uid . '" was not found';
+        }
+
+        if ($row[$GLOBALS['TCA'][$table]['ctrl']['languageField']] > 0 && (int)$row[$GLOBALS['TCA'][$table]['ctrl']['languageField']] !== (int)$previewLanguage) {
+            return 'Record "' . $table . '_' . $uid . '" seems to be a translation already (has a language value "'
+                . $row[$GLOBALS['TCA'][$table]['ctrl']['languageField']] . '", relation to record "'
+                . $row[$GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField']] . '")';
+        }
+
+        if ((int)$row[$GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField']] !== 0) {
+            return 'Record "' . $table . '_' . $uid . '" seems to be a translation already (has a relation to record "'
+                . $row[$GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField']] . '")';
+        }
+
+        if (!empty($selFieldList)) {
+            $selectFields = GeneralUtility::trimExplode(',', $selFieldList);
+        } else {
+            $selectFields = [
+                'uid',
+                $GLOBALS['TCA'][$table]['ctrl']['languageField']
+            ];
+        }
+
+        $constraints = [];
+        $constraintsA = [];
+        $constraintsB = [];
+
+        // Look for translations of this record, index by language field value:
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
+        $queryBuilder->getRestrictions()
+            ->removeAll()
+            ->add(GeneralUtility::makeInstance(DeletedRestriction::class))
+            ->add(GeneralUtility::makeInstance(BackendWorkspaceRestriction::class));
+
+        $constraintsA[] = $queryBuilder->expr()->eq(
+            $GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField'],
+            $queryBuilder->createNamedParameter((int)$uid, \PDO::PARAM_INT)
+        );
+
+        $constraintsA[] = $queryBuilder->expr()->eq(
+            'pid',
+            $queryBuilder->createNamedParameter((int)$row['pid'], \PDO::PARAM_INT)
+        );
+
+        if ((int)$sys_language_uid === 0) {
+            $constraintsA[] = $queryBuilder->expr()->gt(
+                $GLOBALS['TCA'][$table]['ctrl']['languageField'],
+                $queryBuilder->createNamedParameter(0, \PDO::PARAM_INT)
+            );
+        } else {
+            $constraintsA[] = $queryBuilder->expr()->eq(
+                $GLOBALS['TCA'][$table]['ctrl']['languageField'],
+                $queryBuilder->createNamedParameter((int)$sys_language_uid, \PDO::PARAM_INT)
+            );
+        }
+
+        if ($previewLanguage > 0) {
+            $constraintsB[] = $queryBuilder->expr()->eq(
+                'pid',
+                $queryBuilder->createNamedParameter((int)$row['pid'], \PDO::PARAM_INT)
+            );
+            $constraintsB[] = $queryBuilder->expr()->eq(
+                'uid',
+                $queryBuilder->createNamedParameter((int)$uid, \PDO::PARAM_INT)
+            );
+            $constraintsB[] = $queryBuilder->expr()->eq(
+                $GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField'],
+                $queryBuilder->createNamedParameter(0, \PDO::PARAM_INT)
+            );
+            $constraintsB[] = $queryBuilder->expr()->eq(
+                $GLOBALS['TCA'][$table]['ctrl']['languageField'],
+                $queryBuilder->createNamedParameter((int)$previewLanguage, \PDO::PARAM_INT)
+            );
+
+            $constraints[] = $queryBuilder->expr()->orX(
+                $queryBuilder->expr()->andX(...$constraintsA),
+                $queryBuilder->expr()->andX(...$constraintsB)
+            );
+        } else {
+            $constraints = $constraintsA;
+        }
+
+        $translationsTemp = $queryBuilder->select(...$selectFields)
+            ->from($table)
+            ->where(...$constraints)
+            ->execute()
+            ->fetchAll();
+
+        $translations = array();
+        $translations_errors = array();
+        foreach ($translationsTemp as $r) {
+            if (!isset($translations[$r[$GLOBALS['TCA'][$table]['ctrl']['languageField']]])) {
+                $translations[$r[$GLOBALS['TCA'][$table]['ctrl']['languageField']]] = $r;
+            } else {
+                $translations_errors[$r[$GLOBALS['TCA'][$table]['ctrl']['languageField']]][] = $r;
+            }
+        }
+        return array(
+            'table' => $table,
+            'uid' => $uid,
+            'CType' => $row['CType'],
+            'sys_language_uid' => $row[$GLOBALS['TCA'][$table]['ctrl']['languageField']],
+            'translation_table' => $table,
+            'translations' => $translations,
+            'excessive_translations' => $translations_errors
+        );
     }
 
     /**

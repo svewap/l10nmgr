@@ -23,13 +23,13 @@ namespace Localizationteam\L10nmgr\View;
 use Localizationteam\L10nmgr\Model\L10nConfiguration;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
-use TYPO3\CMS\Core\Database\DatabaseConnection;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageRendererResolver;
 use TYPO3\CMS\Core\Utility\DiffUtility;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Lang\LanguageService;
+use TYPO3\CMS\Core\Localization\LanguageService;
 
 /**
  * Abstract class for all export views
@@ -130,7 +130,7 @@ abstract class AbstractExportView
     /**
      * Saves the information of the export in the database table 'tx_l10nmgr_sava_data'
      *
-     * @return bool|\mysqli_result|object resource Handle to the database query
+     * @return bool
      */
     public function saveExportInformation()
     {
@@ -150,24 +150,27 @@ abstract class AbstractExportView
             'filename' => (string)$this->getFilename(),
             'exportType' => (int)$this->exportType
         );
-        $res = $this->getDatabaseConnection()->exec_INSERTquery(
+
+        $databaseConnection = GeneralUtility::makeInstance(ConnectionPool::class)
+            ->getConnectionForTable('tx_l10nmgr_exportdata');
+        $res = $databaseConnection->insert(
             'tx_l10nmgr_exportdata',
-            $field_values,
-            array('source_lang', 'translation_lang', 'crdate', 'tstamp', 'l10ncfg_id', 'pid', 'cruser_id', 'exportType')
+            $field_values
         );
+
         if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['l10nmgr']['exportView'])) {
             $params = array(
-                'uid' => $this->getDatabaseConnection()->sql_insert_id(),
+                'uid' => (int)$databaseConnection->lastInsertId('tx_l10nmgr_exportdata'),
                 'data' => $field_values
             );
             foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['l10nmgr']['exportView'] as $classData) {
-                $postSaveProcessor = GeneralUtility::getUserObj($classData);
+                $postSaveProcessor = GeneralUtility::makeInstance($classData);
                 if ($postSaveProcessor instanceof PostSaveInterface) {
                     $postSaveProcessor->postExportAction($params);
                 }
             }
         }
-        return $res;
+        return $res > 0;
     }
 
     /**
@@ -224,41 +227,33 @@ abstract class AbstractExportView
     }
 
     /**
-     * Get DatabaseConnection instance - $GLOBALS['TYPO3_DB']
-     *
-     * This method should be used instead of direct access to
-     * $GLOBALS['TYPO3_DB'] for easy IDE auto completion.
-     *
-     * @return DatabaseConnection
-     * @deprecated since TYPO3 v8, will be removed in TYPO3 v9
-     */
-    protected function getDatabaseConnection()
-    {
-        GeneralUtility::logDeprecatedFunction();
-        return $GLOBALS['TYPO3_DB'];
-    }
-
-    /**
      * Checks if an export exists
      *
      * @return boolean
      */
     public function checkExports()
     {
-        $res = $this->getDatabaseConnection()->exec_SELECTquery('l10ncfg_id,exportType,translation_lang',
-            'tx_l10nmgr_exportdata',
-            'l10ncfg_id =' . (int)$this->l10ncfgObj->getData('uid') . ' AND exportType = ' . $this->exportType . ' AND translation_lang = ' . $this->sysLang);
-        if (!$this->getDatabaseConnection()->sql_error()) {
-            $numRows = $this->getDatabaseConnection()->sql_num_rows($res);
-        } else {
-            $numRows = 0;
-        }
-        if ($numRows > 0) {
-            $ret = false;
-        } else {
-            $ret = true;
-        }
-        return $ret;
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_l10nmgr_exportdata');
+        $numRows = $queryBuilder->count('*')
+            ->from('tx_l10nmgr_exportdata')
+            ->where(
+                $queryBuilder->expr()->eq(
+                    'l10ncfg_id',
+                    $queryBuilder->createNamedParameter((int)$this->l10ncfgObj->getData('uid'), \PDO::PARAM_INT)
+                ),
+                $queryBuilder->expr()->eq(
+                    'exportType',
+                    $queryBuilder->createNamedParameter($this->exportType, \PDO::PARAM_STR)
+                ),
+                $queryBuilder->expr()->eq(
+                    'translation_lang',
+                    $queryBuilder->createNamedParameter($this->sysLang, \PDO::PARAM_INT)
+                )
+            )
+            ->execute()
+            ->fetchColumn(0);
+
+        return $numRows > 0;
     }
 
     /**
@@ -312,14 +307,27 @@ abstract class AbstractExportView
      */
     protected function fetchExports()
     {
-        $exports = array();
-        $res = $this->getDatabaseConnection()->exec_SELECTgetRows('crdate,l10ncfg_id,exportType,translation_lang,filename',
-            'tx_l10nmgr_exportdata',
-            'l10ncfg_id = ' . (int)$this->l10ncfgObj->getData('uid') . ' AND exportType = ' . $this->exportType . ' AND translation_lang = ' . $this->sysLang,
-            '', 'crdate DESC');
-        if (is_array($res)) {
-            $exports = $res;
-        }
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_l10nmgr_exportdata');
+        $exports = $queryBuilder->select('crdate', 'l10ncfg_id', 'exportType', 'translation_lang', 'filename')
+            ->from('tx_l10nmgr_exportdata')
+            ->where(
+                $queryBuilder->expr()->eq(
+                    'l10ncfg_id',
+                    $queryBuilder->createNamedParameter((int)$this->l10ncfgObj->getData('uid'), \PDO::PARAM_INT)
+                ),
+                $queryBuilder->expr()->eq(
+                    'exportType',
+                    $queryBuilder->createNamedParameter($this->exportType, \PDO::PARAM_STR)
+                ),
+                $queryBuilder->expr()->eq(
+                    'translation_lang',
+                    $queryBuilder->createNamedParameter($this->sysLang, \PDO::PARAM_INT)
+                )
+            )
+            ->orderBy('crdate', 'DESC')
+            ->execute()
+            ->fetchAll();
+
         return $exports;
     }
 
