@@ -26,7 +26,7 @@ use Localizationteam\L10nmgr\Model\Tools\Tools;
 use TYPO3\CMS\Backend\Tree\View\PageTreeView;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
-use TYPO3\CMS\Core\Database\DatabaseConnection;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\RootlineUtility;
 
@@ -103,7 +103,9 @@ class L10nAccumulatedInformation
     public function __construct($tree, $l10ncfg, $sysLang)
     {
         // Load the extension's configuration
-        $this->extensionConfiguration = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['l10nmgr']);
+        $this->extensionConfiguration = empty($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['l10nmgr'])
+            ? unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['l10nmgr'])
+            : $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['l10nmgr'];
         $this->disallowDoktypes = GeneralUtility::trimExplode(',', $this->extensionConfiguration['disallowDoktypes']);
         $this->tree = $tree;
         $this->l10ncfg = $l10ncfg;
@@ -167,8 +169,12 @@ class L10nAccumulatedInformation
         if ($this->forcedPreviewLanguage != '') {
             $previewLanguage = $this->forcedPreviewLanguage;
         } else {
-            $previewLanguage = current(GeneralUtility::intExplode(',',
-                $this->getBackendUser()->getTSConfigVal('options.additionalPreviewLanguages')));
+            $previewLanguage = current(
+                GeneralUtility::intExplode(
+                    ',',
+                    $this->getBackendUser()->getTSConfig('options.additionalPreviewLanguages')['value']
+                )
+            );
         }
         if ($previewLanguage) {
             $t8Tools->previewLanguages = [$previewLanguage];
@@ -221,9 +227,13 @@ class L10nAccumulatedInformation
                     // Only those tables we want to work on:
                     if (GeneralUtility::inList($l10ncfg['tablelist'], $table)) {
                         if ($table === 'pages') {
-                            $accum[$pageId]['items'][$table][$pageId] = $t8Tools->translationDetails('pages',
-                                BackendUtility::getRecordWSOL('pages', $pageId), $sysLang, $flexFormDiff,
-                                $previewLanguage);
+                            $accum[$pageId]['items'][$table][$pageId] = $t8Tools->translationDetails(
+                                'pages',
+                                BackendUtility::getRecordWSOL('pages', $pageId),
+                                $sysLang,
+                                $flexFormDiff,
+                                $previewLanguage
+                            );
                             $this->_increaseInternalCounters($accum[$pageId]['items'][$table][$pageId]['fields']);
                         } else {
                             $allRows = $t8Tools->getRecordsToTranslateFromTable($table, $pageId);
@@ -266,16 +276,31 @@ class L10nAccumulatedInformation
                         }
                     }
                     if ($table === 'sys_file_reference' && !empty($fileList)) {
-                        $fileList = implode(',',
-                            array_keys(array_flip(GeneralUtility::intExplode(',', $fileList, true))));
+                        $fileList = array_keys(array_flip(GeneralUtility::intExplode(',', $fileList, true)));
                         if (!empty($fileList)) {
-                            $metaData = $this->getDatabaseConnection()->exec_SELECTgetRows('uid', 'sys_file_metadata',
-                                'sys_language_uid = ' . (int)$previewLanguage . ' AND file IN (' . $fileList . ')', '',
-                                'uid', '', 'uid');
+                            $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_file_metadata');
+                            $metaData = $queryBuilder->select('uid')
+                                ->from('sys_file_metadata')
+                                ->where(
+                                    $queryBuilder->expr()->eq(
+                                        'sys_language_uid',
+                                        $queryBuilder->createNamedParameter((int)$previewLanguage, \PDO::PARAM_INT)
+                                    ),
+                                    $queryBuilder->expr()->in(
+                                        'file',
+                                        $fileList
+                                    )
+                                )
+                                ->orderBy('uid')
+                                ->execute()
+                                ->fetchAll();
+
                             if (!empty($metaData)) {
                                 $l10ncfg['include'] .= $l10ncfg['include'] ? ',' : '';
-                                $l10ncfg['include'] .= 'sys_file_metadata:' . implode(',sys_file_metadata:',
-                                        array_keys($metaData));
+                                foreach ($metaData as $data) {
+                                    $l10ncfg['include'] .= 'sys_file_metadata:' . $data['uid'] . ',';
+                                }
+                                $l10ncfg['include'] = rtrim($l10ncfg['include'], ',');
                             }
                         }
                     }
@@ -316,79 +341,6 @@ class L10nAccumulatedInformation
             if (function_exists('str_word_count')) {
                 foreach ($fieldsArray as $v) {
                     $this->_wordCount = $this->_wordCount + str_word_count($v['defaultValue']);
-                }
-            }
-        }
-    }
-
-    /**
-     * Get DatabaseConnection instance - $GLOBALS['TYPO3_DB']
-     *
-     * This method should be used instead of direct access to
-     * $GLOBALS['TYPO3_DB'] for easy IDE auto completion.
-     *
-     * @return DatabaseConnection
-     * @deprecated since TYPO3 v8, will be removed in TYPO3 v9
-     */
-    protected function getDatabaseConnection()
-    {
-        GeneralUtility::logDeprecatedFunction();
-        return $GLOBALS['TYPO3_DB'];
-    }
-
-    /**
-     * @param string $indexList
-     */
-    protected function addPagesMarkedAsIncluded($indexList, $excludeList)
-    {
-        $this->includeIndex = [];
-        $this->excludeIndex = array_flip(GeneralUtility::trimExplode(',', $excludeList, true));
-        if ($indexList) {
-            $this->includeIndex = array_flip(GeneralUtility::trimExplode(',', $indexList, true));
-        }
-        $enableClause = BackendUtility::BEenableFields('pages');
-        $explicitlyIncludedPages = $this->getDatabaseConnection()->exec_SELECTgetRows('uid', 'pages',
-            'l10nmgr_configuration = ' . Constants::L10NMGR_CONFIGURATION_INCLUDE . $enableClause);
-        if (!empty($explicitlyIncludedPages)) {
-            foreach ($explicitlyIncludedPages as $page) {
-                if (!isset($this->excludeIndex['pages:' . $page['uid']]) && !in_array($page['doktype'],
-                        $this->disallowDoktypes)
-                ) {
-                    $this->includeIndex['pages:' . $page['uid']] = 1;
-                }
-            }
-        }
-        $includingParentPages = $this->getDatabaseConnection()->exec_SELECTgetRows('uid', 'pages',
-            'l10nmgr_configuration_next_level = ' . Constants::L10NMGR_CONFIGURATION_INCLUDE . $enableClause);
-        if (!empty($includingParentPages)) {
-            foreach ($includingParentPages as $parentPage) {
-                $this->addSubPagesRecursively($parentPage['uid']);
-            }
-        }
-    }
-
-    /**
-     * Walks through a tree branch and checks if pages are to be included
-     * Will ignore pages with explicit l10nmgr_configuration settings but still walk through their subpages
-     * @param int $uid
-     * @param int $level
-     */
-    protected function addSubPagesRecursively($uid, $level = 0)
-    {
-        $level++;
-        if ($uid > 0 && $level < 100) {
-            $enableClause = BackendUtility::BEenableFields('pages');
-            $subPages = $this->getDatabaseConnection()->exec_SELECTgetRows('uid,pid,l10nmgr_configuration,l10nmgr_configuration_next_level',
-                'pages',
-                'pid = ' . (int)$uid . $enableClause);
-            if (!empty($subPages)) {
-                foreach ($subPages as $page) {
-                    if ($page['l10nmgr_configuration'] === Constants::L10NMGR_CONFIGURATION_DEFAULT) {
-                        $this->includeIndex['pages:' . $page['uid']] = 1;
-                    }
-                    if ($page['l10nmgr_configuration_next_level'] === Constants::L10NMGR_CONFIGURATION_DEFAULT || $page['l10nmgr_configuration_next_level'] === Constants::L10NMGR_CONFIGURATION_INCLUDE) {
-                        $this->addSubPagesRecursively($page['uid'], $level);
-                    }
                 }
             }
         }
