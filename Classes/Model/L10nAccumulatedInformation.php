@@ -42,39 +42,39 @@ class L10nAccumulatedInformation
     /**
      * @var string The status of this object, set to processed if internal variables are calculated.
      */
-    var $objectStatus = 'new';
+    protected $objectStatus = 'new';
     /**
      * @var PageTreeView
      */
-    var $tree;
+    protected $tree;
     /**
      * @var array Selected l10nmgr configuration
      */
-    var $l10ncfg = array();
+    protected $l10ncfg = array();
     /**
      * @var array List of not allowed doktypes
      */
-    var $disallowDoktypes = array('--div--', '255');
+    protected $disallowDoktypes = array('--div--', '255');
     /**
      * @var int sys_language_uid of source language
      */
-    var $sysLang;
+    protected $sysLang;
     /**
      * @var int sys_language_uid of target language
      */
-    var $forcedPreviewLanguage;
+    protected $forcedPreviewLanguage;
     /**
      * @var array Information about collected data for translation
      */
-    var $_accumulatedInformations = array();
+    protected $_accumulatedInformations = array();
     /**
      * @var int Field count, might be needed by tranlation agencies
      */
-    var $_fieldCount = 0;
+    protected $_fieldCount = 0;
     /**
      * @var int Word count, might be needed by tranlation agencies
      */
-    var $_wordCount = 0;
+    protected $_wordCount = 0;
     /**
      * @var array Extension's configuration as from the EM
      */
@@ -108,7 +108,9 @@ class L10nAccumulatedInformation
     }
 
     /**
-     * return information array with accumulated information. This way client classes have access to the accumulated array directly. and can read this array in order to create some output...
+     * return information array with accumulated information.
+     * This way client classes have access to the accumulated array directly.
+     * And can read this array in order to create some output...
      *
      * @return array Complete Information array
      */
@@ -129,7 +131,8 @@ class L10nAccumulatedInformation
         $this->objectStatus = 'processed';
     }
 
-    /** set internal _accumulatedInformations array. Is called from constructor and uses the given tree, lang and l10ncfg
+    /** set internal _accumulatedInformations array.
+     * Is called from constructor and uses the given tree, lang and l10ncfg
      *
      * @return void
      **/
@@ -170,9 +173,7 @@ class L10nAccumulatedInformation
         // Traverse tree elements:
         foreach ($tree->tree as $treeElement) {
             $pageId = $treeElement['row']['uid'];
-            if (!isset($excludeIndex['pages:' . $pageId]) && !in_array($treeElement['row']['doktype'],
-                    $this->disallowDoktypes)
-            ) {
+            if (!isset($excludeIndex['pages:' . $pageId]) && !in_array($treeElement['row']['doktype'], $this->disallowDoktypes)) {
                 $accum[$pageId]['header']['title'] = $treeElement['row']['title'];
                 $accum[$pageId]['header']['icon'] = $treeElement['HTML'];
                 $accum[$pageId]['header']['prevLang'] = $previewLanguage;
@@ -202,14 +203,24 @@ class L10nAccumulatedInformation
                                         }
                                         if (is_array($row) && count($tableUidConstraintIndex) > 0) {
                                             if (is_array($row) && isset($tableUidConstraintIndex[$table . ':' . $row['uid']])) {
-                                                $accum[$pageId]['items'][$table][$row['uid']] = $t8Tools->translationDetails($table,
-                                                    $row, $sysLang, $flexFormDiff, $previewLanguage);
+                                                $accum[$pageId]['items'][$table][$row['uid']] = $t8Tools->translationDetails(
+                                                    $table,
+                                                    $row,
+                                                    $sysLang,
+                                                    $flexFormDiff,
+                                                    $previewLanguage
+                                                );
                                                 $this->_increaseInternalCounters($accum[$pageId]['items'][$table][$row['uid']]['fields']);
                                             }
                                         } else {
                                             if (is_array($row) && !isset($excludeIndex[$table . ':' . $row['uid']])) {
-                                                $accum[$pageId]['items'][$table][$row['uid']] = $t8Tools->translationDetails($table,
-                                                    $row, $sysLang, $flexFormDiff, $previewLanguage);
+                                                $accum[$pageId]['items'][$table][$row['uid']] = $t8Tools->translationDetails(
+                                                    $table,
+                                                    $row,
+                                                    $sysLang,
+                                                    $flexFormDiff,
+                                                    $previewLanguage
+                                                );
                                                 $this->_increaseInternalCounters($accum[$pageId]['items'][$table][$row['uid']]['fields']);
                                             }
                                         }

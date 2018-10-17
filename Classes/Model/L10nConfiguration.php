@@ -94,11 +94,14 @@ class L10nConfiguration
      **/
     public function getData($key)
     {
-        return $key === 'pid' && (int)$this->l10ncfg['depth'] === -1 && (int)$this->sourcePid ? (int)$this->sourcePid : $this->l10ncfg[$key];
+        return $key === 'pid' && (int)$this->l10ncfg['depth'] === -1 && (int)$this->sourcePid
+            ? (int)$this->sourcePid
+            : $this->l10ncfg[$key];
     }
 
     /**
-     * Factory method to create AccumulatedInformations Object (e.g. build tree etc...) (Factorys should have all dependencies passed as parameter)
+     * Factory method to create AccumulatedInformations Object (e.g. build tree etc...)
+     * (Factorys should have all dependencies passed as parameter)
      *
      * @param int $sysLang sys_language_uid
      *
@@ -182,8 +185,10 @@ class L10nConfiguration
             $flexFormDiffForAllLanguages = array();
         }
         // Set the data (
-        $flexFormDiffForAllLanguages[$sysLang] = array_merge((array)$flexFormDiffForAllLanguages[$sysLang],
-            $flexFormDiffArray);
+        $flexFormDiffForAllLanguages[$sysLang] = array_merge(
+            (array)$flexFormDiffForAllLanguages[$sysLang],
+            $flexFormDiffArray
+        );
         // Serialize back and save it to record:
         $l10ncfg['flexformdiff'] = serialize($flexFormDiffForAllLanguages);
 
@@ -207,5 +212,4 @@ class L10nConfiguration
     {
         $this->sourcePid = (int)$id;
     }
-
 }
