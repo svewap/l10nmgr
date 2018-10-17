@@ -25,24 +25,18 @@ use Localizationteam\L10nmgr\Model\L10nConfiguration;
 use Localizationteam\L10nmgr\View\CatXmlView;
 use Localizationteam\L10nmgr\View\ExcelXmlView;
 use Localizationteam\L10nmgr\View\ExportViewInterface;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\ConnectionPool;
-use TYPO3\CMS\Core\Localization\LanguageService;
+use TYPO3\CMS\Core\Exception;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 
-class Export extends Command
+class Export extends L10nCommand
 {
-    /**
-     * @var LanguageService
-     */
-    protected $languageService;
 
     /**
      * Configure the command by defining the name, options and arguments
@@ -56,7 +50,8 @@ class Export extends Command
                 'config',
                 'c',
                 InputOption::VALUE_OPTIONAL,
-                "UIDs of the localization manager configurations to be used for export. Comma seperated values, no spaces.\nDefault is EXTCONF which means values are taken from extension configuration."
+                "UIDs of the localization manager configurations to be used for export. Comma seperated values, no spaces.\nDefault is EXTCONF which means values are taken from extension configuration.",
+                'EXTCONF'
             )
             ->addOption(
                 'forcedSourceLanguage',
@@ -68,14 +63,16 @@ class Export extends Command
                 'format',
                 null,
                 InputOption::VALUE_OPTIONAL,
-                "Format for export of translatable data can be:\n CATXML = XML for translation tools (default)\n EXCEL = Microsoft XML format"
+                "Format for export of translatable data can be:\n CATXML = XML for translation tools (default)\n EXCEL = Microsoft XML format",
+                'CATXML'
             )
             ->addOption('hidden', null, InputOption::VALUE_NONE, 'Do not export hidden contents')
             ->addOption(
                 'srcPID',
                 'p',
                 InputOption::VALUE_OPTIONAL,
-                'UID of the page used during export. Needs configuration depth to be set to "current page" Default = 0'
+                'UID of the page used during export. Needs configuration depth to be set to "current page" Default = 0',
+                0
             )
             ->addOption(
                 'target',
@@ -88,7 +85,8 @@ class Export extends Command
                 'workspace',
                 'w',
                 InputOption::VALUE_OPTIONAL,
-                'UID of the workspace used during export. Default = 0'
+                'UID of the workspace used during export. Default = 0',
+                0
             );
     }
 
@@ -107,10 +105,10 @@ class Export extends Command
         $extConf = $this->getExtConf();
 
         // get format (CATXML,EXCEL)
-        $format = $input->getOption('format') ?? 'CATXML';
+        $format = $input->getOption('format');
 
         // get l10ncfg command line takes precedence over extConf
-        $l10ncfg = $input->getOption('config') ?? 'EXTCONF';
+        $l10ncfg = $input->getOption('config');
 
         if ($l10ncfg !== 'EXTCONF' && !empty($l10ncfg)) {
             //export single
@@ -163,7 +161,12 @@ class Export extends Command
                     $output->writeln('<error>' . $this->getLanguageService()->getLL('error.target_language_id_integer.msg') . '</error>');
                     return;
                 }
-                $msg .= $this->exportXML($l10ncfg, $tlang, $format, $input, $output);
+                try {
+                    $msg .= $this->exportXML($l10ncfg, $tlang, $format, $input, $output);
+                } catch (Exception $e) {
+                    $output->writeln('<error>' . $e->getMessage() . '</error>');
+                    return;
+                }
             }
         }
 
@@ -175,44 +178,6 @@ class Export extends Command
     }
 
     /**
-     * The function loadExtConf loads the extension configuration.
-     *
-     * @return array
-     */
-    protected function getExtConf()
-    {
-        return empty($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['l10nmgr'])
-            ? unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['l10nmgr'])
-            : $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['l10nmgr'];
-    }
-
-    /**
-     * getter/setter for LanguageService object
-     *
-     * @return LanguageService $languageService
-     */
-    protected function getLanguageService()
-    {
-        if (!$this->languageService instanceof LanguageService) {
-            $this->languageService = GeneralUtility::makeInstance(LanguageService::class);
-        }
-        $fileRef = 'EXT:l10nmgr/Resources/Private/Language/Cli/locallang.xml';
-        $this->languageService->includeLLFile($fileRef);
-        $this->languageService->init('');
-        return $this->languageService;
-    }
-
-    /**
-     * Gets the current backend user.
-     *
-     * @return BackendUserAuthentication
-     */
-    protected function getBackendUser()
-    {
-        return $GLOBALS['BE_USER'];
-    }
-
-    /**
      * exportCATXML which is called over cli
      *
      * @param int             $l10ncfg ID of the configuration to load
@@ -221,6 +186,7 @@ class Export extends Command
      * @param OutputInterface $output
      *
      * @return string An error message in case of failure
+     * @throws Exception
      */
     protected function exportXML($l10ncfg, $tlang, $format, $input, $output)
     {
@@ -240,8 +206,7 @@ class Export extends Command
                 /** @var ExportViewInterface $l10nmgrGetXML */
                 $l10nmgrGetXML = GeneralUtility::makeInstance(ExcelXmlView::class, $l10nmgrCfgObj, $tlang);
             } else {
-                $output->writeln("<error>Wrong format. Use 'CATXML' or 'EXCEL' </error>");
-                return;
+                throw new Exception("Wrong format. Use 'CATXML' or 'EXCEL'");
             }
             // Check  if sourceLangStaticId is set in configuration and set setForcedSourceLanguage to this value
             if ($l10nmgrCfgObj->getData('sourceLangStaticId') && ExtensionManagementUtility::isLoaded('static_info_tables')) {
@@ -361,6 +326,8 @@ class Export extends Command
     }
 
     /**
+     * fixme
+     *
      * The function emailNotification sends an email with a translation job to the recipient specified in the extension config.
      *
      * @param string            $xmlFileName   Name of the XML file
