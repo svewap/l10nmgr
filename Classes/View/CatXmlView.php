@@ -103,9 +103,8 @@ class CatXmlView extends AbstractExportView
                                         //echo $tData['fieldType'];
                                         //if (preg_match('/templavoila_flex/',$key)) { echo "1 -"; }
                                         //echo $key."\n";
-                                        if ($tData['fieldType'] == 'text' && $tData['isRTE'] || (preg_match('/templavoila_flex/',
-                                                $key))
-                                        ) {
+                                        if ($tData['fieldType'] == 'text' && $tData['isRTE']
+                                            || (preg_match('/templavoila_flex/', $key))) {
                                             $dataForTranslationTranformed = $xmlTool->RTE2XML($dataForTranslation);
                                             if ($dataForTranslationTranformed !== false) {
                                                 $_isTranformedXML = true;
@@ -113,21 +112,23 @@ class CatXmlView extends AbstractExportView
                                             }
                                         }
                                         if ($_isTranformedXML) {
-                                            $output[] = "\t\t" . '<data table="' . $table . '" elementUid="' . $elementUid . '" key="' . $key . '" transformations="1">' . $dataForTranslation . '</data>' . "\n";
+                                            $output[] = "\t\t"
+                                                . '<data table="' . $table . '" elementUid="' . $elementUid . '" key="' . $key . '" transformations="1">' . $dataForTranslation . '</data>' . "\n";
                                         } else {
                                             // Substitute HTML entities with actual characters (we use UTF-8 anyway:-) but leave quotes untouched
-                                            $dataForTranslation = html_entity_decode($dataForTranslation, ENT_NOQUOTES,
-                                                'UTF-8');
+                                            $dataForTranslation = html_entity_decode(
+                                                $dataForTranslation,
+                                                ENT_NOQUOTES,
+                                                'UTF-8'
+                                            );
                                             //Substitute & with &amp; in non-RTE fields
-                                            $dataForTranslation = preg_replace('/&(?!(amp|nbsp|quot|apos|lt|gt);)/',
-                                                '&amp;', $dataForTranslation);
+                                            $dataForTranslation = preg_replace('/&(?!(amp|nbsp|quot|apos|lt|gt);)/', '&amp;', $dataForTranslation);
                                             //Substitute > and < in non-RTE fields
                                             $dataForTranslation = str_replace(' < ', ' &lt; ', $dataForTranslation);
                                             $dataForTranslation = str_replace(' > ', ' &gt; ', $dataForTranslation);
                                             $dataForTranslation = str_replace('<br>', '<br />', $dataForTranslation);
                                             $dataForTranslation = str_replace('<hr>', '<hr />', $dataForTranslation);
-                                            $params = $this->getBackendUser()->getModuleData('l10nmgr/cm1/prefs',
-                                                'prefs');
+                                            $params = $this->getBackendUser()->getModuleData('l10nmgr/cm1/prefs', 'prefs');
                                             if ($params['utf8'] == '1') {
                                                 $dataForTranslation = Utf8Tools::utf8_bad_strip($dataForTranslation);
                                             }
@@ -137,14 +138,20 @@ class CatXmlView extends AbstractExportView
                                                 if ($params['noxmlcheck'] == '1') {
                                                     $output[] = "\t\t" . '<data table="' . $table . '" elementUid="' . $elementUid . '" key="' . $key . '"><![CDATA[' . $dataForTranslation . ']]></data>' . "\n";
                                                 } else {
-                                                    $this->setInternalMessage($this->getLanguageService()->getLL('export.process.error.invalid.message'),
-                                                        $elementUid . '/' . $table . '/' . $key);
+                                                    $this->setInternalMessage(
+                                                        $this->getLanguageService()->getLL(
+                                                            'export.process.error.invalid.message'
+                                                        ),
+                                                        $elementUid . '/' . $table . '/' . $key
+                                                    );
                                                 }
                                             }
                                         }
                                     } else {
-                                        $this->setInternalMessage($this->getLanguageService()->getLL('export.process.error.empty.message'),
-                                            $elementUid . '/' . $table . '/' . $key);
+                                        $this->setInternalMessage(
+                                            $this->getLanguageService()->getLL('export.process.error.empty.message'),
+                                            $elementUid . '/' . $table . '/' . $key
+                                        );
                                     }
                                 }
                             }
@@ -164,8 +171,11 @@ class CatXmlView extends AbstractExportView
         // get ISO2L code for source language
         $staticLangArr = array();
         if ($this->l10ncfgObj->getData('sourceLangStaticId') && ExtensionManagementUtility::isLoaded('static_info_tables')) {
-            $staticLangArr = BackendUtility::getRecord('static_languages',
-                $this->l10ncfgObj->getData('sourceLangStaticId'), 'lg_iso_2');
+            $staticLangArr = BackendUtility::getRecord(
+                'static_languages',
+                $this->l10ncfgObj->getData('sourceLangStaticId'),
+                'lg_iso_2'
+            );
         }
         $XML = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         $XML .= '<!DOCTYPE TYPO3L10N [ <!ENTITY nbsp " "> ]>' . "\n" . '<TYPO3L10N>' . "\n";
@@ -193,7 +203,8 @@ class CatXmlView extends AbstractExportView
      *
      * @return string The XML to add to the head section
      */
-    protected function additionalHeaderData() {
+    protected function additionalHeaderData()
+    {
         $additionalHeaderData = '';
         if (!empty($this->l10ncfgObj->getData('metadata'))) {
             $additionalHeaderDataArray = json_decode($this->l10ncfgObj->getData('metadata'));
@@ -218,7 +229,10 @@ class CatXmlView extends AbstractExportView
             if (!empty($messages)) {
                 $messages .= "\n\t";
             }
-            $messages .= "\t\t" . '<t3_skippedItem>' . "\n\t\t\t\t" . '<t3_description>' . $messageInformation['message'] . '</t3_description>' . "\n\t\t\t\t" . '<t3_key>' . $messageInformation['key'] . '</t3_key>' . "\n\t\t\t" . '</t3_skippedItem>' . "\r";
+            $messages .= "\t\t" . '<t3_skippedItem>' . "\n\t\t\t\t"
+                . '<t3_description>' . $messageInformation['message'] . '</t3_description>' . "\n\t\t\t\t"
+                . '<t3_key>' . $messageInformation['key'] . '</t3_key>' . "\n\t\t\t"
+                . '</t3_skippedItem>' . "\r";
         }
         return $messages;
     }

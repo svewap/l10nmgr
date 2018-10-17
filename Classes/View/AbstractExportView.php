@@ -295,7 +295,11 @@ abstract class AbstractExportView implements ExportViewInterface
             $this->getLanguageService()->getLL('export.overview.configuration.label'),
             $this->getLanguageService()->getLL('export.overview.type.label'),
             $this->getLanguageService()->getLL('export.overview.targetlanguage.label'),
-            $this->getLanguageService()->getLL('export.overview.filename.label'), implode(chr(10), $content));
+            $this->getLanguageService()->getLL(
+                'export.overview.filename.label'
+            ),
+            implode(chr(10), $content)
+        );
         return $out;
     }
 
@@ -307,7 +311,8 @@ abstract class AbstractExportView implements ExportViewInterface
      */
     protected function fetchExports()
     {
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_l10nmgr_exportdata');
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+            ->getQueryBuilderForTable('tx_l10nmgr_exportdata');
         $exports = $queryBuilder->select('crdate', 'l10ncfg_id', 'exportType', 'translation_lang', 'filename')
             ->from('tx_l10nmgr_exportdata')
             ->where(
