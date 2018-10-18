@@ -36,7 +36,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  * @package TYPO3
  * @subpackage tx_l10nmgr
  */
-class CatXmlView extends AbstractExportView
+class CatXmlView extends AbstractExportView implements ExportViewInterface
 {
     /**
      * @var integer $forcedSourceLanguage Overwrite the default language uid with the desired language to export

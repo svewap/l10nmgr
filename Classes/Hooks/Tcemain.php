@@ -1,4 +1,5 @@
 <?php
+
 namespace Localizationteam\L10nmgr\Hooks;
 
 /***************************************************************
@@ -20,17 +21,19 @@ namespace Localizationteam\L10nmgr\Hooks;
  * GNU General Public License for more details.
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Updating translation index - hook for tcemain
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
+
 use Localizationteam\L10nmgr\Model\L10nBaseService;
 use Localizationteam\L10nmgr\Model\Tools\Tools;
-use TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
-use TYPO3\CMS\Core\Database\DatabaseConnection;
+use TYPO3\CMS\Core\Core\Environment;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -54,7 +57,6 @@ class Tcemain
      */
     public function processDatamap_afterDatabaseOperations($status, $table, $id, $fieldArray, &$pObj)
     {
-        global $TCA;
         // Check if
         // debug(array($status, $table, $id));
         // Map id for new records:
@@ -63,38 +65,31 @@ class Tcemain
             // echo "New fixed<br>";
         }
         // Find live record if any:
-        if (!($liveRecord = BackendUtility::getLiveVersionOfRecord($table,
-            $id))
-        ) {
+        if (!($liveRecord = BackendUtility::getLiveVersionOfRecord($table, $id))) {
             // If it was a version we find live...
             $liveRecord = BackendUtility::getRecord($table, $id); // Otherwise we load live record.
-            //	echo "Live version<br>";
+            // echo "Live version<br>";
         }
+
+        if (!is_array($liveRecord) || !isset($GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField'])) {
+            return;
+        }
+
+        // Now, see if this record is a translation of another one:
+        if ($liveRecord[$GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField']]) {
+            // So it had a translation pointer - lets look for the root record then:
+            $liveRecord = BackendUtility::getRecord($table, $liveRecord[$GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField']], 'uid');
+            // echo "Finding root version<br>";
+        }
+        $languageID = L10nBaseService::getTargetLanguageID();
         if (is_array($liveRecord)) {
-            // Now, see if this record is a translation of another one:
-            /** @var TranslationConfigurationProvider $t8ToolsObj */
-            $t8ToolsObj = GeneralUtility::makeInstance(TranslationConfigurationProvider::class);
-            if ($t8ToolsObj->isTranslationInOwnTable($table) && $liveRecord[$TCA[$table]['ctrl']['transOrigPointerField']]) {
-                // So it had a translation pointer - lets look for the root record then:
-                $liveRecord = BackendUtility::getRecord($table,
-                    $liveRecord[$TCA[$table]['ctrl']['transOrigPointerField']], 'uid');
-                // echo "Finding root version<br>";
-            } elseif ($TCA[$table]['ctrl']['transOrigPointerTable'] && $liveRecord[$TCA[$table]['ctrl']['transOrigPointerField']]) {
-                $fld = $TCA[$table]['ctrl']['transOrigPointerField'];
-                $table = $TCA[$table]['ctrl']['transOrigPointerTable']; // Changeing table value here on purpose!
-                $liveRecord = BackendUtility::getRecord($table, $liveRecord[$fld], 'uid');
-            }
-            $languageID = L10nBaseService::getTargetLanguageID();
-            if (is_array($liveRecord)) {
-                // echo "indexing id ".$liveRecord['uid'];
-                //// Finally, we have found the "root record" and will check it:
-                /** @var Tools $t8Tools */
-                $t8Tools = GeneralUtility::makeInstance(Tools::class);
-                $t8Tools->verbose = false; // Otherwise it will show records which has fields but none editable.
-                //	debug($t8Tools->indexDetailsRecord($table,$liveRecord['uid']));
-                $t8Tools->updateIndexTableFromDetailsArray($t8Tools->indexDetailsRecord($table, $liveRecord['uid'],
-                    $languageID));
-            }
+            // echo "indexing id ".$liveRecord['uid'];
+            //// Finally, we have found the "root record" and will check it:
+            /** @var Tools $t8Tools */
+            $t8Tools = GeneralUtility::makeInstance(Tools::class);
+            $t8Tools->verbose = false; // Otherwise it will show records which has fields but none editable.
+            // debug($t8Tools->indexDetailsRecord($table,$liveRecord['uid']));
+            $t8Tools->updateIndexTableFromDetailsArray($t8Tools->indexDetailsRecord($table, $liveRecord['uid'], $languageID));
         }
     }
 
@@ -103,21 +98,22 @@ class Tcemain
      *
      * @param $p
      * @param $pObj
-     *
      * @return string [type]...
      */
-    function stat($p, $pObj)
+    public function stat($p, $pObj)
     {
-        if (!empty($this->getBackendUser()->groupData['allowed_languages']) || $this->getBackendUser()->isAdmin()) {
-            return $this->calcStat($p,
-                $this->getDatabaseConnection()->cleanIntList($this->getBackendUser()->groupData['allowed_languages']));
-        } else {
-            return '';
+        if (strcmp($this->getBackendUser()->groupData['allowed_languages'], '')) {
+            return $this->calcStat(
+                $p,
+                array_map('intval', $this->getBackendUser()->groupData['allowed_languages'])
+            );
         }
+        return '';
     }
 
     /**
      * Returns the Backend User
+     *
      * @return BackendUserAuthentication
      */
     protected function getBackendUser()
@@ -125,19 +121,48 @@ class Tcemain
         return $GLOBALS['BE_USER'];
     }
 
-    function calcStat($p, $languageList, $noLink = false)
+    /**
+     * @param array $p
+     * @param array $languageList
+     * @param bool $noLink
+     * @return string
+     */
+    public function calcStat($p, $languageList, $noLink = false)
     {
         $output = '';
-
-        if ($p[0] != 'pages') {
-            $records = $this->getDatabaseConnection()->exec_SELECTgetRows('*', 'tx_l10nmgr_index',
-                'tablename=' . $this->getDatabaseConnection()->fullQuoteStr($p[0],
-                    'tx_l10nmgr_index') . ' AND recuid=' . (int)$p[1] . ' AND (translation_lang IN (' . $languageList . ') OR ' . $languageList . ' = 0)' . ' AND workspace=' . (int)$this->getBackendUser()->workspace);
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_l10nmgr_index');
+        $queryBuilder->select('*')->from('tx_l10nmgr_index');
+        $queryBuilder->where(
+            $queryBuilder->expr()->in(
+                'translation_lang',
+                $languageList
+            ),
+            $queryBuilder->expr()->eq(
+                'workspace',
+                $queryBuilder->createNamedParameter((int)$this->getBackendUser()->workspace, \PDO::PARAM_INT)
+            )
+        );
+        if ($p[0] !== 'pages') {
+            $queryBuilder->andWhere(
+                $queryBuilder->expr()->eq(
+                    'tablename',
+                    $queryBuilder->createNamedParameter($p[0], \PDO::PARAM_STR)
+                ),
+                $queryBuilder->expr()->eq(
+                    'recuid',
+                    $queryBuilder->createNamedParameter((int)$p[1], \PDO::PARAM_INT)
+                )
+            );
         } else {
-            $records = $this->getDatabaseConnection()->exec_SELECTgetRows('*', 'tx_l10nmgr_index',
-                'recpid=' . (int)$p[1] . ' AND (translation_lang IN (' . $languageList . ') OR ' . $languageList . ' = 0)' . ' AND workspace=' . (int)$this->getBackendUser()->workspace);
+            $queryBuilder->andWhere(
+                $queryBuilder->expr()->eq(
+                    'recpid',
+                    $queryBuilder->createNamedParameter((int)$p[1], \PDO::PARAM_INT)
+                )
+            );
         }
-        $flags = array();
+        $records = $queryBuilder->execute()->fetchAll();
+        $flags = [];
         foreach ($records as $r) {
             $flags['new'] += $r['flag_new'];
             $flags['unknown'] += $r['flag_unknown'];
@@ -149,7 +174,9 @@ class Tcemain
             $msg = '';
             if ($flags['new'] && !$flags['unknown'] && !$flags['noChange'] && !$flags['update']) {
                 $msg .= 'None of ' . $flags['new'] . ' elements are translated.';
-                $output = '<img src="../' . ExtensionManagementUtility::siteRelPath('l10nmgr') . 'Resources/Public/Images/flags_new.png" hspace="2" width="10" height="16" alt="' . htmlspecialchars($msg) . '" title="' . htmlspecialchars($msg) . '" />';
+                $output = '<img src="' . $GLOBALS['BACK_PATH']
+                    . $this->siteRelPath('l10nmgr')
+                    . 'flags_new.png" hspace="2" width="10" height="16" alt="' . htmlspecialchars($msg) . '" title="' . htmlspecialchars($msg) . '" />';
             } elseif ($flags['new'] || $flags['update']) {
                 if ($flags['update']) {
                     $msg .= $flags['update'] . ' elements to update. ';
@@ -157,35 +184,49 @@ class Tcemain
                 if ($flags['new']) {
                     $msg .= $flags['new'] . ' new elements found. ';
                 }
-                $output = '<img src="../' . ExtensionManagementUtility::siteRelPath('l10nmgr') . 'Resources/Public/Images/flags_update.png" hspace="2" width="10" height="16" alt="' . htmlspecialchars($msg) . '" title="' . htmlspecialchars($msg) . '" />';
+                $output = '<img src="' . $GLOBALS['BACK_PATH']
+                    . $this->siteRelPath('l10nmgr')
+                    . 'flags_update.png" hspace="2" width="10" height="16" alt="' . htmlspecialchars($msg) . '" title="' . htmlspecialchars($msg) . '" />';
             } elseif ($flags['unknown']) {
                 $msg .= 'Translation status is unknown for ' . $flags['unknown'] . ' elements. Please check and update. ';
-                $output = '<img src="../' . ExtensionManagementUtility::siteRelPath('l10nmgr') . 'Resources/Public/Images/flags_unknown.png" hspace="2" width="10" height="16" alt="' . htmlspecialchars($msg) . '" title="' . htmlspecialchars($msg) . '" />';
+                $output = '<img src="' . $GLOBALS['BACK_PATH']
+                    . $this->siteRelPath('l10nmgr')
+                    . 'flags_unknown.png" hspace="2" width="10" height="16" alt="' . htmlspecialchars($msg) . '" title="' . htmlspecialchars($msg) . '" />';
             } elseif ($flags['noChange']) {
                 $msg .= 'All ' . $flags['noChange'] . ' translations OK';
-                $output = '<img src="../' . ExtensionManagementUtility::siteRelPath('l10nmgr') . 'Resources/Public/Images/flags_ok.png" hspace="2" width="10" height="16" alt="' . htmlspecialchars($msg) . '" title="' . htmlspecialchars($msg) . '" />';
+                $output = '<img src="' . $GLOBALS['BACK_PATH']
+                    . $this->siteRelPath('l10nmgr')
+                    . 'flags_ok.png" hspace="2" width="10" height="16" alt="' . htmlspecialchars($msg) . '" title="' . htmlspecialchars($msg) . '" />';
             } else {
                 $msg .= 'Nothing to do. ';
                 $msg .= '[n/?/u/ok=' . implode('/', $flags) . ']';
-                $output = '<img src="../' . ExtensionManagementUtility::siteRelPath('l10nmgr') . 'Resources/Public/Images/flags_none.png" hspace="2" width="10" height="16" alt="' . htmlspecialchars($msg) . '" title="' . htmlspecialchars($msg) . '" />';
+                $output = '<img src="' . $GLOBALS['BACK_PATH']
+                    . $this->siteRelPath('l10nmgr')
+                    . 'flags_none.png" hspace="2" width="10" height="16" alt="' . htmlspecialchars($msg) . '" title="' . htmlspecialchars($msg) . '" />';
             }
-            $output = !$noLink ? '<a href="#" onclick="' . htmlspecialchars('parent.list_frame.location.href="' . $GLOBALS['BACK_PATH'] . ExtensionManagementUtility::siteRelPath('l10nmgr') . 'cm2/index.php?table=' . $p[0] . '&uid=' . $p[1] . '&languageList=' . rawurlencode($languageList) . '"; return false;') . '" target="listframe">' . $output . '</a>' : $output;
+            $output = !$noLink
+                ? '<a href="#" onclick="'
+                . htmlspecialchars(
+                    'parent.list_frame.location.href="' . $GLOBALS['BACK_PATH']
+                    . $this->siteRelPath('l10nmgr')
+                    . 'cm2/index.php?table=' . $p[0] . '&uid=' . $p[1] . '&languageList=' . rawurlencode($languageList)
+                    . '"; return false;'
+                ) . '" target="listframe">' . $output . '</a>'
+                : $output;
         }
         return $output;
     }
 
     /**
-     * Get DatabaseConnection instance - $GLOBALS['TYPO3_DB']
+     * Returns the relative path to the extension as measured from the public web path
      *
-     * This method should be used instead of direct access to
-     * $GLOBALS['TYPO3_DB'] for easy IDE auto completion.
-     *
-     * @return DatabaseConnection
-     * @deprecated since TYPO3 v8, will be removed in TYPO3 v9
+     * @param string $extensionKey
+     * @return string
+     * @internal
      */
-    protected function getDatabaseConnection()
+    protected function siteRelPath($extensionKey)
     {
-        GeneralUtility::logDeprecatedFunction();
-        return $GLOBALS['TYPO3_DB'];
+        $path = ExtensionManagementUtility::extPath($extensionKey);
+        return substr($path, strlen(Environment::getPublicPath() . '/'));
     }
 }
