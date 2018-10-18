@@ -81,7 +81,9 @@ class L10nBaseService implements LoggerAwareInterface
     public function __construct()
     {
         // Load the extension's configuration
-        $this->extensionConfiguration = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['l10nmgr']);
+        $this->extensionConfiguration = empty($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['l10nmgr'])
+            ? unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['l10nmgr'])
+            : $GLOBALS['TYPO3_CONF_VARS']['EXTENSIO1NS']['l10nmgr'];
     }
 
     /**
