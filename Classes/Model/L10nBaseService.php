@@ -379,7 +379,11 @@ class L10nBaseService implements LoggerAwareInterface
                                 if (is_array($tData) && array_key_exists($key, $inputArray[$table][$elementUid])) {
                                     list($Ttable, $TuidString, $Tfield, $Tpath) = explode(':', $key);
                                     list($Tuid, $Tlang, $TdefRecord) = explode('/', $TuidString);
-                                    if (!$this->createTranslationAlsoIfEmpty && $inputArray[$table][$elementUid][$key] == '' && $Tuid == 'NEW' && $Tfield !== trim($GLOBALS['TCA'][$Ttable]['ctrl']['label'])) {
+                                    if (!$this->createTranslationAlsoIfEmpty
+                                        && $inputArray[$table][$elementUid][$key] == ''
+                                        && $Tuid == 'NEW'
+                                        && $Tfield !== trim($GLOBALS['TCA'][$Ttable]['ctrl']['label'])
+                                    ) {
                                         //if data is empty and the field is not the label field of that particular table, do not save it
                                         unset($inputArray[$table][$elementUid][$key]);
                                         continue;
@@ -444,10 +448,7 @@ class L10nBaseService implements LoggerAwareInterface
                 $tce->process_datamap();
             }
             if (count($tce->errorLog)) {
-                $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': TCEmain update errors: ' . implode(
-                        ', ',
-                        $tce->errorLog
-                    ));
+                $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': TCEmain update errors: ' . implode(', ', $tce->errorLog));
             }
             if (count($tce->autoVersionIdMap) && count($_flexFormDiffArray)) {
                 foreach ($_flexFormDiffArray as $key => $value) {
@@ -504,13 +505,17 @@ class L10nBaseService implements LoggerAwareInterface
                         }
                         if (is_array($data['fields'])) {
                             foreach ($data['fields'] as $key => $tData) {
-                                if (is_array($tData) && is_array($inputArray[$table][$elementUid]) && array_key_exists(
-                                        $key,
-                                        $inputArray[$table][$elementUid]
-                                    )) {
+                                if (is_array($tData)
+                                    && is_array($inputArray[$table][$elementUid])
+                                    && array_key_exists($key, $inputArray[$table][$elementUid])
+                                ) {
                                     list($Ttable, $TuidString, $Tfield, $Tpath) = explode(':', $key);
                                     list($Tuid, $Tlang, $TdefRecord) = explode('/', $TuidString);
-                                    if (!$this->createTranslationAlsoIfEmpty && $inputArray[$table][$elementUid][$key] == '' && $Tuid == 'NEW' && $Tfield !== trim($GLOBALS['TCA'][$Ttable]['ctrl']['label'])) {
+                                    if (!$this->createTranslationAlsoIfEmpty
+                                        && $inputArray[$table][$elementUid][$key] == ''
+                                        && $Tuid == 'NEW'
+                                        && $Tfield !== trim($GLOBALS['TCA'][$Ttable]['ctrl']['label'])
+                                    ) {
                                         //if data is empty and the field is not the label field of that particular table, do not save it
                                         unset($inputArray[$table][$elementUid][$key]);
                                         continue;
@@ -691,10 +696,7 @@ class L10nBaseService implements LoggerAwareInterface
                 }
             }
             // Before remapping
-            $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': TCEmain_data before remapping: ' . implode(
-                    ', ',
-                    $TCEmain_data
-                ));
+            $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': TCEmain_data before remapping: ' . implode(', ', $TCEmain_data));
             // Remapping those elements which are new:
             $this->lastTCEMAINCommandsCount = 0;
             foreach ($TCEmain_data as $table => $items) {
@@ -778,10 +780,7 @@ class L10nBaseService implements LoggerAwareInterface
                 }
             }
             // After remapping
-            $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': TCEmain_data after remapping: ' . implode(
-                    ', ',
-                    $TCEmain_data
-                ));
+            $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': TCEmain_data after remapping: ' . implode(', ', $TCEmain_data));
             // Now, submitting translation data:
             /** @var DataHandler $tce */
             $tce = GeneralUtility::makeInstance(DataHandler::class);
@@ -799,16 +798,10 @@ class L10nBaseService implements LoggerAwareInterface
             }
             self::$targetLanguageID = null;
             if (count($tce->errorLog)) {
-                $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': TCEmain update errors: ' . implode(
-                        ', ',
-                        $tce->errorLog
-                    ));
+                $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': TCEmain update errors: ' . implode(', ', $tce->errorLog));
             }
             if (count($tce->autoVersionIdMap) && count($_flexFormDiffArray)) {
-                $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': flexFormDiffArry: ' . implode(
-                        ', ',
-                        $this->flexFormDiffArray
-                    ));
+                $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': flexFormDiffArry: ' . implode(', ', $this->flexFormDiffArray));
                 foreach ($_flexFormDiffArray as $key => $value) {
                     list($Ttable, $Tuid, $Trest) = explode(':', $key, 3);
                     if ($tce->autoVersionIdMap[$Ttable][$Tuid]) {
@@ -817,10 +810,7 @@ class L10nBaseService implements LoggerAwareInterface
                     }
                 }
                 $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': autoVersionIdMap: ' . $tce->autoVersionIdMap);
-                $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': _flexFormDiffArray: ' . implode(
-                        ', ',
-                        $_flexFormDiffArray
-                    ));
+                $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': _flexFormDiffArray: ' . implode(', ', $_flexFormDiffArray));
             }
             // Should be empty now - or there were more information in the incoming array than there should be!
             if (count($inputArray)) {
@@ -867,11 +857,7 @@ class L10nBaseService implements LoggerAwareInterface
                 $this->TCEmain_cmd['tt_content'][$translatedParent['uid']]['inlineLocalizeSynchronize'] = $childrenField . ',localize';
             } else {
                 if ($element[$parentField] > 0) {
-                    $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tt_content');
-                    $queryBuilder->getRestrictions()->removeAll()->add(GeneralUtility::makeInstance(DeletedRestriction::class));
-
                     $parent = $this->getRawRecord('tt_content', (int)$element[$parentField]);
-
                     $this->recursivelyCheckForRelationParents($parent, $Tlang, $parentField, $childrenField);
                 } else {
                     $this->TCEmain_cmd['tt_content'][$element['uid']]['localize'] = $Tlang;
