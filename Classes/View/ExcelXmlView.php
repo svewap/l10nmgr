@@ -29,7 +29,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  * @package TYPO3
  * @subpackage tx_l10nmgr
  */
-class ExcelXmlView extends AbstractExportView
+class ExcelXmlView extends AbstractExportView implements ExportViewInterface
 {
     //internal flags:
     /**
