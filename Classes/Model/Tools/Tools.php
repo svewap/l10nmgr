@@ -19,12 +19,14 @@ namespace Localizationteam\L10nmgr\Model\Tools;
  * GNU General Public License for more details.
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Contains translation tools
  * $Id: class.t3lib_loaddbgroup.php 1816 2006-11-26 00:43:24Z mundaun $
  *
  * @author Kasper Skaarhoj <kasperYYYY@typo3.com>
  */
+
 use TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
@@ -55,17 +57,17 @@ class Tools
     /**
      * @var array
      */
-    public $filters = array(
+    public $filters = [
         'fieldTypes' => 'text,input',
         'noEmptyValues' => true,
         'noIntegers' => true,
         'l10n_categories' => '' // could be "text,media" for instance.
-    );
+    ];
     // Array of sys_language_uids, eg. array(1,2)
     /**
      * @var array
      */
-    public $previewLanguages = array(); // If TRUE, when fields are not included there will be shown a detailed explanation.
+    public $previewLanguages = []; // If TRUE, when fields are not included there will be shown a detailed explanation.
     /**
      * @var bool
      */
@@ -86,23 +88,23 @@ class Tools
     /**
      * @var array
      */
-    protected $detailsOutput = array(); // System languages initialized
+    protected $detailsOutput = []; // System languages initialized
     /**
      * @var array
      */
-    protected $sysLanguages = array(); // FlexForm diff data
+    protected $sysLanguages = []; // FlexForm diff data
     /**
      * @var array
      */
-    protected $flexFormDiff = array(); // System languages records, loaded by constructor
+    protected $flexFormDiff = []; // System languages records, loaded by constructor
     /**
      * @var array|NULL
      */
-    protected $sys_languages = array();
+    protected $sys_languages = [];
     /**
      * @var array
      */
-    protected $indexFilterObjects = array();
+    protected $indexFilterObjects = [];
     /**
      * @var array
      */
@@ -144,7 +146,6 @@ class Tools
      * @param array $PA Various stuff in an array
      * @param string $structurePath Path to location in flexform
      * @param FlexFormTools $pObj parent object
-     *
      * @return void
      */
     public function translationDetails_flexFormCallBack($dsArr, $dataValue, $PA, $structurePath, $pObj)
@@ -156,7 +157,7 @@ class Tools
             $structurePath = $baseStructPath . $this->detailsOutput['ISOcode'];
             $translValue = $pObj->getArrayValueByPath($structurePath, $pObj->traverseFlexFormXMLData_Data);
             // Generate preview values:
-            $previewLanguageValues = array();
+            $previewLanguageValues = [];
             foreach ($this->previewLanguages as $prevSysUid) {
                 $previewLanguageValues[$prevSysUid] = $pObj->getArrayValueByPath(
                     $baseStructPath . $this->sysLanguages[$prevSysUid]['ISOcode'],
@@ -211,7 +212,6 @@ class Tools
      * @param string $diffDefaultValue Default value of time of current translated value (used for diff'ing with $dataValue)
      * @param array $previewLanguageValues Array of preview language values identified by keys (which are sys_language uids)
      * @param array $contentRow Content row
-     *
      * @return void
      */
     protected function translationDetails_addField(
@@ -220,8 +220,8 @@ class Tools
         $dataValue,
         $translationValue,
         $diffDefaultValue = '',
-        $previewLanguageValues = array(),
-        $contentRow = array()
+        $previewLanguageValues = [],
+        $contentRow = []
     ) {
         $msg = '';
         list($kTableName, , $kFieldName) = explode(':', $key);
@@ -230,8 +230,8 @@ class Tools
                 if ($TCEformsCfg['l10n_mode'] == 'mergeIfNotBlank') {
                     $msg .= 'This field is optional. If not filled in, the default language value will be used.';
                 }
-                if (GeneralUtility::inList('shortcut,shortcut_mode,urltype,url_scheme',
-                        $kFieldName) && GeneralUtility::inList('pages,pages_language_overlay', $kTableName)
+                if (GeneralUtility::inList('shortcut,shortcut_mode,urltype,url_scheme', $kFieldName)
+                    && GeneralUtility::inList('pages,pages_language_overlay', $kTableName)
                 ) {
                     $this->bypassFilter = true;
                 }
@@ -245,20 +245,22 @@ class Tools
                     });
                     $is_HIDE_L10N_SIBLINGS = $GLOBALS['is_HIDE_L10N_SIBLINGS'];
                 } else {
-                    $is_HIDE_L10N_SIBLINGS = GeneralUtility::isFirstPartOfStr($TCEformsCfg['displayCond'],
-                        'HIDE_L10N_SIBLINGS');
+                    $is_HIDE_L10N_SIBLINGS = GeneralUtility::isFirstPartOfStr($TCEformsCfg['displayCond'], 'HIDE_L10N_SIBLINGS');
                 }
                 if (!$is_HIDE_L10N_SIBLINGS) {
                     if (!GeneralUtility::isFirstPartOfStr($kFieldName, 't3ver_')) {
-                        if (!$this->filters['l10n_categories'] || GeneralUtility::inList($this->filters['l10n_categories'],
-                                $TCEformsCfg['l10n_cat'])
-                        ) {
-                            if (!$this->filters['fieldTypes'] || GeneralUtility::inList($this->filters['fieldTypes'],
-                                    $TCEformsCfg['config']['type']) || $this->bypassFilter
+                        if (!$this->filters['l10n_categories'] || GeneralUtility::inList($this->filters['l10n_categories'], $TCEformsCfg['l10n_cat'])) {
+                            if (!$this->filters['fieldTypes']
+                                || GeneralUtility::inList($this->filters['fieldTypes'], $TCEformsCfg['config']['type'])
+                                || $this->bypassFilter
                             ) {
-                                if (!$this->filters['noEmptyValues'] || !(!$dataValue && !$translationValue) || !empty($previewLanguageValues[key($previewLanguageValues)]) || $TCEformsCfg['labelField'] === $kFieldName) { // Checking that no translation value exists either; if a translation value is found it is considered that it should be translated even if the default value is empty for some reason.
+                                if (!$this->filters['noEmptyValues'] || !(!$dataValue && !$translationValue)
+                                    || !empty($previewLanguageValues[key($previewLanguageValues)]) || $TCEformsCfg['labelField'] === $kFieldName
+                                ) {
+                                    // Checking that no translation value exists either; if a translation value is found it is considered that it should be translated
+                                    // even if the default value is empty for some reason.
                                     if (!$this->filters['noIntegers'] || !MathUtility::canBeInterpretedAsInteger($dataValue) || $this->bypassFilter) {
-                                        $this->detailsOutput['fields'][$key] = array(
+                                        $this->detailsOutput['fields'][$key] = [
                                             'defaultValue' => $dataValue,
                                             'translationValue' => $translationValue,
                                             'diffDefaultValue' => $TCEformsCfg['l10n_display'] != 'hideDiff' ? $diffDefaultValue : '',
@@ -267,18 +269,20 @@ class Tools
                                             'readOnly' => $TCEformsCfg['l10n_display'] == 'defaultAsReadonly',
                                             'fieldType' => $TCEformsCfg['config']['type'],
                                             'isRTE' => $this->_isRTEField($key, $TCEformsCfg, $contentRow)
-                                        );
+                                        ];
                                     } elseif ($this->verbose) {
                                         $this->detailsOutput['fields'][$key] = 'Bypassing; ->filters[noIntegers] was set and dataValue "' . $dataValue . '" was an integer';
                                     }
                                 } elseif ($this->verbose) {
-                                    $this->detailsOutput['fields'][$key] = 'Bypassing; ->filters[noEmptyValues] was set and dataValue "' . $dataValue . '" was empty an field was no label field and no translation or alternative source language value found either.';
+                                    $this->detailsOutput['fields'][$key] = 'Bypassing; ->filters[noEmptyValues] was set and dataValue "'
+                                        . $dataValue . '" was empty an field was no label field and no translation or alternative source language value found either.';
                                 }
                             } elseif ($this->verbose) {
                                 $this->detailsOutput['fields'][$key] = 'Bypassing; fields of type "' . $TCEformsCfg['config']['type'] . '" was filtered out in ->filters[fieldTypes]';
                             }
                         } elseif ($this->verbose) {
-                            $this->detailsOutput['fields'][$key] = 'Bypassing; ->filters[l10n_categories] was set to "' . $this->filters['l10n_categories'] . '" and l10n_cat for field ("' . $TCEformsCfg['l10n_cat'] . '") did not match.';
+                            $this->detailsOutput['fields'][$key] = 'Bypassing; ->filters[l10n_categories] was set to "'
+                                . $this->filters['l10n_categories'] . '" and l10n_cat for field ("' . $TCEformsCfg['l10n_cat'] . '") did not match.';
                         }
                     } elseif ($this->verbose) {
                         $this->detailsOutput['fields'][$key] = 'Bypassing; Fieldname "' . $kFieldName . '" was prefixed "t3ver_"';
@@ -301,7 +305,6 @@ class Tools
      * @param string $key Key is a combination of table, uid, field and structure path, identifying the field
      * @param array $TCEformsCfg TCA configuration for field
      * @param array $contentRow The table row being handled
-     *
      * @return boolean
      */
     protected function _isRTEField($key, $TCEformsCfg, $contentRow)
@@ -340,7 +343,6 @@ class Tools
      * @param array $PA Various stuff in an array
      * @param string $structurePath Path to location in flexform
      * @param FlexFormTools $pObj parent object
-     *
      * @return void
      */
     public function translationDetails_flexFormCallBackForOverlay($dsArr, $dataValue, $PA, $structurePath, $pObj)
@@ -351,7 +353,7 @@ class Tools
             $structurePath,
             $this->_callBackParams_translationDiffsourceXMLArray
         );
-        $previewLanguageValues = array();
+        $previewLanguageValues = [];
         foreach ($this->previewLanguages as $prevSysUid) {
             $previewLanguageValues[$prevSysUid] = $pObj->getArrayValueByPath(
                 $structurePath,
@@ -376,7 +378,6 @@ class Tools
      *
      * @param string $table Table name
      * @param int $uid UID
-     *
      * @return string
      */
     public function updateIndexForRecord($table, $uid)
@@ -385,7 +386,7 @@ class Tools
         if ($table == 'pages') {
             $items = $this->indexDetailsPage($uid);
         } else {
-            $items = array();
+            $items = [];
             if ($tmp = $this->indexDetailsRecord($table, $uid)) {
                 $items[$table][$uid] = $tmp;
             }
@@ -408,13 +409,12 @@ class Tools
      *
      * @param integer $pageId Page ID
      * @param int $previewLanguage
-     *
      * @return array Array of the traversed items
      */
     public function indexDetailsPage($pageId, $previewLanguage = 0)
     {
-        
-        $items = array();
+
+        $items = [];
         // Traverse tables:
         foreach ($GLOBALS['TCA'] as $table => $cfg) {
             // Only those tables we want to work on:
@@ -447,7 +447,6 @@ class Tools
      * @param string $table Table name
      * @param integer $uid Record UID
      * @param integer|NULL $languageID Language ID of the record
-     *
      * @return mixed FALSE if the input record is not one that can be translated. Otherwise an array holding information about the status.
      */
     public function indexDetailsRecord($table, $uid, $languageID = null)
@@ -488,7 +487,6 @@ class Tools
      * @param string $table Table name
      * @param integer $uid Record uid
      * @param integer $previewLanguage
-     *
      * @return array | bool Record array if found, otherwise FALSE
      */
     protected function getSingleRecordToTranslate($table, $uid, $previewLanguage = 0)
@@ -550,6 +548,7 @@ class Tools
 
     /**
      * Returns true if the record can be included in index.
+     *
      * @param $table
      * @param $uid
      * @param $pageId
@@ -559,7 +558,7 @@ class Tools
     {
         // Initialize (only first time)
         if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['l10nmgr']['indexFilter']) && !is_array($this->indexFilterObjects[$pageId])) {
-            $this->indexFilterObjects[$pageId] = array();
+            $this->indexFilterObjects[$pageId] = [];
             $c = 0;
             foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['l10nmgr']['indexFilter'] as $objArray) {
                 $this->indexFilterObjects[$pageId][$c] = &GeneralUtility::getUserObj($objArray[0]);
@@ -586,14 +585,13 @@ class Tools
      * @param integer $sysLang sys_language uid
      * @param array $flexFormDiff FlexForm diff data
      * @param integer $previewLanguage previewLanguage
-     *
      * @return array Returns details array
      */
-    public function translationDetails($table, $row, $sysLang, $flexFormDiff = array(), $previewLanguage = 0)
+    public function translationDetails($table, $row, $sysLang, $flexFormDiff = [], $previewLanguage = 0)
     {
         // Initialize:
         $tInfo = $this->translationInfo($table, $row['uid'], $sysLang, null, '', $previewLanguage);
-        $this->detailsOutput = array();
+        $this->detailsOutput = [];
         $this->flexFormDiff = $flexFormDiff;
         if (is_array($tInfo)) {
             // Initialize some more:
@@ -625,15 +623,15 @@ class Tools
                             // to use container blocks with localization. The way out might be setting the language to "All" for such elements.
                             $this->detailsOutput['log'][] = 'Mode: translate to new record';
                             $translationUID = 'NEW/' . $sysLang . '/' . $row['uid'];
-                            $translationRecord = array();
+                            $translationRecord = [];
                         }
                         if ($GLOBALS['TCA'][$tInfo['translation_table']]['ctrl']['transOrigDiffSourceField']) {
                             $diffArray = unserialize($translationRecord[$GLOBALS['TCA'][$tInfo['translation_table']]['ctrl']['transOrigDiffSourceField']]);
                             // debug($diffArray);
                         } else {
-                            $diffArray = array();
+                            $diffArray = [];
                         }
-                        $prevLangRec = array();
+                        $prevLangRec = [];
                         foreach ($this->previewLanguages as $prevSysUid) {
                             $prevLangInfo = $this->translationInfo(
                                 $table,
@@ -662,9 +660,9 @@ class Tools
                                 && $GLOBALS['TCA'][$tInfo['translation_table']]['ctrl']['transOrigDiffSourceField'] !== $field
                             ) {
                                 $key = $tInfo['translation_table'] . ':' . BackendUtility::wsMapId(
-                                    $tInfo['translation_table'],
-                                    $translationUID
-                                ) . ':' . $field;
+                                        $tInfo['translation_table'],
+                                        $translationUID
+                                    ) . ':' . $field;
                                 if ($cfg['config']['type'] == 'flex') {
                                     $dataStructArray = $this->_getFlexFormMetaDataForContentElement(
                                         $table,
@@ -700,7 +698,7 @@ class Tools
                                 } else {
                                     // handle normal fields:
                                     $diffDefaultValue = $diffArray[$field];
-                                    $previewLanguageValues = array();
+                                    $previewLanguageValues = [];
                                     foreach ($this->previewLanguages as $prevSysUid) {
                                         $previewLanguageValues[$prevSysUid] = $prevLangRec[$prevSysUid][$field];
                                     }
@@ -844,8 +842,8 @@ class Tools
             ->execute()
             ->fetchAll();
 
-        $translations = array();
-        $translations_errors = array();
+        $translations = [];
+        $translations_errors = [];
         foreach ($translationsTemp as $r) {
             if (!isset($translations[$r[$GLOBALS['TCA'][$table]['ctrl']['languageField']]])) {
                 $translations[$r[$GLOBALS['TCA'][$table]['ctrl']['languageField']]] = $r;
@@ -853,7 +851,7 @@ class Tools
                 $translations_errors[$r[$GLOBALS['TCA'][$table]['ctrl']['languageField']]][] = $r;
             }
         }
-        return array(
+        return [
             'table' => $table,
             'uid' => $uid,
             'CType' => $row['CType'],
@@ -861,7 +859,7 @@ class Tools
             'translation_table' => $table,
             'translations' => $translations,
             'excessive_translations' => $translations_errors
-        );
+        ];
     }
 
     /**
@@ -881,12 +879,11 @@ class Tools
      * @param array $tInfo Translation info
      * @param string $table Table name
      * @param array $row Table row
-     *
      * @return array
      */
     protected function _detectTranslationModes($tInfo, $table, $row)
     {
-        $translationModes = array();
+        $translationModes = [];
         if ($table === 'pages') {
             $translationModes[] = 'flexformInternalTranslation';
             $this->detailsOutput['log'][] = 'Mode: "flexformInternalTranslation" detected because we have page Record';
@@ -935,15 +932,18 @@ class Tools
      * @param string $table Name of the table
      * @param string $field Name of the field
      * @param array $row Current row of data
-     *
      * @return array|boolean Flexform structure (or false, if not found)
      */
     protected function _getFlexFormMetaDataForContentElement($table, $field, $row)
     {
         $conf = $GLOBALS['TCA'][$table]['columns'][$field];
-        $dataStructArray = array();
-        $dataStructIdentifier = GeneralUtility::makeInstance(FlexFormTools::class)->getDataStructureIdentifier($conf, $table,
-            $field, $row);
+        $dataStructArray = [];
+        $dataStructIdentifier = GeneralUtility::makeInstance(FlexFormTools::class)->getDataStructureIdentifier(
+            $conf,
+            $table,
+            $field,
+            $row
+        );
         if (!empty($dataStructIdentifier)) {
             $dataStructArray = GeneralUtility::makeInstance(FlexFormTools::class)->parseDataStructureByIdentifier($dataStructIdentifier);
         }
@@ -963,12 +963,11 @@ class Tools
      *
      * @param string $table Table name
      * @param array $row Table row
-     *
      * @return void
      */
     protected function _lookForFlexFormFieldAndAddToInternalTranslationDetails($table, $row)
     {
-        
+
         foreach ($GLOBALS['TCA'][$table]['columns'] as $field => $conf) {
             // For "flex" fieldtypes we need to traverse the structure looking for file and db references of course!
             if ($conf['config']['type'] == 'flex') {
@@ -976,7 +975,7 @@ class Tools
                 // since otherwise we would translate flexform content that might be hidden if say the record had a DS
                 // set but was later changed back to "Text w/Image" or so... But probably this is a rare case.
                 // Get current data structure to see if translation is needed:
-                $dataStructArray = array();
+                $dataStructArray = [];
                 $dataStructIdentifier = GeneralUtility::makeInstance(FlexFormTools::class)->getDataStructureIdentifier(
                     $conf,
                     $table,
@@ -1018,12 +1017,11 @@ class Tools
      * @param array $fullDetails Details as fetched (as gotten by ->translationDetails())
      * @param integer $sys_lang The language UID for which this record is made
      * @param integer $pid PID of record
-     *
      * @return array Record.
      */
     protected function compileIndexRecord($fullDetails, $sys_lang, $pid)
     {
-        $record = array(
+        $record = [
             'hash' => '',
             'tablename' => $fullDetails['translationInfo']['table'],
             'recuid' => (int)$fullDetails['translationInfo']['uid'],
@@ -1033,7 +1031,7 @@ class Tools
             'translation_lang' => $sys_lang,
             'translation_recuid' => (int)$fullDetails['translationInfo']['translations'][$sys_lang]['uid'],
             'workspace' => $this->getBackendUser()->workspace,
-            'serializedDiff' => array(),
+            'serializedDiff' => [],
             'flag_new' => 0,
             // Something awaits to get translated => Put to TODO list as a new element
             'flag_unknown' => 0,
@@ -1042,7 +1040,7 @@ class Tools
             // If only "noChange" is set for the record, all is well!
             'flag_update' => 0,
             // This indicates something to update
-        );
+        ];
         if (is_array($fullDetails['fields'])) {
             foreach ($fullDetails['fields'] as $key => $tData) {
                 if (is_array($tData)) {
@@ -1075,6 +1073,7 @@ class Tools
 
     /**
      * Returns the Backend User
+     *
      * @return BackendUserAuthentication
      */
     protected function getBackendUser()
@@ -1087,7 +1086,6 @@ class Tools
      *
      * @param string $old Old content
      * @param string $new New content
-     *
      * @return string Marked up string.
      */
     protected function diffCMP($old, $new)
@@ -1104,7 +1102,6 @@ class Tools
      * @param string $table Table name
      * @param integer $pageId Page id
      * @param integer $previewLanguage
-     *
      * @return array Array of records from table (with all fields selected)
      */
     public function getRecordsToTranslateFromTable($table, $pageId, $previewLanguage = 0)
@@ -1176,7 +1173,6 @@ class Tools
      *
      * @param array $rDetails See output of indexDetailsRecord()
      * @param boolean $echo If true, will output log information for each insert
-     *
      * @return void
      */
     public function updateIndexTableFromDetailsArray($rDetails, $echo = false)
@@ -1184,7 +1180,8 @@ class Tools
         if ($rDetails && is_array($rDetails['indexRecord']) && count($rDetails['indexRecord'])) {
             foreach ($rDetails['indexRecord'] as $rIndexRecord) {
                 if ($echo) {
-                    echo "Inserting " . $rIndexRecord['tablename'] . ':' . $rIndexRecord['recuid'] . ':' . $rIndexRecord['translation_lang'] . ':' . $rIndexRecord['workspace'] . chr(10);
+                    echo "Inserting " . $rIndexRecord['tablename'] . ':' . $rIndexRecord['recuid']
+                        . ':' . $rIndexRecord['translation_lang'] . ':' . $rIndexRecord['workspace'] . chr(10);
                 }
                 $this->updateIndexTable($rIndexRecord);
             }
@@ -1195,7 +1192,6 @@ class Tools
      * Updates translation index table with input record
      *
      * @param array $record Array (generated with ->compileIndexRecord())
-     *
      * @return void
      */
     protected function updateIndexTable($record)
@@ -1204,7 +1200,7 @@ class Tools
             ->getConnectionForTable('tx_l10nmgr_index');
 
         $databaseConnection->delete(
-        'tx_l10nmgr_index',
+            'tx_l10nmgr_index',
             ['hash' => $record['hash']]
         );
 
@@ -1215,7 +1211,6 @@ class Tools
      * Flush Index Of Workspace - removes all index records for workspace - useful to nightly build-up of the index.
      *
      * @param int $ws Workspace ID
-     *
      * @return void
      */
     public function flushIndexOfWorkspace($ws)
@@ -1235,25 +1230,24 @@ class Tools
      * @param string $table Table name
      * @param int $uid UID
      * @param bool $exec Execution flag
-     *
      * @return array
      */
     public function flushTranslations($table, $uid, $exec = false)
     {
         /** @var FlexFormTools $flexToolObj */
         $flexToolObj = GeneralUtility::makeInstance(FlexFormTools::class);
-        $TCEmain_data = array();
-        $TCEmain_cmd = array();
+        $TCEmain_data = [];
+        $TCEmain_cmd = [];
         // Simply collecting information about indexing on a page to assess what has to be flushed. Maybe this should move to be an API in
         if ($table == 'pages') {
             $items = $this->indexDetailsPage($uid);
         } else {
-            $items = array();
+            $items = [];
             if ($tmp = $this->indexDetailsRecord($table, $uid)) {
                 $items[$table][$uid] = $tmp;
             }
         }
-        $remove = array();
+        $remove = [];
         if (count($items)) {
             foreach ($items as $tt => $rr) {
                 foreach ($rr as $rUid => $rDetails) {
@@ -1271,10 +1265,13 @@ class Tools
                                                 $remove['resetFlexFormFields'][$tt][$rUid][$pp[2]][] = $pp[3];
 
                                                 if (!is_array($TCEmain_data[$tt][$rUid][$pp[2]])) {
-                                                    $TCEmain_data[$tt][$rUid][$pp[2]] = array();
+                                                    $TCEmain_data[$tt][$rUid][$pp[2]] = [];
                                                 }
-                                                $flexToolObj->setArrayValueByPath($pp[3],
-                                                    $TCEmain_data[$tt][$rUid][$pp[2]], '');
+                                                $flexToolObj->setArrayValueByPath(
+                                                    $pp[3],
+                                                    $TCEmain_data[$tt][$rUid][$pp[2]],
+                                                    ''
+                                                );
                                             }
                                         }
                                     }
@@ -1299,12 +1296,11 @@ class Tools
             $tce = GeneralUtility::makeInstance(DataHandler::class);
             $tce->dontProcessTransformations = true;
             $tce->isImporting = true;
-            $tce->start($TCEmain_data,
-                $TCEmain_cmd); // check has been done previously that there is a backend user which is Admin and also in live workspace
+            $tce->start($TCEmain_data, $TCEmain_cmd); // check has been done previously that there is a backend user which is Admin and also in live workspace
             $tce->process_datamap();
             $tce->process_cmdmap();
             $errorLog = $tce->errorLog;
         }
-        return array($remove, $TCEmain_cmd, $TCEmain_data, $errorLog);
+        return [$remove, $TCEmain_cmd, $TCEmain_data, $errorLog];
     }
 }
