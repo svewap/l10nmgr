@@ -33,6 +33,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\CMS\Core\Exception;
+use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class Import extends L10nCommand
@@ -67,6 +68,12 @@ class Import extends L10nCommand
         $this->setDescription('Import the translations as file')
             ->setHelp('With this command you can import translation')
             ->addOption(
+                'task',
+                't',
+                InputOption::VALUE_REQUIRED,
+                "The values can be:\n importString = Import a XML string\n importFile = Import a XML file\n preview = Generate a preview of the source from a XML string"
+            )
+            ->addOption(
                 'file',
                 null,
                 InputOption::VALUE_OPTIONAL,
@@ -82,14 +89,7 @@ class Import extends L10nCommand
                 'UID of the page used during export. Needs configuration depth to be set to "current page" Default = 0',
                 0
             )
-            ->addOption('string', 's', InputOption::VALUE_OPTIONAL, 'XML string to import.')
-            ->addOption(
-                'task',
-                't',
-                InputOption::VALUE_OPTIONAL,
-                "The values can be:\n importString = Import a XML string\n importFile = Import a XML file\n preview = Generate a preview of the source from a XML string",
-                'importString'
-            );
+            ->addOption('string', 's', InputOption::VALUE_OPTIONAL, 'XML string to import.');
     }
 
     /**
@@ -106,17 +106,13 @@ class Import extends L10nCommand
         $this->extensionConfiguration = $this->getExtConf();
 
         // Parse the command-line arguments
-        $callParameters = $this->initializeCallParameters($input, $output);
-
-        $msg = '';
-
         try {
+            $callParameters = $this->initializeCallParameters($input, $output);
             switch ($callParameters['task']) {
                 case 'importString':
                 case 'preview':
                     // Get workspace id from CATXML
                     // Continue if found, else exit script execution
-
                     $wsId = $this->getWsIdFromCATXML($callParameters['string']);
                     // Set workspace to the required workspace ID from CATXML:
                     $this->getBackendUser()->setWorkspace($wsId);
@@ -130,6 +126,9 @@ class Import extends L10nCommand
                     $this->importXMLFile($callParameters);
                     $msg = "\n\nImport was successful.\n";
                     break;
+                default:
+                    $output->writeln('<error>Please specify a task with --task. Either "importString", "preview" or "importFile".</error>');
+                    return;
             }
         } catch (Exception $e) {
             $output->writeln('<error>' . $e->getMessage() . '</error>');
@@ -149,6 +148,7 @@ class Import extends L10nCommand
      * It takes care of backwards-compatibility with the old way of calling the import script
      *
      * @return array
+     * @throws Exception
      */
     protected function initializeCallParameters(InputInterface $input, OutputInterface $output)
     {
@@ -159,8 +159,7 @@ class Import extends L10nCommand
         if ($input->getOption('task') === 'importString' || $input->getOption('task') === 'importFile' || $input->getOption('task') === 'preview') {
             $callParameters['task'] = $input->getOption('task');
         } else {
-            $output->writeln('<error> The task is not set correctly</error>');
-            //todo what is running here
+            throw new Exception('Please specify a task with --task. Either "importString", "preview" or "importFile".', 1539950024);
         }
 
         // Get the preview flag
@@ -193,11 +192,14 @@ class Import extends L10nCommand
      */
     protected function getWsIdFromCATXML($xml)
     {
+        if (empty($xml)) {
+            throw new Exception('No XML passed for import. Pass the XML via --string.', 1322475562);
+        }
         preg_match('/<t3_workspaceId>([^<]+)/', $xml, $matches);
         if (!empty($matches)) {
             return $matches[1];
         }
-        throw new Exception('No workspace id found', 1322475562);
+        throw new Exception('No workspace id found in the passed XML', 1322475562);
     }
 
     /**
@@ -249,24 +251,28 @@ class Import extends L10nCommand
         $importManager->delL10N($importManager->getDelL10NDataFromCATXMLNodes($importManager->getXmlNodes()));
         //Make preview links
         if ($callParameters['preview']) {
-            $pageIds = [];
-            if (empty($importManager->headerData['t3_previewId'])) {
-                $pageIds = $importManager->getPidsFromCATXMLNodes($importManager->getXmlNodes());
+            if (!ExtensionManagementUtility::isLoaded('workspaces')) {
+                $out .= 'Workspace extension not installed. Skipping preview generation.';
             } else {
-                $pageIds[0] = $importManager->headerData['t3_previewId'];
+                $pageIds = [];
+                if (empty($importManager->headerData['t3_previewId'])) {
+                    $pageIds = $importManager->getPidsFromCATXMLNodes($importManager->getXmlNodes());
+                } else {
+                    $pageIds[0] = $importManager->headerData['t3_previewId'];
+                }
+                /** @var MkPreviewLinkService $mkPreviewLinks */
+                $mkPreviewLinks = GeneralUtility::makeInstance(
+                    MkPreviewLinkService::class,
+                    $importManager->headerData['t3_workspaceId'],
+                    $importManager->headerData['t3_sysLang'],
+                    $pageIds
+                );
+                $previewLink = $mkPreviewLinks->mkSinglePreviewLink(
+                    $importManager->headerData['t3_baseURL'],
+                    $callParameters['server']
+                );
+                $out .= $previewLink;
             }
-            /** @var MkPreviewLinkService $mkPreviewLinks */
-            $mkPreviewLinks = GeneralUtility::makeInstance(
-                MkPreviewLinkService::class,
-                $importManager->headerData['t3_workspaceId'],
-                $importManager->headerData['t3_sysLang'],
-                $pageIds
-            );
-            $previewLink = $mkPreviewLinks->mkSinglePreviewLink(
-                $importManager->headerData['t3_baseURL'],
-                $callParameters['server']
-            );
-            $out .= $previewLink;
         }
         /** @var $translationData TranslationData */
         $translationData = $factory->getTranslationDataFromCATXMLNodes($importManager->getXMLNodes());
@@ -378,24 +384,28 @@ class Import extends L10nCommand
                     $importManager->delL10N($importManager->getDelL10NDataFromCATXMLNodes($importManager->getXmlNodes()));
                     // Make preview links
                     if ($callParameters['preview']) {
-                        $pageIds = [];
-                        if (empty($importManager->headerData['t3_previewId'])) {
-                            $pageIds = $importManager->getPidsFromCATXMLNodes($importManager->getXmlNodes());
+                        if (!ExtensionManagementUtility::isLoaded('workspaces')) {
+                            $out .= 'Workspace extension not installed. Skipping preview generation.';
                         } else {
-                            $pageIds[0] = $importManager->headerData['t3_previewId'];
+                            $pageIds = [];
+                            if (empty($importManager->headerData['t3_previewId'])) {
+                                $pageIds = $importManager->getPidsFromCATXMLNodes($importManager->getXmlNodes());
+                            } else {
+                                $pageIds[0] = $importManager->headerData['t3_previewId'];
+                            }
+                            /** @var MkPreviewLinkService $mkPreviewLinks */
+                            $mkPreviewLinks = GeneralUtility::makeInstance(
+                                MkPreviewLinkService::class,
+                                $importManager->headerData['t3_workspaceId'],
+                                $importManager->headerData['t3_sysLang'],
+                                $pageIds
+                            );
+                            $previewLink = $mkPreviewLinks->mkSinglePreviewLink(
+                                $importManager->headerData['t3_baseURL'],
+                                $callParameters['server']
+                            );
+                            $out .= $previewLink;
                         }
-                        /** @var MkPreviewLinkService $mkPreviewLinks */
-                        $mkPreviewLinks = GeneralUtility::makeInstance(
-                            MkPreviewLinkService::class,
-                            $importManager->headerData['t3_workspaceId'],
-                            $importManager->headerData['t3_sysLang'],
-                            $pageIds
-                        );
-                        $previewLink = $mkPreviewLinks->mkSinglePreviewLink(
-                            $importManager->headerData['t3_baseURL'],
-                            $callParameters['server']
-                        );
-                        $out .= $previewLink;
                     }
                     /** @var $translationData TranslationData */
                     $translationData = $factory->getTranslationDataFromCATXMLNodes($importManager->getXMLNodes());
@@ -483,12 +493,9 @@ class Import extends L10nCommand
             throw new Exception('Could not connect to FTP server', 1322489458);
         }
         if (@ftp_login(
-
             $connection,
-
             $this->extensionConfiguration['ftp_server_username'],
             $this->extensionConfiguration['ftp_server_password']
-
         )
         ) {
             ftp_pasv($connection, true);

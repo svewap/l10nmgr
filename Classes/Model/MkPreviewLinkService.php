@@ -1,4 +1,5 @@
 <?php
+
 namespace Localizationteam\L10nmgr\Model;
 
 /***************************************************************
@@ -18,8 +19,10 @@ namespace Localizationteam\L10nmgr\Model;
  * GNU General Public License for more details.
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -53,6 +56,7 @@ class MkPreviewLinkService
 
     /**
      * MkPreviewLinkService constructor.
+     *
      * @param int $t3_workspaceId
      * @param int $t3_sysLang
      * @param array $pageIds
@@ -86,13 +90,51 @@ class MkPreviewLinkService
 
     /**
      * Generate single target preview link for CLI
-     *
      * Returns the Backend User
+     *
      * @return BackendUserAuthentication
      */
     protected function getBackendUser()
     {
         return $GLOBALS['BE_USER'];
+    }
+
+    /**
+     * Set preview keyword, eg:
+     * $previewUrl = GeneralUtility::getIndpEnv('TYPO3_SITE_URL').'index.php?ADMCMD_prev='.$this->compilePreviewKeyword('id='.$pageId.'&L='.$language.'&ADMCMD_view=1&ADMCMD_editIcons=1&ADMCMD_previewWS='.$this->workspace, $GLOBALS['BE_USER']->user['uid'], 120);
+     *
+     * @todo for sys_preview:
+     * - Add a comment which can be shown to previewer in frontend in some way (plus maybe ability to write back, take other action?)
+     * - Add possibility for the preview keyword to work in the backend as well: So it becomes a quick way to a certain action of sorts?
+     * @param string $getVarsStr Get variables to preview, eg. 'id=1150&L=0&ADMCMD_view=1&ADMCMD_editIcons=1&ADMCMD_previewWS=8'
+     * @param string $backendUserUid 32 byte MD5 hash keyword for the URL: "?ADMCMD_prev=[keyword]
+     * @param int $ttl Time-To-Live for keyword
+     * @param int|null $fullWorkspace Which workspace to preview. Workspace UID, -1 or >0. If set, the getVars is ignored in the frontend, so that string can be empty
+     * @return string Returns keyword to use in URL for ADMCMD_prev=
+     */
+    public function compilePreviewKeyword($getVarsStr, $backendUserUid, $ttl = 172800, $fullWorkspace = null)
+    {
+        if (!ExtensionManagementUtility::isLoaded('workspaces')) {
+            return '';
+        }
+        $fieldData = [
+            'keyword' => md5(uniqid(microtime(), true)),
+            'tstamp' => $GLOBALS['EXEC_TIME'],
+            'endtime' => $GLOBALS['EXEC_TIME'] + $ttl,
+            'config' => serialize([
+                'fullWorkspace' => $fullWorkspace,
+                'getVars' => $getVarsStr,
+                'BEUSER_uid' => $backendUserUid
+            ])
+        ];
+        GeneralUtility::makeInstance(ConnectionPool::class)
+            ->getConnectionForTable('sys_preview')
+            ->insert(
+                'sys_preview',
+                $fieldData
+            );
+
+        return $fieldData['keyword'];
     }
 
     /**
@@ -121,7 +163,7 @@ class MkPreviewLinkService
      */
     public function mkPreviewLinks()
     {
-        $previewUrls = array();
+        $previewUrls = [];
         foreach ($this->pageIds as $pageId) {
             $ttlHours = (int)$this->getBackendUser()->getTSConfigVal('options.workspaces.previewLinkTTLHours');
             $ttlHours = ($ttlHours ? $ttlHours : 24 * 2);
@@ -147,41 +189,5 @@ class MkPreviewLinkService
         }
         $out .= '</ol>';
         return $out;
-    }
-
-    /**
-     * Set preview keyword, eg:
-     * $previewUrl = GeneralUtility::getIndpEnv('TYPO3_SITE_URL').'index.php?ADMCMD_prev='.$this->compilePreviewKeyword('id='.$pageId.'&L='.$language.'&ADMCMD_view=1&ADMCMD_editIcons=1&ADMCMD_previewWS='.$this->workspace, $GLOBALS['BE_USER']->user['uid'], 120);
-     *
-     * @todo for sys_preview:
-     * - Add a comment which can be shown to previewer in frontend in some way (plus maybe ability to write back, take other action?)
-     * - Add possibility for the preview keyword to work in the backend as well: So it becomes a quick way to a certain action of sorts?
-     *
-     * @param string $getVarsStr Get variables to preview, eg. 'id=1150&L=0&ADMCMD_view=1&ADMCMD_editIcons=1&ADMCMD_previewWS=8'
-     * @param string $backendUserUid 32 byte MD5 hash keyword for the URL: "?ADMCMD_prev=[keyword]
-     * @param int $ttl Time-To-Live for keyword
-     * @param int|null $fullWorkspace Which workspace to preview. Workspace UID, -1 or >0. If set, the getVars is ignored in the frontend, so that string can be empty
-     * @return string Returns keyword to use in URL for ADMCMD_prev=
-     */
-    public function compilePreviewKeyword($getVarsStr, $backendUserUid, $ttl = 172800, $fullWorkspace = null)
-    {
-        $fieldData = [
-            'keyword' => md5(uniqid(microtime(), true)),
-            'tstamp' => $GLOBALS['EXEC_TIME'],
-            'endtime' => $GLOBALS['EXEC_TIME'] + $ttl,
-            'config' => serialize([
-                'fullWorkspace' => $fullWorkspace,
-                'getVars' => $getVarsStr,
-                'BEUSER_uid' => $backendUserUid
-            ])
-        ];
-        GeneralUtility::makeInstance(ConnectionPool::class)
-            ->getConnectionForTable('sys_preview')
-            ->insert(
-                'sys_preview',
-                $fieldData
-            );
-
-        return $fieldData['keyword'];
     }
 }
