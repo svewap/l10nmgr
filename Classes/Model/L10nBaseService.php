@@ -430,10 +430,6 @@ class L10nBaseService implements LoggerAwareInterface
                     }
                 }
             }
-            if ($TCEmain_data['pages_language_overlay']) {
-                $TCEmain_data['pages'] = $TCEmain_data['pages_language_overlay'];
-                unset($TCEmain_data['pages_language_overlay']);
-            }
             $this->lastTCEMAINCommandsCount = 0;
             // Now, submitting translation data:
             /** @var DataHandler $tce */
@@ -700,7 +696,7 @@ class L10nBaseService implements LoggerAwareInterface
             // Remapping those elements which are new:
             $this->lastTCEMAINCommandsCount = 0;
             foreach ($TCEmain_data as $table => $items) {
-                foreach ($TCEmain_data[$table] as $TuidString => $fields) {
+                foreach ($items as $TuidString => $fields) {
                     if ($table === 'sys_file_reference' && $fields['tablenames'] === 'pages') {
                         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages_language_overlay');
                         $queryBuilder->getRestrictions()->removeAll()->add(GeneralUtility::makeInstance(DeletedRestriction::class));

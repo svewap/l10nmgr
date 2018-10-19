@@ -20,8 +20,6 @@ namespace Localizationteam\L10nmgr\Model;
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-use Localizationteam\L10nmgr\Constants;
-use Localizationteam\L10nmgr\LanguageRestriction\Collection\LanguageRestrictionCollection;
 use Localizationteam\L10nmgr\Model\Tools\Tools;
 use TYPO3\CMS\Backend\Tree\View\PageTreeView;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
@@ -55,11 +53,11 @@ class L10nAccumulatedInformation
     /**
      * @var array Selected l10nmgr configuration
      */
-    protected $l10ncfg = array();
+    protected $l10ncfg = [];
     /**
      * @var array List of not allowed doktypes
      */
-    protected $disallowDoktypes = array('--div--', '255');
+    protected $disallowDoktypes = ['--div--', '255'];
     /**
      * @var int sys_language_uid of target language
      */
@@ -71,7 +69,7 @@ class L10nAccumulatedInformation
     /**
      * @var array Information about collected data for translation
      */
-    protected $_accumulatedInformations = array();
+    protected $_accumulatedInformations = [];
     /**
      * @var int Field count, might be needed by tranlation agencies
      */
@@ -84,14 +82,6 @@ class L10nAccumulatedInformation
      * @var array Extension's configuration as from the EM
      */
     protected $extensionConfiguration = [];
-    /**
-     * @var array Index of pages to be excluded from translation
-     */
-    protected $excludeIndex = [];
-    /**
-     * @var array Index of pages to be included with translation
-     */
-    protected $includeIndex = [];
 
     /**
      * Constructor
@@ -295,8 +285,7 @@ class L10nAccumulatedInformation
             list($table, $uid) = explode(':', $recId);
             $row = BackendUtility::getRecordWSOL($table, $uid);
             if (count($row)) {
-                $accum[-1]['items'][$table][$row['uid']] = $t8Tools->translationDetails($table, $row, $sysLang,
-                    $flexFormDiff, $previewLanguage);
+                $accum[-1]['items'][$table][$row['uid']] = $t8Tools->translationDetails($table, $row, $sysLang, $flexFormDiff, $previewLanguage);
                 $this->_increaseInternalCounters($accum[-1]['items'][$table][$row['uid']]['fields']);
             }
         }
@@ -306,6 +295,7 @@ class L10nAccumulatedInformation
 
     /**
      * Returns the Backend User
+     *
      * @return BackendUserAuthentication
      */
     protected function getBackendUser()
