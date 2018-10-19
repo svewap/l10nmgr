@@ -1,4 +1,5 @@
 <?php
+
 namespace Localizationteam\L10nmgr\Model;
 
 /***************************************************************
@@ -18,6 +19,7 @@ namespace Localizationteam\L10nmgr\Model;
  * GNU General Public License for more details.
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 use Localizationteam\L10nmgr\Model\Tools\Tools;
 use TYPO3\CMS\Backend\Tree\View\PageTreeView;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
@@ -50,11 +52,11 @@ class L10nAccumulatedInformation
     /**
      * @var array Selected l10nmgr configuration
      */
-    protected $l10ncfg = array();
+    protected $l10ncfg = [];
     /**
      * @var array List of not allowed doktypes
      */
-    protected $disallowDoktypes = array('--div--', '255');
+    protected $disallowDoktypes = ['--div--', '255'];
     /**
      * @var int sys_language_uid of source language
      */
@@ -66,7 +68,7 @@ class L10nAccumulatedInformation
     /**
      * @var array Information about collected data for translation
      */
-    protected $_accumulatedInformations = array();
+    protected $_accumulatedInformations = [];
     /**
      * @var int Field count, might be needed by tranlation agencies
      */
@@ -78,7 +80,7 @@ class L10nAccumulatedInformation
     /**
      * @var array Extension's configuration as from the EM
      */
-    protected $extensionConfiguration = array();
+    protected $extensionConfiguration = [];
 
     /**
      * Constructor
@@ -141,7 +143,7 @@ class L10nAccumulatedInformation
         global $TCA;
         $tree = $this->tree;
         $l10ncfg = $this->l10ncfg;
-        $accum = array();
+        $accum = [];
         $sysLang = $this->sysLang;
         // FlexForm Diff data:
         $flexFormDiff = unserialize($l10ncfg['flexformdiff']);
@@ -167,7 +169,7 @@ class L10nAccumulatedInformation
             );
         }
         if ($previewLanguage) {
-            $t8Tools->previewLanguages = array($previewLanguage);
+            $t8Tools->previewLanguages = [$previewLanguage];
         }
         $fileList = '';
         // Traverse tree elements:
@@ -177,7 +179,7 @@ class L10nAccumulatedInformation
                 $accum[$pageId]['header']['title'] = $treeElement['row']['title'];
                 $accum[$pageId]['header']['icon'] = $treeElement['HTML'];
                 $accum[$pageId]['header']['prevLang'] = $previewLanguage;
-                $accum[$pageId]['items'] = array();
+                $accum[$pageId]['items'] = [];
                 // Traverse tables:
                 foreach ($TCA as $table => $cfg) {
                     // Only those tables we want to work on:
@@ -267,8 +269,7 @@ class L10nAccumulatedInformation
             list($table, $uid) = explode(':', $recId);
             $row = BackendUtility::getRecordWSOL($table, $uid);
             if (count($row)) {
-                $accum[-1]['items'][$table][$row['uid']] = $t8Tools->translationDetails($table, $row, $sysLang,
-                    $flexFormDiff, $previewLanguage);
+                $accum[-1]['items'][$table][$row['uid']] = $t8Tools->translationDetails($table, $row, $sysLang, $flexFormDiff, $previewLanguage);
                 $this->_increaseInternalCounters($accum[-1]['items'][$table][$row['uid']]['fields']);
             }
         }
@@ -278,6 +279,7 @@ class L10nAccumulatedInformation
 
     /**
      * Returns the Backend User
+     *
      * @return BackendUserAuthentication
      */
     protected function getBackendUser()

@@ -230,9 +230,7 @@ class Tools
                 if ($TCEformsCfg['l10n_mode'] == 'mergeIfNotBlank') {
                     $msg .= 'This field is optional. If not filled in, the default language value will be used.';
                 }
-                if (GeneralUtility::inList('shortcut,shortcut_mode,urltype,url_scheme', $kFieldName)
-                    && GeneralUtility::inList('pages,pages_language_overlay', $kTableName)
-                ) {
+                if (GeneralUtility::inList('shortcut,shortcut_mode,urltype,url_scheme', $kFieldName) && $kTableName === 'pages') {
                     $this->bypassFilter = true;
                 }
                 $is_HIDE_L10N_SIBLINGS = false;
@@ -652,9 +650,9 @@ class Tools
                                 && $GLOBALS['TCA'][$tInfo['translation_table']]['ctrl']['transOrigDiffSourceField'] !== $field
                             ) {
                                 $key = $tInfo['translation_table'] . ':' . BackendUtility::wsMapId(
-                                        $tInfo['translation_table'],
-                                        $translationUID
-                                    ) . ':' . $field;
+                                    $tInfo['translation_table'],
+                                    $translationUID
+                                ) . ':' . $field;
                                 if ($cfg['config']['type'] == 'flex') {
                                     $dataStructArray = $this->_getFlexFormMetaDataForContentElement(
                                         $table,
