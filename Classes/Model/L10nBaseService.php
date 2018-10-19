@@ -697,31 +697,6 @@ class L10nBaseService implements LoggerAwareInterface
             $this->lastTCEMAINCommandsCount = 0;
             foreach ($TCEmain_data as $table => $items) {
                 foreach ($items as $TuidString => $fields) {
-                    if ($table === 'sys_file_reference' && $fields['tablenames'] === 'pages') {
-                        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages_language_overlay');
-                        $queryBuilder->getRestrictions()->removeAll()->add(GeneralUtility::makeInstance(DeletedRestriction::class));
-
-                        $parent = $queryBuilder
-                            ->select('*')
-                            ->from('pages_language_overlay')
-                            ->where(
-                                $queryBuilder->expr()->eq(
-                                    'pid',
-                                    $queryBuilder->createNamedParameter((int)$element['pid'], \PDO::PARAM_INT)
-                                ),
-                                $queryBuilder->expr()->eq(
-                                    'sys_language_uid',
-                                    $queryBuilder->createNamedParameter((int)$Tlang, \PDO::PARAM_INT)
-                                )
-                            )
-                            ->execute()
-                            ->fetch();
-
-                        if ($parent['uid']) {
-                            $fields['tablenames'] = 'pages_language_overlay';
-                            $fields['uid_foreign'] = $parent['uid'];
-                        }
-                    }
                     list($Tuid, $Tlang, $TdefRecord) = explode('/', $TuidString);
                     $this->lastTCEMAINCommandsCount++;
                     if ($Tuid === 'NEW') {
