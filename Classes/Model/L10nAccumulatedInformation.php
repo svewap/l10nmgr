@@ -141,7 +141,6 @@ class L10nAccumulatedInformation
      **/
     protected function _calculateInternalAccumulatedInformationsArray()
     {
-        global $TCA;
         $tree = $this->tree;
         $l10ncfg = $this->l10ncfg;
         $accum = [];
@@ -165,14 +164,14 @@ class L10nAccumulatedInformation
             $previewLanguage = current(
                 GeneralUtility::intExplode(
                     ',',
-                    $this->getBackendUser()->getTSConfig('options.additionalPreviewLanguages')['value']
+                    $this->getBackendUser()->getTSConfig('options.additionalPreviewLanguages')['value'] ?? ''
                 )
             );
         }
         if ($previewLanguage) {
             $t8Tools->previewLanguages = [$previewLanguage];
         }
-        $fileList = '';
+
         // Traverse tree elements:
         /**
          * @var $rootlineUtility RootlineUtility
@@ -185,7 +184,8 @@ class L10nAccumulatedInformation
                 $accum[$pageId]['header']['prevLang'] = $previewLanguage;
                 $accum[$pageId]['items'] = [];
                 // Traverse tables:
-                foreach ($TCA as $table => $cfg) {
+                foreach ($GLOBALS['TCA'] as $table => $cfg) {
+                    $fileList = '';
                     // Only those tables we want to work on:
                     if (GeneralUtility::inList($l10ncfg['tablelist'], $table)) {
                         if ($table === 'pages') {

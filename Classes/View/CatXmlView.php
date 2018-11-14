@@ -41,11 +41,21 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
     /**
      * @var integer $forcedSourceLanguage Overwrite the default language uid with the desired language to export
      */
-    protected $forcedSourceLanguage = false;
+    protected $forcedSourceLanguage = 0;
     /**
      * @var int
      */
     protected $exportType = 1;
+
+    /**
+     * @var string
+     */
+    protected $baseUrl = '';
+
+    /**
+     * @var array
+     */
+    protected $params = [];
 
     /**
      * CatXmlView constructor.
@@ -74,9 +84,12 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
         $xmlTool = GeneralUtility::makeInstance(XmlTools::class);
         $output = array();
         $targetIso = '';
+        if (empty($this->baseUrl)) {
+            $this->baseUrl = GeneralUtility::getIndpEnv("TYPO3_SITE_URL");
+        }
         // Traverse the structure and generate XML output:
         foreach ($accum as $pId => $page) {
-            $output[] = "\t" . '<pageGrp id="' . $pId . '" sourceUrl="' . GeneralUtility::getIndpEnv("TYPO3_SITE_URL") . 'index.php?id=' . $pId . '">' . "\n";
+            $output[] = "\t" . '<pageGrp id="' . $pId . '" sourceUrl="' . $this->baseUrl . 'index.php?id=' . $pId . '">' . "\n";
             foreach ($accum[$pId]['items'] as $table => $elements) {
                 foreach ($elements as $elementUid => $data) {
                     $targetIso = '';
@@ -89,7 +102,7 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
                                 $noChangeFlag = !strcmp(trim($tData['diffDefaultValue']), trim($tData['defaultValue']));
                                 if (!$this->modeOnlyChanged || !$noChangeFlag) {
                                     // @DP: Why this check?
-                                    if (($this->forcedSourceLanguage && isset($tData['previewLanguageValues'][$this->forcedSourceLanguage])) || $this->forcedSourceLanguage === false) {
+                                    if ((int)$this->forcedSourceLanguage === 0 || ($this->forcedSourceLanguage && isset($tData['previewLanguageValues'][$this->forcedSourceLanguage]))) {
                                         if ($this->forcedSourceLanguage) {
                                             $dataForTranslation = $tData['previewLanguageValues'][$this->forcedSourceLanguage];
                                         } else {
@@ -128,31 +141,17 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
                                             $dataForTranslation = str_replace(' > ', ' &gt; ', $dataForTranslation);
                                             $dataForTranslation = str_replace('<br>', '<br />', $dataForTranslation);
                                             $dataForTranslation = str_replace('<hr>', '<hr />', $dataForTranslation);
-                                            $params = $this->getBackendUser()->getModuleData('l10nmgr/cm1/prefs', 'prefs');
-                                            if ($params['utf8'] == '1') {
+                                            if (empty($this->params)) {
+                                                $this->params = $this->getBackendUser()->getModuleData('l10nmgr/cm1/prefs', 'prefs');
+                                            }
+                                            if ($this->params['utf8'] == '1') {
                                                 $dataForTranslation = Utf8Tools::utf8_bad_strip($dataForTranslation);
                                             }
                                             if ($_isTranformedXML) {
                                                 $output[] = "\t\t" . '<data table="' . $table . '" elementUid="' . $elementUid . '" key="' . $key . '" transformations="1">' . $dataForTranslation . '</data>' . "\n";
                                             } else {
-                                                // Substitute HTML entities with actual characters (we use UTF-8 anyway:-) but leave quotes untouched
-                                                $dataForTranslation = html_entity_decode($dataForTranslation, ENT_NOQUOTES,
-                                                    'UTF-8');
-                                                //Substitute & with &amp; in non-RTE fields
-                                                $dataForTranslation = preg_replace('/&(?!(amp|nbsp|quot|apos|lt|gt);)/',
-                                                    '&amp;', $dataForTranslation);
-                                                //Substitute > and < in non-RTE fields
-                                                $dataForTranslation = str_replace(' < ', ' &lt; ', $dataForTranslation);
-                                                $dataForTranslation = str_replace(' > ', ' &gt; ', $dataForTranslation);
-                                                $dataForTranslation = str_replace('<br>', '<br />', $dataForTranslation);
-                                                $dataForTranslation = str_replace('<hr>', '<hr />', $dataForTranslation);
-                                                $params = $this->getBackendUser()->getModuleData('l10nmgr/cm1/prefs',
-                                                    'prefs');
-                                                if ($params['utf8'] == '1') {
-                                                    $dataForTranslation = Utf8Tools::utf8_bad_strip($dataForTranslation);
-                                                }
-                                                if ($xmlTool->isValidXMLString($dataForTranslation)) {
-                                                    $output[] = "\t\t" . '<data table="' . $table . '" elementUid="' . $elementUid . '" key="' . $key . '">' . $dataForTranslation . '</data>' . "\n";
+                                                if ($this->params['noxmlcheck'] == '1') {
+                                                    $output[] = "\t\t" . '<data table="' . $table . '" elementUid="' . $elementUid . '" key="' . $key . '"><![CDATA[' . $dataForTranslation . ']]></data>' . "\n";
                                                 } else {
                                                     $this->setInternalMessage(
                                                         $this->getLanguageService()->getLL(
@@ -203,7 +202,7 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
         $XML .= "\t\t" . '<t3_sysLang>' . $sysLang . '</t3_sysLang>' . "\n";
         $XML .= "\t\t" . '<t3_sourceLang>' . $staticLangArr['lg_iso_2'] . '</t3_sourceLang>' . "\n";
         $XML .= "\t\t" . '<t3_targetLang>' . $targetIso . '</t3_targetLang>' . "\n";
-        $XML .= "\t\t" . '<t3_baseURL>' . GeneralUtility::getIndpEnv("TYPO3_SITE_URL") . '</t3_baseURL>' . "\n";
+        $XML .= "\t\t" . '<t3_baseURL>' . $this->baseUrl . '</t3_baseURL>' . "\n";
         $XML .= "\t\t" . '<t3_workspaceId>' . $this->getBackendUser()->workspace . '</t3_workspaceId>' . "\n";
         $XML .= "\t\t" . '<t3_count>' . $accumObj->getFieldCount() . '</t3_count>' . "\n";
         $XML .= "\t\t" . '<t3_wordCount>' . $accumObj->getWordCount() . '</t3_wordCount>' . "\n";
@@ -267,5 +266,14 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
     public function setForcedSourceLanguage($id)
     {
         $this->forcedSourceLanguage = $id;
+    }
+
+    /**
+     * @param string $baseUrl
+     * @return void
+     */
+    public function setBaseUrl(string $baseUrl)
+    {
+        $this->baseUrl = $baseUrl;
     }
 }
