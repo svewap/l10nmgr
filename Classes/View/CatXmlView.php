@@ -22,6 +22,7 @@ use Localizationteam\L10nmgr\Model\L10nConfiguration;
 use Localizationteam\L10nmgr\Model\Tools\Utf8Tools;
 use Localizationteam\L10nmgr\Model\Tools\XmlTools;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -56,6 +57,11 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
      * @var array
      */
     protected $params = [];
+
+    /**
+     * @var array
+     */
+    protected $overrideParams = [];
 
     /**
      * CatXmlView constructor.
@@ -142,15 +148,16 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
                                             $dataForTranslation = str_replace('<br>', '<br />', $dataForTranslation);
                                             $dataForTranslation = str_replace('<hr>', '<hr />', $dataForTranslation);
                                             if (empty($this->params)) {
-                                                $this->params = $this->getBackendUser()->getModuleData('l10nmgr/cm1/prefs', 'prefs');
+                                                $this->params = $this->getBackendUser()->getModuleData('l10nmgr/cm1/prefs', 'prefs') ?? [];
+                                                ArrayUtility::mergeRecursiveWithOverrule($this->params, $this->overrideParams);
                                             }
-                                            if ($this->params['utf8'] == '1') {
+                                            if ($this->params['utf8']) {
                                                 $dataForTranslation = Utf8Tools::utf8_bad_strip($dataForTranslation);
                                             }
                                             if ($_isTranformedXML) {
                                                 $output[] = "\t\t" . '<data table="' . $table . '" elementUid="' . $elementUid . '" key="' . $key . '" transformations="1">' . $dataForTranslation . '</data>' . "\n";
                                             } else {
-                                                if ($this->params['noxmlcheck'] == '1') {
+                                                if ($this->params['noxmlcheck']) {
                                                     $output[] = "\t\t" . '<data table="' . $table . '" elementUid="' . $elementUid . '" key="' . $key . '"><![CDATA[' . $dataForTranslation . ']]></data>' . "\n";
                                                 } else {
                                                     $this->setInternalMessage(
@@ -275,5 +282,14 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
     public function setBaseUrl(string $baseUrl)
     {
         $this->baseUrl = $baseUrl;
+    }
+
+    /**
+     * @param array $overrideParams
+     * @return void
+     */
+    public function setOverrideParams(array $overrideParams)
+    {
+        $this->overrideParams = $overrideParams;
     }
 }
