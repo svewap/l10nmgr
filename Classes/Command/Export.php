@@ -87,6 +87,27 @@ class Export extends L10nCommand
                 InputOption::VALUE_OPTIONAL,
                 'UID of the workspace used during export. Default = 0',
                 0
+            )
+            ->addOption(
+                'baseUrl',
+                'b',
+                InputOption::VALUE_OPTIONAL,
+                'Base URL for the export. E.g. https://example.com/',
+                ''
+            )
+            ->addOption(
+                'checkXml',
+                'x',
+                InputOption::VALUE_OPTIONAL,
+                'Set to true if invalid XML should be excluded from export. When set to false (default) the falsy XML string will be wrapped in CDATA.',
+                false
+            )
+            ->addOption(
+                'utf8',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Set to true if XML should be checked for valid UTF-8. If set to false (default) no such check is performed.',
+                false
             );
     }
 
@@ -200,10 +221,19 @@ class Export extends L10nCommand
         $l10nmgrCfgObj->setSourcePid($sourcePid);
         if ($l10nmgrCfgObj->isLoaded()) {
             if ($format == 'CATXML') {
-                /** @var ExportViewInterface $l10nmgrGetXML */
                 $l10nmgrGetXML = GeneralUtility::makeInstance(CatXmlView::class, $l10nmgrCfgObj, $tlang);
+                if ($input->hasOption('baseUrl')) {
+                    $baseUrl = $input->getOption('baseUrl');
+                    $baseUrl = rtrim($baseUrl, '/') .  '/';
+                    $l10nmgrGetXML->setBaseUrl($baseUrl);
+                }
+                $l10nmgrGetXML->setOverrideParams(
+                    [
+                        'noxmlcheck' => !(bool)$input->getOption('checkXml'),
+                        'utf8' => (bool)$input->getOption('utf8')
+                    ]
+                );
             } elseif ($format == 'EXCEL') {
-                /** @var ExportViewInterface $l10nmgrGetXML */
                 $l10nmgrGetXML = GeneralUtility::makeInstance(ExcelXmlView::class, $l10nmgrCfgObj, $tlang);
             } else {
                 throw new Exception("Wrong format. Use 'CATXML' or 'EXCEL'");
@@ -322,7 +352,7 @@ class Export extends L10nCommand
             )
             ->execute()
             ->fetch();
-        return $result['uid'];
+        return $result['uid'] ?? 0;
     }
 
     /**
