@@ -94,6 +94,20 @@ class Export extends L10nCommand
                 InputOption::VALUE_OPTIONAL,
                 'Base URL for the export. E.g. https://example.com/',
                 ''
+            )
+            ->addOption(
+                'checkXml',
+                'x',
+                InputOption::VALUE_OPTIONAL,
+                'Set to true if invalid XML should be excluded from export. When set to false (default) the falsy XML string will be wrapped in CDATA.',
+                false
+            )
+            ->addOption(
+                'utf8',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Set to true if XML should be checked for valid UTF-8. If set to false (default) no such check is performed.',
+                false
             );
     }
 
@@ -213,6 +227,12 @@ class Export extends L10nCommand
                     $baseUrl = rtrim($baseUrl, '/') .  '/';
                     $l10nmgrGetXML->setBaseUrl($baseUrl);
                 }
+                $l10nmgrGetXML->setOverrideParams(
+                    [
+                        'noxmlcheck' => !(bool)$input->getOption('checkXml'),
+                        'utf8' => (bool)$input->getOption('utf8')
+                    ]
+                );
             } elseif ($format == 'EXCEL') {
                 $l10nmgrGetXML = GeneralUtility::makeInstance(ExcelXmlView::class, $l10nmgrCfgObj, $tlang);
             } else {
