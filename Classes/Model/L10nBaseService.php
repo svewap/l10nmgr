@@ -211,7 +211,7 @@ class L10nBaseService implements LoggerAwareInterface
                 'colPos, sorting'
             );
             foreach ($recordsInOriginalLanguage as $recordInOriginalLanguage) {
-                $translatedContentElements = $this->getRecordsByField(
+                $translatedContentElements = BackendUtility::getRecordLocalization(
                     'tt_content',
                     $recordInOriginalLanguage['uid'],
                     $targetLanguageUid
@@ -229,7 +229,7 @@ class L10nBaseService implements LoggerAwareInterface
                 'colPos, sorting'
             );
             foreach ($recordsInOriginalLanguage as $recordInOriginalLanguage) {
-                $translatedContentElements = $this->getRecordsByField(
+                $translatedContentElements = BackendUtility::getRecordLocalization(
                     'tt_content',
                     $recordInOriginalLanguage['uid'],
                     $targetLanguageUid
@@ -248,7 +248,7 @@ class L10nBaseService implements LoggerAwareInterface
                 'colPos, sorting'
             );
             foreach ($recordsInOriginalLanguage as $recordInOriginalLanguage) {
-                $translatedContentElements = $this->getRecordsByField(
+                $translatedContentElements = BackendUtility::getRecordLocalization(
                     'tt_content',
                     $recordInOriginalLanguage['uid'],
                     $targetLanguageUid
