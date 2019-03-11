@@ -1,4 +1,5 @@
 <?php
+
 if (!defined('TYPO3_MODE')) {
     die('Access denied.');
 }
@@ -24,5 +25,5 @@ $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['Localizationtea
     'extension' => $_EXTKEY,
     'title' => 'LLL:EXT:' . $_EXTKEY . '/Resources/Private/Language/Task/locallang.xlf:fileGarbageCollection.name',
     'description' => 'LLL:EXT:' . $_EXTKEY . '/Resources/Private/Language/Task/locallang.xlf:fileGarbageCollection.description',
-    'additionalFields' => 'LocalizationmanagerFileGarbageCollectionAdditionalFieldProvider',
+    'additionalFields' => \Localizationteam\L10nmgr\Task\LocalizationmanagerFileGarbageCollectionAdditionalFieldProvider::class,
 ];
