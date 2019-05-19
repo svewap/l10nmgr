@@ -27,3 +27,15 @@ $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['Localizationtea
     'description' => 'LLL:EXT:' . $_EXTKEY . '/Resources/Private/Language/Task/locallang.xlf:fileGarbageCollection.description',
     'additionalFields' => \Localizationteam\L10nmgr\Task\LocalizationmanagerFileGarbageCollectionAdditionalFieldProvider::class,
 ];
+
+$GLOBALS['TYPO3_CONF_VARS']['FE']['addRootLineFields'] .= ',l10nmgr_configuration,l10nmgr_configuration_next_level';
+
+$signalSlotDispatcher = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\SignalSlot\Dispatcher::class);
+$signalSlotDispatcher->connect(
+    \TYPO3\CMS\Install\Service\SqlExpectedSchemaService::class,
+    'tablesDefinitionIsBeingBuilt',
+    \Localizationteam\L10nmgr\LanguageRestriction\LanguageRestrictionRegistry::class,
+    'addLanguageRestrictionDatabaseSchemaToTablesDefinition'
+);
+unset($signalSlotDispatcher);
+

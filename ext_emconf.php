@@ -10,7 +10,7 @@ $EM_CONF[$_EXTKEY] = array(
   'title' => 'Localization Manager',
   'description' => 'Module for managing localization import and export',
   'category' => 'module',
-  'version' => '8.4.1',
+  'version' => '9.0.0',
   'state' => 'beta',
   'uploadfolder' => false,
   'createDirs' => 'uploads/tx_l10nmgr/settings,uploads/tx_l10nmgr/saved_files,uploads/tx_l10nmgr/jobs,uploads/tx_l10nmgr/jobs/out,uploads/tx_l10nmgr/jobs/in,uploads/tx_l10nmgr/jobs/done,uploads/tx_l10nmgr/jobs/_cmd',
@@ -20,7 +20,7 @@ $EM_CONF[$_EXTKEY] = array(
   'author_company' => 'Localization Manager Team',
   'constraints' => array(
     'depends' => array(
-      'typo3' => '9.4.0',
+      'typo3' => '9.5.0',
       'static_info_tables' => '6.4.2-0.0.0'
     ),
     'conflicts' => array(),
