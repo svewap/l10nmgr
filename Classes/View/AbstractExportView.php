@@ -64,11 +64,11 @@ abstract class AbstractExportView
     /**
      * @var bool
      */
-    protected $modeNoHidden = false;
+    protected $modeOnlyNew = false;
     /**
      * @var bool
      */
-    protected $modeOnlyNew = false;
+    protected $modeNoHidden = false;
     /**
      * @var int
      */
