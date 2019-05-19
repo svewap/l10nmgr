@@ -310,10 +310,18 @@ class Tools
         $isRTE = false;
         if (is_array($contentRow)) {
             list($table, $uid, $field) = explode(':', $key);
+            $TCAtype = BackendUtility::getTCAtypeValue($table, $contentRow);
             // Check if the RTE is explicitly declared in the defaultExtras configuration
             if (isset($TCEformsCfg['defaultExtras']) && strpos($TCEformsCfg['defaultExtras'], 'richtext') !== false) {
                 $isRTE = true;
                 // If not, then we must check per type configuration
+            } else if (
+                isset($GLOBALS['TCA'][$table]['types'][$TCAtype]['columnsOverrides'])
+                && isset($GLOBALS['TCA'][$table]['types'][$TCAtype]['columnsOverrides'][$field])
+                && isset($GLOBALS['TCA'][$table]['types'][$TCAtype]['columnsOverrides'][$field]['config']['defaultExtras'])
+                && strpos($GLOBALS['TCA'][$table]['types'][$TCAtype]['columnsOverrides'][$field]['config']['defaultExtras'], 'richtext') !== false
+            ) {
+                $isRTE = true;
             } else {
                 $typesDefinition = BackendUtility::getTCAtypes($table, $contentRow, true);
                 $isRTE = !empty($typesDefinition[$field]['spec']['richtext']);

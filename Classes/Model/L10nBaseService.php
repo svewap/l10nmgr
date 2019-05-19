@@ -133,26 +133,6 @@ class L10nBaseService implements LoggerAwareInterface
     }
 
     /**
-     * Getter for $importAsDefaultLanguage
-     *
-     * @return bool
-     */
-    public function getImportAsDefaultLanguage()
-    {
-        return $this->importAsDefaultLanguage;
-    }
-
-    /**
-     * Setter for $importAsDefaultLanguage
-     *
-     * @param bool $importAsDefaultLanguage
-     */
-    public function setImportAsDefaultLanguage($importAsDefaultLanguage)
-    {
-        $this->importAsDefaultLanguage = $importAsDefaultLanguage;
-    }
-
-    /**
      * Function that iterates over all page records that are given within the import data
      * and translate all pages and content elements
      * beforehand so ordering and container elements work just as expected.
@@ -343,6 +323,28 @@ class L10nBaseService implements LoggerAwareInterface
             return $this->_submitContentAsDefaultLanguageAndGetFlexFormDiff($accum, $inputArray);
         }
         return $this->_submitContentAsTranslatedLanguageAndGetFlexFormDiff($accum, $inputArray);
+    }
+
+    /**
+     * Getter for $importAsDefaultLanguage
+     *
+     * @return boolean
+     */
+    public function getImportAsDefaultLanguage()
+    {
+        return $this->importAsDefaultLanguage;
+    }
+
+    /**
+     * Setter for $importAsDefaultLanguage
+     *
+     * @param boolean $importAsDefaultLanguage
+     *
+     * @return void
+     */
+    public function setImportAsDefaultLanguage($importAsDefaultLanguage)
+    {
+        $this->importAsDefaultLanguage = $importAsDefaultLanguage;
     }
 
     /**
