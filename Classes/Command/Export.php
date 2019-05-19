@@ -67,6 +67,7 @@ class Export extends L10nCommand
                 'CATXML'
             )
             ->addOption('hidden', null, InputOption::VALUE_NONE, 'Do not export hidden contents')
+            ->addOption('new', 'u', InputOption::VALUE_NONE, 'Export only new contents')
             ->addOption(
                 'srcPID',
                 'p',
@@ -80,7 +81,7 @@ class Export extends L10nCommand
                 InputOption::VALUE_OPTIONAL,
                 'UIDs for the target languages used during export. Comma seperated values, no spaces. Default is 0. In that case UIDs are taken from extension configuration.'
             )
-            ->addOption('updated', 'u', InputOption::VALUE_NONE, 'Export only new/updated contents')
+            ->addOption('updated', 'u', InputOption::VALUE_NONE, 'Export only updated contents')
             ->addOption(
                 'workspace',
                 'w',
@@ -250,6 +251,10 @@ class Export extends L10nCommand
             $onlyChanged = $input->getOption('updated');
             if ($onlyChanged) {
                 $l10nmgrGetXML->setModeOnlyChanged();
+            }
+            $onlyNew = $input->getOption('new');
+            if ($onlyNew) {
+                $l10nmgrGetXML->setModeOnlyNew();
             }
             $hidden = $input->getOption('hidden');
             if ($hidden) {
