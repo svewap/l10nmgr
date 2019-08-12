@@ -26,6 +26,7 @@ use Localizationteam\L10nmgr\Model\Tools\Tools;
 use TYPO3\CMS\Backend\Module\BaseScriptClass;
 use TYPO3\CMS\Backend\Template\DocumentTemplate;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Lang\LanguageService;
@@ -134,15 +135,55 @@ class Cm2 extends BaseScriptClass
             $languageList = implode(',', $languageListArray);
             // Fetch translation index records:
             if ($table != 'pages') {
-                $records = $this->getDatabaseConnection()->exec_SELECTgetRows('*', 'tx_l10nmgr_index',
-                    'tablename=' . $this->getDatabaseConnection()->fullQuoteStr($table,
-                        'tx_l10nmgr_index') . ' AND recuid=' . (int)$uid . ' AND translation_lang IN (' . $this->getDatabaseConnection()->cleanIntList($languageList) . ')' . ' AND workspace=' . (int)$this->getBackendUser()->workspace . ' AND (flag_new>0 OR flag_update>0 OR flag_noChange>0 OR flag_unknown>0)',
-                    '', 'translation_lang, tablename, recuid');
+                $uidPid = 'recuid';
             } else {
-                $records = $this->getDatabaseConnection()->exec_SELECTgetRows('*', 'tx_l10nmgr_index',
-                    'recpid=' . (int)$uid . ' AND translation_lang IN (' . $this->getDatabaseConnection()->cleanIntList($languageList) . ')' . ' AND workspace=' . (int)$this->getBackendUser()->workspace . ' AND (flag_new>0 OR flag_update>0 OR flag_noChange>0 OR flag_unknown>0)',
-                    '', 'translation_lang, tablename, recuid');
+                $uidPid = 'recpid';
             }
+            $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_l10nmgr_index');
+            $queryBuilder->select('*')
+                ->from('tx_l10nmgr_index')
+                ->where(
+                    $queryBuilder->expr()->eq(
+                        'tablename',
+                        $queryBuilder->createNamedParameter('tx_l10nmgr_index')
+                    ),
+                    $queryBuilder->expr()->eq(
+                        $uidPid,
+                        $queryBuilder->createNamedParameter((int)$uid, \PDO::PARAM_INT)
+                    ),
+                    $queryBuilder->expr()->in(
+                        'translation_lang',
+                        $languageList
+                    ),
+                    $queryBuilder->expr()->eq(
+                        'workspace',
+                        $queryBuilder->createNamedParameter((int)$this->getBackendUser()->workspace, \PDO::PARAM_INT)
+                    ),
+                    $queryBuilder->expr()->orX(
+                        $queryBuilder->expr()->gt(
+                            'flag_new',
+                            $queryBuilder->createNamedParameter(0, \PDO::PARAM_INT)
+                        ),
+                        $queryBuilder->expr()->gt(
+                            'flag_update',
+                            $queryBuilder->createNamedParameter(0, \PDO::PARAM_INT)
+                        ),
+                        $queryBuilder->expr()->gt(
+                            'flag_noChange',
+                            $queryBuilder->createNamedParameter(0, \PDO::PARAM_INT)
+                        ),
+                        $queryBuilder->expr()->gt(
+                            'flag_unknown',
+                            $queryBuilder->createNamedParameter(0, \PDO::PARAM_INT)
+                        )
+                    )
+                )
+                ->orderBy('translation_lang')
+                ->addOrderBy('tablename')
+                ->addOrderBy('recuid')
+                ->execute();
+            $records = $queryBuilder->fetchAll();
+
             //	\TYPO3\CMS\Core\Utility\GeneralUtility::debugRows($records,'Index entries for '.$table.':'.$uid);
             $tRows = array();
             $tRows[] = '<tr class="bgColor2 tableheader">
