@@ -17,12 +17,15 @@ namespace Localizationteam\L10nmgr\Controller;
  * GNU General Public License for more details.
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * l10nmgr module cm2
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
+
 use Localizationteam\L10nmgr\Model\Tools\Tools;
+use PDO;
 use TYPO3\CMS\Backend\Module\BaseScriptClass;
 use TYPO3\CMS\Backend\Template\DocumentTemplate;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
@@ -149,7 +152,7 @@ class Cm2 extends BaseScriptClass
                     ),
                     $queryBuilder->expr()->eq(
                         $uidPid,
-                        $queryBuilder->createNamedParameter((int)$uid, \PDO::PARAM_INT)
+                        $queryBuilder->createNamedParameter((int)$uid, PDO::PARAM_INT)
                     ),
                     $queryBuilder->expr()->in(
                         'translation_lang',
@@ -157,24 +160,24 @@ class Cm2 extends BaseScriptClass
                     ),
                     $queryBuilder->expr()->eq(
                         'workspace',
-                        $queryBuilder->createNamedParameter((int)$this->getBackendUser()->workspace, \PDO::PARAM_INT)
+                        $queryBuilder->createNamedParameter((int)$this->getBackendUser()->workspace, PDO::PARAM_INT)
                     ),
                     $queryBuilder->expr()->orX(
                         $queryBuilder->expr()->gt(
                             'flag_new',
-                            $queryBuilder->createNamedParameter(0, \PDO::PARAM_INT)
+                            $queryBuilder->createNamedParameter(0, PDO::PARAM_INT)
                         ),
                         $queryBuilder->expr()->gt(
                             'flag_update',
-                            $queryBuilder->createNamedParameter(0, \PDO::PARAM_INT)
+                            $queryBuilder->createNamedParameter(0, PDO::PARAM_INT)
                         ),
                         $queryBuilder->expr()->gt(
                             'flag_noChange',
-                            $queryBuilder->createNamedParameter(0, \PDO::PARAM_INT)
+                            $queryBuilder->createNamedParameter(0, PDO::PARAM_INT)
                         ),
                         $queryBuilder->expr()->gt(
                             'flag_unknown',
-                            $queryBuilder->createNamedParameter(0, \PDO::PARAM_INT)
+                            $queryBuilder->createNamedParameter(0, PDO::PARAM_INT)
                         )
                     )
                 )
@@ -185,7 +188,7 @@ class Cm2 extends BaseScriptClass
             $records = $queryBuilder->fetchAll();
 
             //	\TYPO3\CMS\Core\Utility\GeneralUtility::debugRows($records,'Index entries for '.$table.':'.$uid);
-            $tRows = array();
+            $tRows = [];
             $tRows[] = '<tr class="bgColor2 tableheader">
 	<td colspan="2">Base element:</td>
 	<td colspan="2">Translation:</td>

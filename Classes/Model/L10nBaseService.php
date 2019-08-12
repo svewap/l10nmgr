@@ -20,6 +20,7 @@ namespace Localizationteam\L10nmgr\Model;
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+use PDO;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
@@ -628,14 +629,14 @@ class L10nBaseService implements LoggerAwareInterface
                                                                 $GLOBALS['TCA'][$element['tablenames']]['ctrl']['transOrigPointerField'],
                                                                 $queryBuilder->createNamedParameter(
                                                                     (int)$element['uid_foreign'],
-                                                                    \PDO::PARAM_INT
+                                                                    PDO::PARAM_INT
                                                                 )
                                                             ),
                                                             $queryBuilder->expr()->eq(
                                                                 'sys_language_uid',
                                                                 $queryBuilder->createNamedParameter(
                                                                     (int)$Tlang,
-                                                                    \PDO::PARAM_INT
+                                                                    PDO::PARAM_INT
                                                                 )
                                                             )
                                                         )
@@ -784,11 +785,11 @@ class L10nBaseService implements LoggerAwareInterface
                                         ->where(
                                             $queryBuilder->expr()->eq(
                                                 $GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField'],
-                                                $queryBuilder->createNamedParameter((int)$TdefRecord, \PDO::PARAM_INT)
+                                                $queryBuilder->createNamedParameter((int)$TdefRecord, PDO::PARAM_INT)
                                             ),
                                             $queryBuilder->expr()->eq(
                                                 'sys_language_uid',
-                                                $queryBuilder->createNamedParameter((int)$Tlang, \PDO::PARAM_INT)
+                                                $queryBuilder->createNamedParameter((int)$Tlang, PDO::PARAM_INT)
                                             )
                                         )
                                         ->execute()
@@ -879,7 +880,7 @@ class L10nBaseService implements LoggerAwareInterface
             ->where(
                 $queryBuilder->expr()->eq(
                     'uid',
-                    $queryBuilder->createNamedParameter((int)$elementUid, \PDO::PARAM_INT)
+                    $queryBuilder->createNamedParameter((int)$elementUid, PDO::PARAM_INT)
                 )
             )
             ->execute()
@@ -910,11 +911,11 @@ class L10nBaseService implements LoggerAwareInterface
                     ->where(
                         $queryBuilder->expr()->eq(
                             $GLOBALS['TCA']['tt_content']['ctrl']['transOrigPointerField'],
-                            $queryBuilder->createNamedParameter((int)$element[$parentField], \PDO::PARAM_INT)
+                            $queryBuilder->createNamedParameter((int)$element[$parentField], PDO::PARAM_INT)
                         ),
                         $queryBuilder->expr()->eq(
                             'sys_language_uid',
-                            $queryBuilder->createNamedParameter((int)$Tlang, \PDO::PARAM_INT)
+                            $queryBuilder->createNamedParameter((int)$Tlang, PDO::PARAM_INT)
                         )
                     )
                     ->execute()

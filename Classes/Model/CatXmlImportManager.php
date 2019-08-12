@@ -1,4 +1,5 @@
 <?php
+
 namespace Localizationteam\L10nmgr\Model;
 
 /***************************************************************
@@ -18,6 +19,8 @@ namespace Localizationteam\L10nmgr\Model;
  * GNU General Public License for more details.
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
+use PDO;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
@@ -321,15 +324,15 @@ class CatXmlImportManager
                 ->where(
                     $queryBuilder->expr()->eq(
                         $GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField'],
-                        $queryBuilder->createNamedParameter($elementUid, \PDO::PARAM_INT)
+                        $queryBuilder->createNamedParameter($elementUid, PDO::PARAM_INT)
                     ),
                     $queryBuilder->expr()->eq(
                         $GLOBALS['TCA'][$table]['ctrl']['languageField'],
-                        $queryBuilder->createNamedParameter($this->headerData['t3_sysLang'], \PDO::PARAM_INT)
+                        $queryBuilder->createNamedParameter($this->headerData['t3_sysLang'], PDO::PARAM_INT)
                     ),
                     $queryBuilder->expr()->eq(
                         't3ver_wsid',
-                        $queryBuilder->createNamedParameter($this->headerData['t3_workspaceId'], \PDO::PARAM_INT)
+                        $queryBuilder->createNamedParameter($this->headerData['t3_workspaceId'], PDO::PARAM_INT)
                     )
                 )
                 ->execute()

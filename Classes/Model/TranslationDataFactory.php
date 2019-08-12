@@ -1,4 +1,5 @@
 <?php
+
 namespace Localizationteam\L10nmgr\Model;
 
 /***************************************************************
@@ -18,6 +19,7 @@ namespace Localizationteam\L10nmgr\Model;
  * GNU General Public License for more details.
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 use Localizationteam\L10nmgr\Model\Tools\XmlTools;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
@@ -35,9 +37,9 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class TranslationDataFactory implements LoggerAwareInterface
 {
-    
+
     use LoggerAwareTrait;
-    
+
     /**
      * @var string List of error messages
      */
@@ -72,7 +74,7 @@ class TranslationDataFactory implements LoggerAwareInterface
         /** @var XmlTools $xmlTool */
         $xmlTool = GeneralUtility::makeInstance(XmlTools::class);
 //print_r($xmlNodes); exit;
-        $translation = array();
+        $translation = [];
 // OK, this method of parsing the XML really sucks, but it was 4:04 in the night and ... I have no clue to make it better on PHP4. Anyway, this will work for now. But is probably unstable in case a user puts formatting in the content of the translation! (since only the first CData chunk will be found!)
         if (is_array($xmlNodes['TYPO3L10N'][0]['ch']['pageGrp'])) {
             foreach ($xmlNodes['TYPO3L10N'][0]['ch']['pageGrp'] as $pageGrp) {
@@ -118,7 +120,7 @@ class TranslationDataFactory implements LoggerAwareInterface
                             $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': Pattern: ' . $pattern);
                             $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': Pattern 2: ' . $pattern2);
                             if (preg_match($pattern, $originalValue, $treffer)) {
-                                    $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': Start row[values][0] eq start row[XMLvalue]!!!' . LF . 'XMLvalue: ' . $row['XMLvalue']);
+                                $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': Start row[values][0] eq start row[XMLvalue]!!!' . LF . 'XMLvalue: ' . $row['XMLvalue']);
                                 $translation[$attrs['table']][$attrs['elementUid']][$attrs['key']] = $row['XMLvalue'];
                             } elseif ((preg_match('/<[^>]+>/i', $originalValue))
                                 && (!preg_match($pattern2, $originalValue, $treffer))
@@ -174,7 +176,7 @@ class TranslationDataFactory implements LoggerAwareInterface
         $xmlNodes = GeneralUtility::xml2tree(
             str_replace('&nbsp;', '&#160;', $fileContent)
         ); // For some reason PHP chokes on incoming &nbsp; in XML!
-        $translation = array();
+        $translation = [];
         if (!is_array($xmlNodes)) {
             $this->errorMsg .= $xmlNodes;
             return false;
@@ -248,7 +250,7 @@ class TranslationDataFactory implements LoggerAwareInterface
             $this->errorMsg .= $xmlNodes;
             return false;
         }
-        $translation = array();
+        $translation = [];
         // OK, this method of parsing the XML really sucks, but it was 4:04 in the night and ... I have no clue to make it better on PHP4. Anyway, this will work for now. But is probably unstable in case a user puts formatting in the content of the translation! (since only the first CData chunk will be found!)
         if (is_array($xmlNodes['TYPO3L10N'][0]['ch']['Data'])) {
             foreach ($xmlNodes['TYPO3L10N'][0]['ch']['Data'] as $row) {
@@ -263,7 +265,7 @@ class TranslationDataFactory implements LoggerAwareInterface
                     $parseHTML->procOptions['dontConvBRtoParagraph'] = true;
                     //$parseHTML->procOptions['preserveTags'].=',br';
                     if (!is_array($parseHTML->procOptions['HTMLparser_db.'])) {
-                        $parseHTML->procOptions['HTMLparser_db.'] = array();
+                        $parseHTML->procOptions['HTMLparser_db.'] = [];
                     }
                     $parseHTML->procOptions['HTMLparser_db.']['xhtml_cleaning'] = true;
                     //trick to preserve strongtags

@@ -30,6 +30,7 @@ namespace Localizationteam\L10nmgr\Hooks;
 
 use Localizationteam\L10nmgr\Model\L10nBaseService;
 use Localizationteam\L10nmgr\Model\Tools\Tools;
+use PDO;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Core\Environment;
@@ -78,7 +79,8 @@ class Tcemain
         // Now, see if this record is a translation of another one:
         if ($liveRecord[$GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField']]) {
             // So it had a translation pointer - lets look for the root record then:
-            $liveRecord = BackendUtility::getRecord($table, $liveRecord[$GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField']], 'uid');
+            $liveRecord = BackendUtility::getRecord($table,
+                $liveRecord[$GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField']], 'uid');
             // echo "Finding root version<br>";
         }
         $languageID = L10nBaseService::getTargetLanguageID();
@@ -89,7 +91,8 @@ class Tcemain
             $t8Tools = GeneralUtility::makeInstance(Tools::class);
             $t8Tools->verbose = false; // Otherwise it will show records which has fields but none editable.
             // debug($t8Tools->indexDetailsRecord($table,$liveRecord['uid']));
-            $t8Tools->updateIndexTableFromDetailsArray($t8Tools->indexDetailsRecord($table, $liveRecord['uid'], $languageID));
+            $t8Tools->updateIndexTableFromDetailsArray($t8Tools->indexDetailsRecord($table, $liveRecord['uid'],
+                $languageID));
         }
     }
 
@@ -139,25 +142,25 @@ class Tcemain
             ),
             $queryBuilder->expr()->eq(
                 'workspace',
-                $queryBuilder->createNamedParameter((int)$this->getBackendUser()->workspace, \PDO::PARAM_INT)
+                $queryBuilder->createNamedParameter((int)$this->getBackendUser()->workspace, PDO::PARAM_INT)
             )
         );
         if ($p[0] !== 'pages') {
             $queryBuilder->andWhere(
                 $queryBuilder->expr()->eq(
                     'tablename',
-                    $queryBuilder->createNamedParameter($p[0], \PDO::PARAM_STR)
+                    $queryBuilder->createNamedParameter($p[0], PDO::PARAM_STR)
                 ),
                 $queryBuilder->expr()->eq(
                     'recuid',
-                    $queryBuilder->createNamedParameter((int)$p[1], \PDO::PARAM_INT)
+                    $queryBuilder->createNamedParameter((int)$p[1], PDO::PARAM_INT)
                 )
             );
         } else {
             $queryBuilder->andWhere(
                 $queryBuilder->expr()->eq(
                     'recpid',
-                    $queryBuilder->createNamedParameter((int)$p[1], \PDO::PARAM_INT)
+                    $queryBuilder->createNamedParameter((int)$p[1], PDO::PARAM_INT)
                 )
             );
         }

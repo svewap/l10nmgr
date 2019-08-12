@@ -24,7 +24,6 @@ namespace Localizationteam\L10nmgr\Command;
 use Localizationteam\L10nmgr\Model\L10nConfiguration;
 use Localizationteam\L10nmgr\View\CatXmlView;
 use Localizationteam\L10nmgr\View\ExcelXmlView;
-use Localizationteam\L10nmgr\View\ExportViewInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -115,7 +114,7 @@ class Export extends L10nCommand
     /**
      * Executes the command for straigthening content elements
      *
-     * @param InputInterface  $input
+     * @param InputInterface $input
      * @param OutputInterface $output
      * @return int|void|null
      */
@@ -202,9 +201,9 @@ class Export extends L10nCommand
     /**
      * exportCATXML which is called over cli
      *
-     * @param int             $l10ncfg ID of the configuration to load
-     * @param int             $tlang   ID of the language to translate to
-     * @param InputInterface  $input
+     * @param int $l10ncfg ID of the configuration to load
+     * @param int $tlang ID of the language to translate to
+     * @param InputInterface $input
      * @param OutputInterface $output
      *
      * @return string An error message in case of failure
@@ -225,13 +224,13 @@ class Export extends L10nCommand
                 $l10nmgrGetXML = GeneralUtility::makeInstance(CatXmlView::class, $l10nmgrCfgObj, $tlang);
                 if ($input->hasOption('baseUrl')) {
                     $baseUrl = $input->getOption('baseUrl');
-                    $baseUrl = rtrim($baseUrl, '/') .  '/';
+                    $baseUrl = rtrim($baseUrl, '/') . '/';
                     $l10nmgrGetXML->setBaseUrl($baseUrl);
                 }
                 $l10nmgrGetXML->setOverrideParams(
                     [
                         'noxmlcheck' => !(bool)$input->getOption('checkXml'),
-                        'utf8' => (bool)$input->getOption('utf8')
+                        'utf8'       => (bool)$input->getOption('utf8'),
                     ]
                 );
             } elseif ($format == 'EXCEL') {
@@ -304,10 +303,30 @@ class Export extends L10nCommand
     }
 
     /**
+     * @param $sourceLangStaticId
+     * @return int
+     */
+    protected function getStaticLangUid($sourceLangStaticId)
+    {
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_language');
+        $result = $queryBuilder->select('uid')
+            ->from('sys_language')
+            ->where(
+                $queryBuilder->expr()->eq(
+                    'static_lang_isocode',
+                    $sourceLangStaticId
+                )
+            )
+            ->execute()
+            ->fetch();
+        return $result['uid'] ?? 0;
+    }
+
+    /**
      * The function ftpUpload puts an export on a remote FTP server for further processing
      *
      * @param string $xmlFileName Path to the file to upload
-     * @param string $filename    Name of the file to upload to
+     * @param string $filename Name of the file to upload to
      *
      * @return string Error message
      */
@@ -341,33 +360,13 @@ class Export extends L10nCommand
     }
 
     /**
-     * @param $sourceLangStaticId
-     * @return int
-     */
-    protected function getStaticLangUid($sourceLangStaticId)
-    {
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_language');
-        $result = $queryBuilder->select('uid')
-            ->from('sys_language')
-            ->where(
-                $queryBuilder->expr()->eq(
-                    'static_lang_isocode',
-                    $sourceLangStaticId
-                )
-            )
-            ->execute()
-            ->fetch();
-        return $result['uid'] ?? 0;
-    }
-
-    /**
      * fixme
      *
      * The function emailNotification sends an email with a translation job to the recipient specified in the extension config.
      *
-     * @param string            $xmlFileName   Name of the XML file
+     * @param string $xmlFileName Name of the XML file
      * @param L10nConfiguration $l10nmgrCfgObj L10N Manager configuration object
-     * @param int               $tlang         ID of the language to translate to
+     * @param int $tlang ID of the language to translate to
      */
     protected function emailNotification($xmlFileName, $l10nmgrCfgObj, $tlang)
     {
@@ -409,20 +408,20 @@ class Export extends L10nCommand
         }
         $email->organisation = $this->lConf['email_sender_organisation'];
         $message = [
-            'msg1' => $this->getLanguageService()->getLL('email.greeting.msg'),
-            'msg2' => '',
-            'msg3' => sprintf(
+            'msg1'  => $this->getLanguageService()->getLL('email.greeting.msg'),
+            'msg2'  => '',
+            'msg3'  => sprintf(
                 $this->getLanguageService()->getLL('email.new_translation_job.msg'),
                 $sourceLang,
                 $targetLang,
                 $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename']
             ),
-            'msg4' => $this->getLanguageService()->getLL('email.info.msg'),
-            'msg5' => $this->getLanguageService()->getLL('email.info.import.msg'),
-            'msg6' => '',
-            'msg7' => $this->getLanguageService()->getLL('email.goodbye.msg'),
-            'msg8' => $email->from_name,
-            'msg9' => '--',
+            'msg4'  => $this->getLanguageService()->getLL('email.info.msg'),
+            'msg5'  => $this->getLanguageService()->getLL('email.info.import.msg'),
+            'msg6'  => '',
+            'msg7'  => $this->getLanguageService()->getLL('email.goodbye.msg'),
+            'msg8'  => $email->from_name,
+            'msg9'  => '--',
             'msg10' => $this->getLanguageService()->getLL('email.info.exportef_file.msg'),
             'msg11' => $xmlFileName,
         ];
