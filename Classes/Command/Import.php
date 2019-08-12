@@ -32,7 +32,9 @@ use Localizationteam\L10nmgr\Zip;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Exception;
+use TYPO3\CMS\Core\Mail\MailMessage;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -140,7 +142,7 @@ class Import extends L10nCommand
         $output->writeln($msg);
         $output->writeln(sprintf($this->getLanguageService()->getLL('import.process.duration.message'), $time));
         // Send reporting mail
-//        $this->sendMailNotification();
+        $this->sendMailNotification();
     }
 
     /**
@@ -635,37 +637,38 @@ class Import extends L10nCommand
     }
 
     /**
-     * This method is unused
-     *
      * Sends reporting mail about which files were imported
      */
     protected function sendMailNotification()
     {
-        return;
         // Send mail only if notifications are active and at least one file was imported
         if ($this->extensionConfiguration['enable_notification'] && count($this->filesImported) > 0) {
             // If at least a recipient is indeed defined, proceed with sending the mail
             $recipients = GeneralUtility::trimExplode(',', $this->extensionConfiguration['email_recipient_import']);
             if (count($recipients) > 0) {
                 // First of all get a list of all workspaces and all l10nmgr configurations to use in the reporting
-                $workspaces = $this->getDatabaseConnection()->exec_SELECTgetRows(
-                    'uid,title',
-                    'sys_workspace',
-                    '',
-                    '',
-                    '',
-                    '',
-                    'uid'
-                );
-                $l10nConfigurations = $this->getDatabaseConnection()->exec_SELECTgetRows(
-                    'uid,title',
-                    'tx_l10nmgr_cfg',
-                    '',
-                    '',
-                    '',
-                    '',
-                    'uid'
-                );
+                $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_workspace');
+                $queryBuilder->select('uid', 'title')
+                    ->from('sys_workspace')
+                    ->execute();
+                $records = $queryBuilder->fetchAll();
+                $workspaces = [];
+                if (!empty($records)) {
+                    foreach($records as $record) {
+                        $workspaces[$record['uid']] = $record;
+                    }
+                }
+                $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_l10nmgr_cfg');
+                $queryBuilder->select('uid', 'title')
+                    ->from('tx_l10nmgr_cfg')
+                    ->execute();
+                $records = $queryBuilder->fetchAll();
+                $l10nConfigurations = [];
+                if (!empty($records)) {
+                    foreach($records as $record) {
+                        $l10nConfigurations[$record['uid']] = $record;
+                    }
+                }
                 // Start assembling the mail message
                 $message = sprintf(
                         $this->getLanguageService()->getLL('import.mail.intro'),
@@ -731,7 +734,7 @@ class Import extends L10nCommand
                 );
                 // Instantiate the mail object, set all necessary properties and send the mail
                 /** @var MailMessage $mailObject */
-                $mailObject = GeneralUtility::makeInstance('\TYPO3\CMS\Core\Mail\MailMessage');
+                $mailObject = GeneralUtility::makeInstance(MailMessage::class);
                 $mailObject->setFrom([$this->extensionConfiguration['email_sender'] => $this->extensionConfiguration['email_sender_name']]);
                 $mailObject->setTo($recipients);
                 $mailObject->setSubject($subject);
@@ -742,18 +745,4 @@ class Import extends L10nCommand
         }
     }
 
-    /**
-     * Get DatabaseConnection instance - $GLOBALS['TYPO3_DB']
-     *
-     * This method should be used instead of direct access to
-     * $GLOBALS['TYPO3_DB'] for easy IDE auto completion.
-     *
-     * @return DatabaseConnection
-     * @deprecated since TYPO3 v8, will be removed in TYPO3 v9
-     */
-    protected function getDatabaseConnection()
-    {
-        GeneralUtility::logDeprecatedFunction();
-        return $GLOBALS['TYPO3_DB'];
-    }
 }
