@@ -89,7 +89,7 @@ class LocalizationManager extends BaseScriptClass
     /**
      * @var array Extension configuration
      */
-    protected $lConf = [];
+    protected $extensionConfiguration = [];
     /**
      * ModuleTemplate Container
      *
@@ -745,7 +745,7 @@ return false;
                         $actionInfo .= str_replace(
                             '###MESSAGE###',
                             sprintf($this->getLanguageService()->getLL('export.ftp.success.detail'),
-                                $this->lConf['ftp_server_path'] . $filename),
+                                $this->extensionConfiguration['ftp_server_path'] . $filename),
                             GeneralUtility::makeInstance(FlashMessageRendererResolver::class)
                                 ->resolve()
                                 ->render([$flashMessage])
@@ -838,7 +838,7 @@ return false;
             $this->_getSelectField("export_xml_forcepreviewlanguage", '0', $_selectOptions) .
             '</div></div>';
         // Add the option to send to FTP server, if FTP information is defined
-        if (!empty($this->lConf['ftp_server']) && !empty($this->lConf['ftp_server_username']) && !empty($this->lConf['ftp_server_password'])) {
+        if (!empty($this->extensionConfiguration['ftp_server']) && !empty($this->extensionConfiguration['ftp_server_username']) && !empty($this->extensionConfiguration['ftp_server_password'])) {
             $tabContentXmlExport .= '<input type="checkbox" value="1" name="ftp_upload" id="tx_l10nmgr_ftp_upload" />
 <label for="tx_l10nmgr_ftp_upload">' . $this->getLanguageService()->getLL('export.xml.ftp.title') . '</label><br />';
         }
@@ -918,22 +918,22 @@ return false;
         $xmlFileName = basename($filename);
         // Try connecting to FTP server and uploading the file
         // If any step fails, an exception is thrown
-        $connection = ftp_connect($this->lConf['ftp_server']);
+        $connection = ftp_connect($this->extensionConfiguration['ftp_server']);
         if ($connection) {
-            if (@ftp_login($connection, $this->lConf['ftp_server_username'], $this->lConf['ftp_server_password'])) {
-                if (ftp_put($connection, $this->lConf['ftp_server_path'] . $xmlFileName, PATH_site . $filename,
+            if (@ftp_login($connection, $this->extensionConfiguration['ftp_server_username'], $this->extensionConfiguration['ftp_server_password'])) {
+                if (ftp_put($connection, $this->extensionConfiguration['ftp_server_path'] . $xmlFileName, PATH_site . $filename,
                     FTP_BINARY)) {
                     ftp_close($connection);
                 } else {
                     ftp_close($connection);
                     throw new Exception(sprintf($this->getLanguageService()->getLL('export.ftp.upload_failed'),
                         $filename,
-                        $this->lConf['ftp_server_path']), 1326906926);
+                        $this->extensionConfiguration['ftp_server_path']), 1326906926);
                 }
             } else {
                 ftp_close($connection);
                 throw new Exception(sprintf($this->getLanguageService()->getLL('export.ftp.login_failed'),
-                    $this->lConf['ftp_server_username']), 1326906772);
+                    $this->extensionConfiguration['ftp_server_username']), 1326906772);
             }
         } else {
             throw new Exception($this->getLanguageService()->getLL('export.ftp.connection_failed'), 1326906675);
@@ -954,7 +954,7 @@ return false;
     protected function emailNotification($xmlFileName, $l10nmgrCfgObj, $tlang)
     {
         // If at least a recipient is indeed defined, proceed with sending the mail
-        $recipients = GeneralUtility::trimExplode(',', $this->lConf['email_recipient']);
+        $recipients = GeneralUtility::trimExplode(',', $this->extensionConfiguration['email_recipient']);
         if (count($recipients) > 0) {
             $fullFilename = PATH_site . 'uploads/tx_l10nmgr/jobs/out/' . $xmlFileName;
             // Get source & target language ISO codes
@@ -966,8 +966,8 @@ return false;
             $sourceLang = $sourceStaticLangArr['lg_iso_2'];
             $targetLang = $targetStaticLangArr['lg_iso_2'];
             // Collect mail data
-            $fromMail = $this->lConf['email_sender'];
-            $fromName = $this->lConf['email_sender_name'];
+            $fromMail = $this->extensionConfiguration['email_sender'];
+            $fromName = $this->extensionConfiguration['email_sender_name'];
             $subject = sprintf($this->getLanguageService()->getLL('email.suject.msg'), $sourceLang, $targetLang,
                 $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename']);
             // Assemble message body
@@ -986,7 +986,7 @@ return false;
                 'msg10' => $this->getLanguageService()->getLL('email.info.exportef_file.msg'),
                 'msg11' => $xmlFileName,
             ];
-            if ($this->lConf['email_attachment']) {
+            if ($this->extensionConfiguration['email_attachment']) {
                 $message['msg3'] = sprintf($this->getLanguageService()->getLL('email.new_translation_job_attached.msg'),
                     $sourceLang, $targetLang, $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename']);
             }
@@ -999,7 +999,7 @@ return false;
             $mailObject->setSubject($subject);
             $mailObject->setFormat('text/plain');
             $mailObject->setBody($msg);
-            if ($this->lConf['email_attachment']) {
+            if ($this->extensionConfiguration['email_attachment']) {
                 $attachment = Swift_Attachment::fromPath($fullFilename, 'text/xml');
                 $mailObject->attach($attachment);
             }
@@ -1034,7 +1034,7 @@ return false;
         $sysL = $t8Tools->getSystemLanguages();
         foreach ($sysL as $sL) {
             if ($sL['uid'] > 0 && $this->getBackendUser()->checkLanguageAccess($sL['uid'])) {
-                if ($this->lConf['enable_hidden_languages'] == 1) {
+                if ($this->extensionConfiguration['enable_hidden_languages'] == 1) {
                     $this->MOD_MENU['lang'][$sL['uid']] = $sL['title'];
                 } elseif ($sL['hidden'] == 0) {
                     $this->MOD_MENU['lang'][$sL['uid']] = $sL['title'];
@@ -1052,7 +1052,7 @@ return false;
     protected function loadExtConf()
     {
         // Load the configuration
-        $this->lConf = empty($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['l10nmgr'])
+        $this->extensionConfiguration = empty($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['l10nmgr'])
             ? unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['l10nmgr'])
             : $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['l10nmgr'];
     }
