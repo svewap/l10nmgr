@@ -369,9 +369,19 @@ class L10nAccumulatedInformation
         if ($indexList) {
             $this->includeIndex = array_flip(GeneralUtility::trimExplode(',', $indexList, true));
         }
-        $enableClause = BackendUtility::BEenableFields('pages');
-        $explicitlyIncludedPages = $this->getDatabaseConnection()->exec_SELECTgetRows('uid', 'pages',
-            'l10nmgr_configuration = ' . Constants::L10NMGR_CONFIGURATION_INCLUDE . $enableClause);
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
+        $explicitlyIncludedPages = $queryBuilder->select('uid')
+            ->from('pages')
+            ->where(
+                $queryBuilder->expr()->eq(
+                    'l10nmgr_configuration',
+                    $queryBuilder->createNamedParameter(Constants::L10NMGR_CONFIGURATION_INCLUDE, \PDO::PARAM_INT)
+                )
+            )
+            ->orderBy('uid')
+            ->execute()
+            ->fetchAll();
+
         if (!empty($explicitlyIncludedPages)) {
             foreach ($explicitlyIncludedPages as $page) {
                 if (!isset($this->excludeIndex['pages:' . $page['uid']]) && !in_array($page['doktype'],
@@ -381,8 +391,19 @@ class L10nAccumulatedInformation
                 }
             }
         }
-        $includingParentPages = $this->getDatabaseConnection()->exec_SELECTgetRows('uid', 'pages',
-            'l10nmgr_configuration_next_level = ' . Constants::L10NMGR_CONFIGURATION_INCLUDE . $enableClause);
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
+        $includingParentPages = $queryBuilder->select('uid')
+            ->from('pages')
+            ->where(
+                $queryBuilder->expr()->eq(
+                    'l10nmgr_configuration_next_level',
+                    $queryBuilder->createNamedParameter(Constants::L10NMGR_CONFIGURATION_INCLUDE, \PDO::PARAM_INT)
+                )
+            )
+            ->orderBy('uid')
+            ->execute()
+            ->fetchAll();
+
         if (!empty($includingParentPages)) {
             foreach ($includingParentPages as $parentPage) {
                 $this->addSubPagesRecursively($parentPage['uid']);
@@ -400,10 +421,19 @@ class L10nAccumulatedInformation
     {
         $level++;
         if ($uid > 0 && $level < 100) {
-            $enableClause = BackendUtility::BEenableFields('pages');
-            $subPages = $this->getDatabaseConnection()->exec_SELECTgetRows('uid,pid,l10nmgr_configuration,l10nmgr_configuration_next_level',
-                'pages',
-                'pid = ' . (int)$uid . $enableClause);
+            $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
+            $subPages = $queryBuilder->select('uid,pid,l10nmgr_configuration,l10nmgr_configuration_next_level')
+                ->from('pages')
+                ->where(
+                    $queryBuilder->expr()->eq(
+                        'pid',
+                        $queryBuilder->createNamedParameter((int)$uid, \PDO::PARAM_INT)
+                    )
+                )
+                ->orderBy('uid')
+                ->execute()
+                ->fetchAll();
+
             if (!empty($subPages)) {
                 foreach ($subPages as $page) {
                     if ($page['l10nmgr_configuration'] === Constants::L10NMGR_CONFIGURATION_DEFAULT) {
