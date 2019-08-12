@@ -18,6 +18,7 @@ namespace Localizationteam\L10nmgr\Command;
 
 use Symfony\Component\Console\Command\Command;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -39,7 +40,7 @@ class L10nCommand extends Command
     protected function getExtConf()
     {
         return empty($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['l10nmgr'])
-            ? unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['l10nmgr'])
+            ? GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('l10nmgr')
             : $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['l10nmgr'];
     }
 

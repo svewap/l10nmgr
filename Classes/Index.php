@@ -30,6 +30,7 @@ namespace Localizationteam\L10nmgr;
 use Localizationteam\L10nmgr\Model\Tools\Tools;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 use TYPO3\CMS\Lowlevel\CleanerCommand;
@@ -76,7 +77,7 @@ class Index extends CleanerCommand
     public function Index()
     {
         // Load the extension's configuration
-        $this->extensionConfiguration = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['l10nmgr']);
+        $this->extensionConfiguration = $backendConfiguration = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('l10nmgr');
         $this->disallowDoktypes = GeneralUtility::trimExplode(',', $this->extensionConfiguration['disallowDoktypes']);
         parent::__construct();
         // Setting up help:

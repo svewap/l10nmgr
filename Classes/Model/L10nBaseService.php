@@ -23,6 +23,7 @@ namespace Localizationteam\L10nmgr\Model;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\Restriction\BackendWorkspaceRestriction;
@@ -82,7 +83,7 @@ class L10nBaseService implements LoggerAwareInterface
     {
         // Load the extension's configuration
         $this->extensionConfiguration = empty($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['l10nmgr'])
-            ? unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['l10nmgr'])
+            ? GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('l10nmgr')
             : $GLOBALS['TYPO3_CONF_VARS']['EXTENSIO1NS']['l10nmgr'];
     }
 

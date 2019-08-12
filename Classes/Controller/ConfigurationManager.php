@@ -26,6 +26,7 @@ namespace Localizationteam\L10nmgr\Controller;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Module\BaseScriptClass;
+use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Database\ConnectionPool;
@@ -178,7 +179,8 @@ class ConfigurationManager extends BaseScriptClass
                 $configurationDetails .= '</div>';
                 $content .= '<tr class="db_list_normal">';
                 $content .= '<td>' . $configurationDetails . '</td>';
-                $content .= '<td><a href="' . BackendUtility::getModuleUrl('LocalizationManager',
+                $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
+                $content .= '<td><a href="' . $uriBuilder->buildUriFromRoute('LocalizationManager',
                         array(
                             'id' => $record['pid'],
                             'srcPID' => $this->id,

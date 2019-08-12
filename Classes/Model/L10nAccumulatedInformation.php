@@ -26,6 +26,7 @@ use Localizationteam\L10nmgr\Model\Tools\Tools;
 use TYPO3\CMS\Backend\Tree\View\PageTreeView;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\RootlineUtility;
@@ -104,7 +105,7 @@ class L10nAccumulatedInformation
     {
         // Load the extension's configuration
         $this->extensionConfiguration = empty($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['l10nmgr'])
-            ? unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['l10nmgr'])
+            ? GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('l10nmgr')
             : $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['l10nmgr'];
         $this->disallowDoktypes = GeneralUtility::trimExplode(',', $this->extensionConfiguration['disallowDoktypes']);
         $this->tree = $tree;
@@ -174,7 +175,7 @@ class L10nAccumulatedInformation
             $previewLanguage = current(
                 GeneralUtility::intExplode(
                     ',',
-                    $this->getBackendUser()->getTSConfig('options.additionalPreviewLanguages')['value'] ?? ''
+                    $this->getBackendUser()->getTSConfig()['options.']['additionalPreviewLanguages'] ?? ''
                 )
             );
         }
