@@ -27,7 +27,6 @@ use TYPO3\CMS\Backend\Tree\View\PageTreeView;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\ConnectionPool;
-use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\RootlineUtility;
 
@@ -328,7 +327,8 @@ class L10nAccumulatedInformation
             list($table, $uid) = explode(':', $recId);
             $row = BackendUtility::getRecordWSOL($table, $uid);
             if (count($row)) {
-                $accum[-1]['items'][$table][$row['uid']] = $t8Tools->translationDetails($table, $row, $sysLang, $flexFormDiff, $previewLanguage);
+                $accum[-1]['items'][$table][$row['uid']] = $t8Tools->translationDetails($table, $row, $sysLang,
+                    $flexFormDiff, $previewLanguage);
                 $this->_increaseInternalCounters($accum[-1]['items'][$table][$row['uid']]['fields']);
             }
         }
