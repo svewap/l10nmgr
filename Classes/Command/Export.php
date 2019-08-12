@@ -368,9 +368,8 @@ class Export extends L10nCommand
      * @param string $xmlFileName Name of the XML file
      * @param L10nConfiguration $l10nmgrCfgObj L10N Manager configuration object
      * @param int $tlang ID of the language to translate to
-     * @param $lConf
      */
-    protected function emailNotification($xmlFileName, $l10nmgrCfgObj, $tlang, $lConf)
+    protected function emailNotification($xmlFileName, $l10nmgrCfgObj, $tlang)
     {
         // If at least a recipient is indeed defined, proceed with sending the mail
         $recipients = GeneralUtility::trimExplode(',', $this->extensionConfiguration['email_recipient']);
