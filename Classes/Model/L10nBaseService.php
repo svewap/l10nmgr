@@ -98,7 +98,7 @@ class L10nBaseService implements LoggerAwareInterface
      * Save the translation
      *
      * @param L10nConfiguration $l10ncfgObj
-     * @param TranslationData   $translationObj
+     * @param TranslationData $translationObj
      */
     public function saveTranslation(L10nConfiguration $l10ncfgObj, TranslationData $translationObj)
     {
@@ -141,7 +141,7 @@ class L10nBaseService implements LoggerAwareInterface
      * which would be expected to be new)
      *
      * @param L10nConfiguration $configurationObject
-     * @param TranslationData   $translationData
+     * @param TranslationData $translationData
      */
     protected function preTranslateAllContent(L10nConfiguration $configurationObject, TranslationData $translationData)
     {
@@ -263,6 +263,66 @@ class L10nBaseService implements LoggerAwareInterface
     }
 
     /**
+     * @param string $theTable
+     * @param string $theField
+     * @param string $theValue
+     * @param string $whereClause
+     * @param string $orderBy
+     * @return array
+     */
+    protected function getRecordsByField(
+        string $theTable,
+        string $theField,
+        string $theValue,
+        string $whereClause = '',
+        string $orderBy = ''
+    ): array {
+        if (is_array($GLOBALS['TCA'][$theTable])) {
+            $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($theTable);
+
+            $queryBuilder->getRestrictions()
+                ->removeAll()
+                ->add(GeneralUtility::makeInstance(BackendWorkspaceRestriction::class))
+                ->add(GeneralUtility::makeInstance(DeletedRestriction::class));
+
+            $queryBuilder
+                ->select('*')
+                ->from($theTable)
+                ->where($queryBuilder->expr()->eq($theField, $queryBuilder->createNamedParameter($theValue)));
+
+            // additional where
+            if ($whereClause) {
+                $queryBuilder->andWhere(preg_replace('/^(?:(AND|OR)[[:space:]]*)+/i', '', trim($whereClause)) ?: '');
+            }
+
+            // order by
+            if ($orderBy !== '') {
+                $orderExpressions = GeneralUtility::trimExplode(',', $orderBy, true);
+
+                $orderByNames = array_map(
+                    function ($expression) {
+                        $fieldNameOrderArray = GeneralUtility::trimExplode(' ', $expression, true);
+                        $fieldName = $fieldNameOrderArray[0] ?? null;
+                        $order = $fieldNameOrderArray[1] ?? null;
+
+                        return [$fieldName, $order];
+                    },
+                    $orderExpressions
+                );
+
+                foreach ($orderByNames as $orderPair) {
+                    list($fieldName, $order) = $orderPair;
+                    $queryBuilder->addOrderBy($fieldName, $order);
+                }
+            }
+
+            $rows = $queryBuilder->execute()->fetchAll();
+            return $rows;
+        }
+        return [];
+    }
+
+    /**
      * If you want to reimport the same file over and over again, by default this can only be done once because the input array
      * contains "NEW" all over the place in th XML file.
      * This feature (enabled per configuration record) maps the data of the existing record in the target language
@@ -271,7 +331,7 @@ class L10nBaseService implements LoggerAwareInterface
      * This also allows to import data of records that have been added in TYPO3 in the meantime.
      *
      * @param L10nConfiguration $configurationObject
-     * @param TranslationData   $translationData
+     * @param TranslationData $translationData
      */
     protected function remapInputDataForExistingTranslations(
         L10nConfiguration $configurationObject,
@@ -312,7 +372,7 @@ class L10nBaseService implements LoggerAwareInterface
     /**
      * Submit incoming content to database. Must match what is available in $accum.
      *
-     * @param array $accum      Translation configuration
+     * @param array $accum Translation configuration
      * @param array $inputArray Array with incoming translation. Must match what is found in $accum
      *
      * @return mixed False if error - else flexFormDiffArray (if $inputArray was an array and processing was performed.)
@@ -350,7 +410,7 @@ class L10nBaseService implements LoggerAwareInterface
     /**
      * Submit incoming content as default language to database. Must match what is available in $accum.
      *
-     * @param array $accum      Translation configuration
+     * @param array $accum Translation configuration
      * @param array $inputArray Array with incoming translation. Must match what is found in $accum
      *
      * @return mixed False if error - else flexFormDiffArray (if $inputArray was an array and processing was performed.)
@@ -378,7 +438,10 @@ class L10nBaseService implements LoggerAwareInterface
                         }
                         if (is_array($data['fields'])) {
                             foreach ($data['fields'] as $key => $tData) {
-                                if (is_array($tData) && array_key_exists($key, $inputArray[$table][$elementUid])) {
+                                if (is_array($tData)
+                                    && is_array($inputArray[$table][$elementUid])
+                                    && array_key_exists($key, $inputArray[$table][$elementUid])
+                                ) {
                                     list($Ttable, $TuidString, $Tfield, $Tpath) = explode(':', $key);
                                     list($Tuid, $Tlang, $TdefRecord) = explode('/', $TuidString);
                                     if (!$this->createTranslationAlsoIfEmpty
@@ -403,7 +466,7 @@ class L10nBaseService implements LoggerAwareInterface
                                         );
                                         $_flexFormDiffArray[$key] = [
                                             'translated' => $inputArray[$table][$elementUid][$key],
-                                            'default' => $tData['defaultValue'],
+                                            'default'    => $tData['defaultValue'],
                                         ];
                                     } else {
                                         $TCEmain_data[$Ttable][$elementUid][$Tfield] = $inputArray[$table][$elementUid][$key];
@@ -446,7 +509,8 @@ class L10nBaseService implements LoggerAwareInterface
                 $tce->process_datamap();
             }
             if (count($tce->errorLog)) {
-                $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': TCEmain update errors: ' . implode(', ', $tce->errorLog));
+                $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': TCEmain update errors: ' . implode(', ',
+                        $tce->errorLog));
             }
             if (count($tce->autoVersionIdMap) && count($_flexFormDiffArray)) {
                 foreach ($_flexFormDiffArray as $key => $value) {
@@ -469,7 +533,7 @@ class L10nBaseService implements LoggerAwareInterface
     /**
      * Submit incoming content as translated language to database. Must match what is available in $accum.
      *
-     * @param array $accum      Translation configuration
+     * @param array $accum Translation configuration
      * @param array $inputArray Array with incoming translation. Must match what is found in $accum
      *
      * @return mixed False if error - else flexFormDiffArray (if $inputArray was an array and processing was performed.)
@@ -623,7 +687,7 @@ class L10nBaseService implements LoggerAwareInterface
                                         if (is_array($hooks)) {
                                             foreach ($hooks as $hookObj) {
                                                 $parameters = [
-                                                    'data' => $data,
+                                                    'data'        => $data,
                                                     'TCEmain_cmd' => $this->TCEmain_cmd,
                                                 ];
                                                 $this->TCEmain_cmd = GeneralUtility::callUserFunction(
@@ -647,7 +711,7 @@ class L10nBaseService implements LoggerAwareInterface
                                         );
                                         $_flexFormDiffArray[$key] = [
                                             'translated' => $inputArray[$table][$elementUid][$key],
-                                            'default' => $tData['defaultValue'],
+                                            'default'    => $tData['defaultValue'],
                                         ];
                                     } else {
                                         $TCEmain_data[$Ttable][$TuidString][$Tfield] = $inputArray[$table][$elementUid][$key];
@@ -667,7 +731,7 @@ class L10nBaseService implements LoggerAwareInterface
                             foreach ($hooks as $hookObj) {
                                 $parameters = [
                                     'TCEmain_data' => $TCEmain_data,
-                                    'TCEmain_cmd' => $this->TCEmain_cmd,
+                                    'TCEmain_cmd'  => $this->TCEmain_cmd,
                                 ];
                                 $this->TCEmain_cmd = GeneralUtility::callUserFunction($hookObj, $parameters, $this);
                             }
@@ -694,7 +758,8 @@ class L10nBaseService implements LoggerAwareInterface
                 }
             }
             // Before remapping
-            $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': TCEmain_data before remapping: ' . implode(', ', $TCEmain_data));
+            $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': TCEmain_data before remapping: ' . implode(', ',
+                    $TCEmain_data));
             // Remapping those elements which are new:
             $this->lastTCEMAINCommandsCount = 0;
             foreach ($TCEmain_data as $table => $items) {
@@ -753,7 +818,8 @@ class L10nBaseService implements LoggerAwareInterface
                 }
             }
             // After remapping
-            $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': TCEmain_data after remapping: ' . implode(', ', $TCEmain_data));
+            $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': TCEmain_data after remapping: ' . implode(', ',
+                    $TCEmain_data));
             // Now, submitting translation data:
             /** @var DataHandler $tce */
             $tce = GeneralUtility::makeInstance(DataHandler::class);
@@ -771,10 +837,12 @@ class L10nBaseService implements LoggerAwareInterface
             }
             self::$targetLanguageID = null;
             if (count($tce->errorLog)) {
-                $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': TCEmain update errors: ' . implode(', ', $tce->errorLog));
+                $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': TCEmain update errors: ' . implode(', ',
+                        $tce->errorLog));
             }
             if (count($tce->autoVersionIdMap) && count($_flexFormDiffArray)) {
-                $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': flexFormDiffArry: ' . implode(', ', $this->flexFormDiffArray));
+                $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': flexFormDiffArry: ' . implode(', ',
+                        $this->flexFormDiffArray));
                 foreach ($_flexFormDiffArray as $key => $value) {
                     list($Ttable, $Tuid, $Trest) = explode(':', $key, 3);
                     if ($tce->autoVersionIdMap[$Ttable][$Tuid]) {
@@ -783,7 +851,8 @@ class L10nBaseService implements LoggerAwareInterface
                     }
                 }
                 $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': autoVersionIdMap: ' . $tce->autoVersionIdMap);
-                $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': _flexFormDiffArray: ' . implode(', ', $_flexFormDiffArray));
+                $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': _flexFormDiffArray: ' . implode(', ',
+                        $_flexFormDiffArray));
             }
             // Should be empty now - or there were more information in the incoming array than there should be!
             if (count($inputArray)) {
@@ -792,6 +861,31 @@ class L10nBaseService implements LoggerAwareInterface
             return $_flexFormDiffArray;
         }
         return false;
+    }
+
+    /**
+     * @param string $table
+     * @param int $elementUid
+     * @return array
+     */
+    protected function getRawRecord(string $table, int $elementUid): array
+    {
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
+        $queryBuilder->getRestrictions()->removeAll()->add(GeneralUtility::makeInstance(DeletedRestriction::class));
+
+        $row = $queryBuilder
+            ->select('*')
+            ->from($table)
+            ->where(
+                $queryBuilder->expr()->eq(
+                    'uid',
+                    $queryBuilder->createNamedParameter((int)$elementUid, \PDO::PARAM_INT)
+                )
+            )
+            ->execute()
+            ->fetch();
+
+        return $row ?: [];
     }
 
     /**
@@ -837,90 +931,5 @@ class L10nBaseService implements LoggerAwareInterface
                 }
             }
         }
-    }
-
-    /**
-     * @param string $table
-     * @param int    $elementUid
-     * @return array
-     */
-    protected function getRawRecord(string $table, int $elementUid): array
-    {
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
-        $queryBuilder->getRestrictions()->removeAll()->add(GeneralUtility::makeInstance(DeletedRestriction::class));
-
-        $row = $queryBuilder
-            ->select('*')
-            ->from($table)
-            ->where(
-                $queryBuilder->expr()->eq(
-                    'uid',
-                    $queryBuilder->createNamedParameter((int)$elementUid, \PDO::PARAM_INT)
-                )
-            )
-            ->execute()
-            ->fetch();
-
-        return $row ?: [];
-    }
-
-    /**
-     * @param string $theTable
-     * @param string $theField
-     * @param string $theValue
-     * @param string $whereClause
-     * @param string $orderBy
-     * @return array
-     */
-    protected function getRecordsByField(
-        string $theTable,
-        string $theField,
-        string $theValue,
-        string $whereClause = '',
-        string $orderBy = ''
-    ): array {
-        if (is_array($GLOBALS['TCA'][$theTable])) {
-            $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($theTable);
-
-            $queryBuilder->getRestrictions()
-                ->removeAll()
-                ->add(GeneralUtility::makeInstance(BackendWorkspaceRestriction::class))
-                ->add(GeneralUtility::makeInstance(DeletedRestriction::class));
-
-            $queryBuilder
-                ->select('*')
-                ->from($theTable)
-                ->where($queryBuilder->expr()->eq($theField, $queryBuilder->createNamedParameter($theValue)));
-
-            // additional where
-            if ($whereClause) {
-                $queryBuilder->andWhere(preg_replace('/^(?:(AND|OR)[[:space:]]*)+/i', '', trim($whereClause)) ?: '');
-            }
-
-            // order by
-            if ($orderBy !== '') {
-                $orderExpressions = GeneralUtility::trimExplode(',', $orderBy, true);
-
-                $orderByNames = array_map(
-                    function ($expression) {
-                        $fieldNameOrderArray = GeneralUtility::trimExplode(' ', $expression, true);
-                        $fieldName = $fieldNameOrderArray[0] ?? null;
-                        $order = $fieldNameOrderArray[1] ?? null;
-
-                        return [$fieldName, $order];
-                    },
-                    $orderExpressions
-                );
-
-                foreach ($orderByNames as $orderPair) {
-                    list($fieldName, $order) = $orderPair;
-                    $queryBuilder->addOrderBy($fieldName, $order);
-                }
-            }
-
-            $rows = $queryBuilder->execute()->fetchAll();
-            return $rows;
-        }
-        return [];
     }
 }
