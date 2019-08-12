@@ -41,11 +41,6 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 class Import extends L10nCommand
 {
     /**
-     * @var array Extension's configuration as from the EM
-     */
-    protected $extensionConfiguration = [];
-
-    /**
      * @var int ID of the language being handled
      */
     protected $sysLanguage;

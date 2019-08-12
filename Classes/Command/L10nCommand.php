@@ -27,6 +27,11 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 class L10nCommand extends Command
 {
     /**
+     * @var array Extension's configuration as from the EM
+     */
+    protected $extensionConfiguration = [];
+
+    /**
      * @var LanguageService
      */
     private $languageService;
