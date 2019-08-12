@@ -23,6 +23,7 @@ namespace Localizationteam\L10nmgr\Model;
 use Localizationteam\L10nmgr\Constants;
 use Localizationteam\L10nmgr\LanguageRestriction\Collection\LanguageRestrictionCollection;
 use Localizationteam\L10nmgr\Model\Tools\Tools;
+use PDO;
 use TYPO3\CMS\Backend\Tree\View\PageTreeView;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
@@ -298,7 +299,7 @@ class L10nAccumulatedInformation
                                 ->where(
                                     $queryBuilder->expr()->eq(
                                         'sys_language_uid',
-                                        $queryBuilder->createNamedParameter((int)$previewLanguage, \PDO::PARAM_INT)
+                                        $queryBuilder->createNamedParameter((int)$previewLanguage, PDO::PARAM_INT)
                                     ),
                                     $queryBuilder->expr()->in(
                                         'file',
@@ -376,7 +377,7 @@ class L10nAccumulatedInformation
             ->where(
                 $queryBuilder->expr()->eq(
                     'l10nmgr_configuration',
-                    $queryBuilder->createNamedParameter(Constants::L10NMGR_CONFIGURATION_INCLUDE, \PDO::PARAM_INT)
+                    $queryBuilder->createNamedParameter(Constants::L10NMGR_CONFIGURATION_INCLUDE, PDO::PARAM_INT)
                 )
             )
             ->orderBy('uid')
@@ -398,7 +399,7 @@ class L10nAccumulatedInformation
             ->where(
                 $queryBuilder->expr()->eq(
                     'l10nmgr_configuration_next_level',
-                    $queryBuilder->createNamedParameter(Constants::L10NMGR_CONFIGURATION_INCLUDE, \PDO::PARAM_INT)
+                    $queryBuilder->createNamedParameter(Constants::L10NMGR_CONFIGURATION_INCLUDE, PDO::PARAM_INT)
                 )
             )
             ->orderBy('uid')
@@ -428,7 +429,7 @@ class L10nAccumulatedInformation
                 ->where(
                     $queryBuilder->expr()->eq(
                         'pid',
-                        $queryBuilder->createNamedParameter((int)$uid, \PDO::PARAM_INT)
+                        $queryBuilder->createNamedParameter((int)$uid, PDO::PARAM_INT)
                     )
                 )
                 ->orderBy('uid')

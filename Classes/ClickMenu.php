@@ -26,6 +26,7 @@ namespace Localizationteam\L10nmgr;
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 
+use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
@@ -72,14 +73,15 @@ class ClickMenu
                 // Remember to add entries in the localconf.php file for additional titles.
                 $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
                 $urlParameters = [
-                    'id' => $backRef->rec['pid'],
-                    'srcPID' => $backRef->rec['pid'],
+                    'id'        => $backRef->rec['pid'],
+                    'srcPID'    => $backRef->rec['pid'],
                     'exportUID' => $uid,
                 ];
                 try {
                     $uri = $uriBuilder->buildUriFromRoute('ConfigurationManager_LocalizationManager', $urlParameters);
-                } catch (\TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException $e) {
-                    $uri = $uriBuilder->buildUriFromRoutePath('ConfigurationManager_LocalizationManager', $urlParameters);
+                } catch (RouteNotFoundException $e) {
+                    $uri = $uriBuilder->buildUriFromRoutePath('ConfigurationManager_LocalizationManager',
+                        $urlParameters);
                 }
                 $url = (string)$uri;
 
@@ -103,7 +105,7 @@ class ClickMenu
             $url = BackendUtility::getModuleUrl(
                 'LocalizationManager_TranslationTasks',
                 [
-                    'id' => $backRef->rec['pid'],
+                    'id'    => $backRef->rec['pid'],
                     'table' => $table,
                 ]
             );

@@ -97,7 +97,7 @@ class Import extends L10nCommand
     /**
      * Executes the command for straigthening content elements
      *
-     * @param InputInterface  $input
+     * @param InputInterface $input
      * @param OutputInterface $output
      * @return int|void|null
      */
@@ -161,7 +161,8 @@ class Import extends L10nCommand
         if ($input->getOption('task') === 'importString' || $input->getOption('task') === 'importFile' || $input->getOption('task') === 'preview') {
             $callParameters['task'] = $input->getOption('task');
         } else {
-            throw new Exception('Please specify a task with --task. Either "importString", "preview" or "importFile".', 1539950024);
+            throw new Exception('Please specify a task with --task. Either "importString", "preview" or "importFile".',
+                1539950024);
         }
 
         // Get the preview flag
@@ -189,7 +190,7 @@ class Import extends L10nCommand
      * @param string $xml XML string to parse
      *
      * @return int ID of the workspace to import to
-     * @throws \TYPO3\CMS\Core\Exception
+     * @throws Exception
      * @throws Exception
      */
     protected function getWsIdFromCATXML($xml)
@@ -418,8 +419,8 @@ class Import extends L10nCommand
                     // Store some information about the imported file
                     // This is used later for reporting by mail
                     $this->filesImported[$xmlFile] = [
-                        'workspace' => $xmlFileHead['t3_workspaceId'][0]['XMLvalue'],
-                        'language' => $xmlFileHead['t3_targetLang'][0]['XMLvalue'],
+                        'workspace'     => $xmlFileHead['t3_workspaceId'][0]['XMLvalue'],
+                        'language'      => $xmlFileHead['t3_targetLang'][0]['XMLvalue'],
                         'configuration' => $xmlFileHead['t3_l10ncfg'][0]['XMLvalue'],
                     ];
                 }
@@ -483,8 +484,8 @@ class Import extends L10nCommand
     /**
      * Gets all available XML or ZIP files from the FTP server
      *
-     * @throws Exception
      * @return array List of files, as local paths
+     * @throws Exception
      */
     protected function getFilesFromFtp()
     {
@@ -571,8 +572,8 @@ class Import extends L10nCommand
     /**
      * Check file types from a list of files
      *
-     * @param array  $files Array of files to be checked
-     * @param string $ext   File extension to be tested for
+     * @param array $files Array of files to be checked
+     * @param string $ext File extension to be tested for
      *
      * @return array Files that passed test
      */
@@ -593,7 +594,7 @@ class Import extends L10nCommand
      * @param string $filepath Path to the file
      *
      * @return bool
-     * @throws \TYPO3\CMS\Core\Exception
+     * @throws Exception
      */
     protected function getXMLFileHead($filepath)
     {
@@ -654,7 +655,7 @@ class Import extends L10nCommand
                 $records = $queryBuilder->fetchAll();
                 $workspaces = [];
                 if (!empty($records)) {
-                    foreach($records as $record) {
+                    foreach ($records as $record) {
                         $workspaces[$record['uid']] = $record;
                     }
                 }
@@ -665,7 +666,7 @@ class Import extends L10nCommand
                 $records = $queryBuilder->fetchAll();
                 $l10nConfigurations = [];
                 if (!empty($records)) {
-                    foreach($records as $record) {
+                    foreach ($records as $record) {
                         $l10nConfigurations[$record['uid']] = $record;
                     }
                 }

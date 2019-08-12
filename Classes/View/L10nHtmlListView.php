@@ -1,4 +1,5 @@
 <?php
+
 namespace Localizationteam\L10nmgr\View;
 
 /***************************************************************
@@ -18,6 +19,7 @@ namespace Localizationteam\L10nmgr\View;
  * GNU General Public License for more details.
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 use Localizationteam\L10nmgr\Model\L10nAccumulatedInformation;
 use Localizationteam\L10nmgr\Model\L10nConfiguration;
 use TYPO3\CMS\Backend\Template\DocumentTemplate;
@@ -115,12 +117,12 @@ class L10nHtmlListView extends AbstractExportView
         // Traverse the structure and generate HTML output:
         foreach ($accum as $pId => $page) {
             $output .= '<h3>' . $page['header']['icon'] . htmlspecialchars($page['header']['title']) . ' [' . $pId . ']</h3>';
-            $tableRows = array();
+            $tableRows = [];
             foreach ($accum[$pId]['items'] as $table => $elements) {
                 foreach ($elements as $elementUid => $data) {
                     if (is_array($data['fields'])) {
-                        $FtableRows = array();
-                        $flags = array();
+                        $FtableRows = [];
+                        $flags = [];
                         if (!$noAnalysis || $showSingle === $table . ':' . $elementUid) {
                             foreach ($data['fields'] as $key => $tData) {
                                 if (is_array($tData)) {
@@ -146,7 +148,7 @@ class L10nHtmlListView extends AbstractExportView
                                         $flags['update']++;
                                     }
                                     if (!$this->modeOnlyChanged || !$noChangeFlag) {
-                                        $fieldCells = array();
+                                        $fieldCells = [];
                                         $fieldCells[] = '<b>' . htmlspecialchars($fieldName) . '</b>' . ($tData['msg'] ? '<br /><em>' . htmlspecialchars($tData['msg']) . '</em>' : '');
                                         $fieldCells[] = nl2br(htmlspecialchars($tData['defaultValue']));
                                         $fieldCells[] = $edit && $this->modeWithInlineEdit
@@ -179,17 +181,17 @@ class L10nHtmlListView extends AbstractExportView
                                         ? $data['translationInfo']['translations'][$sysLang]['uid']
                                         : $data['translationInfo']['uid'];
                                     $editLink = ' - <a href="#" onclick="' . htmlspecialchars(
-                                        BackendUtility::editOnClick(
-                                            '&edit[' . $data['translationInfo']['translation_table'] . '][' . $editId . ']=edit',
-                                            $this->module->backPath
-                                        )
-                                    ) . '"><em>[' . $this->getLanguageService()->getLL('render_overview.clickedit.message') . ']</em></a>';
+                                            BackendUtility::editOnClick(
+                                                '&edit[' . $data['translationInfo']['translation_table'] . '][' . $editId . ']=edit',
+                                                $this->module->backPath
+                                            )
+                                        ) . '"><em>[' . $this->getLanguageService()->getLL('render_overview.clickedit.message') . ']</em></a>';
                                 } else {
                                     $editLink = ' - <a href="' . htmlspecialchars(
-                                        BackendUtility::getLinkToDataHandlerAction(
-                                            '&cmd[' . $table . '][' . $data['translationInfo']['uid'] . '][localize]=' . $sysLang
-                                        )
-                                    ) . '"><em>[' . $this->getLanguageService()->getLL('render_overview.clicklocalize.message') . ']</em></a>';
+                                            BackendUtility::getLinkToDataHandlerAction(
+                                                '&cmd[' . $table . '][' . $data['translationInfo']['uid'] . '][localize]=' . $sysLang
+                                            )
+                                        ) . '"><em>[' . $this->getLanguageService()->getLL('render_overview.clicklocalize.message') . ']</em></a>';
                                 }
                             } else {
                                 $editLink = '';

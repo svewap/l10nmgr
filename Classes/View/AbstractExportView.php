@@ -23,15 +23,16 @@ namespace Localizationteam\L10nmgr\View;
  ***************************************************************/
 
 use Localizationteam\L10nmgr\Model\L10nConfiguration;
+use PDO;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageRendererResolver;
 use TYPO3\CMS\Core\Utility\DiffUtility;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Core\Localization\LanguageService;
 
 /**
  * Abstract class for all export views
@@ -141,17 +142,17 @@ abstract class AbstractExportView
         $date = time();
         // query to insert the data in the database
         $field_values = [
-            'source_lang' => (int)$this->forcedSourceLanguage ? (int)$this->forcedSourceLanguage : 0,
+            'source_lang'      => (int)$this->forcedSourceLanguage ? (int)$this->forcedSourceLanguage : 0,
             'translation_lang' => (int)$this->sysLang,
-            'crdate' => $date,
-            'tstamp' => $date,
-            'l10ncfg_id' => (int)$this->l10ncfgObj->getData('uid'),
-            'pid' => (int)$this->l10ncfgObj->getData('pid'),
-            'tablelist' => (string)$this->l10ncfgObj->getData('tablelist'),
-            'title' => (string)$this->l10ncfgObj->getData('title'),
-            'cruser_id' => (int)$this->l10ncfgObj->getData('cruser_id'),
-            'filename' => (string)$this->getFilename(),
-            'exportType' => (int)$this->exportType
+            'crdate'           => $date,
+            'tstamp'           => $date,
+            'l10ncfg_id'       => (int)$this->l10ncfgObj->getData('uid'),
+            'pid'              => (int)$this->l10ncfgObj->getData('pid'),
+            'tablelist'        => (string)$this->l10ncfgObj->getData('tablelist'),
+            'title'            => (string)$this->l10ncfgObj->getData('title'),
+            'cruser_id'        => (int)$this->l10ncfgObj->getData('cruser_id'),
+            'filename'         => (string)$this->getFilename(),
+            'exportType'       => (int)$this->exportType,
         ];
 
         $databaseConnection = GeneralUtility::makeInstance(ConnectionPool::class)
@@ -163,8 +164,8 @@ abstract class AbstractExportView
 
         if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['l10nmgr']['exportView'])) {
             $params = [
-                'uid' => (int)$databaseConnection->lastInsertId('tx_l10nmgr_exportdata'),
-                'data' => $field_values
+                'uid'  => (int)$databaseConnection->lastInsertId('tx_l10nmgr_exportdata'),
+                'data' => $field_values,
             ];
             foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['l10nmgr']['exportView'] as $classData) {
                 $postSaveProcessor = GeneralUtility::makeInstance($classData);
@@ -247,15 +248,15 @@ abstract class AbstractExportView
             ->where(
                 $queryBuilder->expr()->eq(
                     'l10ncfg_id',
-                    $queryBuilder->createNamedParameter((int)$this->l10ncfgObj->getData('uid'), \PDO::PARAM_INT)
+                    $queryBuilder->createNamedParameter((int)$this->l10ncfgObj->getData('uid'), PDO::PARAM_INT)
                 ),
                 $queryBuilder->expr()->eq(
                     'exportType',
-                    $queryBuilder->createNamedParameter($this->exportType, \PDO::PARAM_STR)
+                    $queryBuilder->createNamedParameter($this->exportType, PDO::PARAM_STR)
                 ),
                 $queryBuilder->expr()->eq(
                     'translation_lang',
-                    $queryBuilder->createNamedParameter($this->sysLang, \PDO::PARAM_INT)
+                    $queryBuilder->createNamedParameter($this->sysLang, PDO::PARAM_INT)
                 )
             )
             ->execute()
@@ -314,8 +315,8 @@ abstract class AbstractExportView
     /**
      * Fetches saved exports based on configuration, export format and target language.
      *
-     * @author Andreas Otto <andreas.otto@dkd.de>
      * @return array Information about exports.
+     * @author Andreas Otto <andreas.otto@dkd.de>
      */
     protected function fetchExports()
     {
@@ -326,15 +327,15 @@ abstract class AbstractExportView
             ->where(
                 $queryBuilder->expr()->eq(
                     'l10ncfg_id',
-                    $queryBuilder->createNamedParameter((int)$this->l10ncfgObj->getData('uid'), \PDO::PARAM_INT)
+                    $queryBuilder->createNamedParameter((int)$this->l10ncfgObj->getData('uid'), PDO::PARAM_INT)
                 ),
                 $queryBuilder->expr()->eq(
                     'exportType',
-                    $queryBuilder->createNamedParameter($this->exportType, \PDO::PARAM_STR)
+                    $queryBuilder->createNamedParameter($this->exportType, PDO::PARAM_STR)
                 ),
                 $queryBuilder->expr()->eq(
                     'translation_lang',
-                    $queryBuilder->createNamedParameter($this->sysLang, \PDO::PARAM_INT)
+                    $queryBuilder->createNamedParameter($this->sysLang, PDO::PARAM_INT)
                 )
             )
             ->orderBy('crdate', 'DESC')
@@ -486,7 +487,7 @@ abstract class AbstractExportView
     {
         $this->internalMessages[] = [
             'message' => $message,
-            'key' => $key
+            'key'     => $key,
         ];
     }
 }
