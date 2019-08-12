@@ -125,20 +125,20 @@ class Export extends L10nCommand
         $error = false;
         $time_start = microtime(true);
 
-        $extConf = $this->getExtConf();
+        $this->extensionConfiguration = $this->getExtConf();
 
         // get format (CATXML,EXCEL)
         $format = $input->getOption('format');
 
-        // get l10ncfg command line takes precedence over extConf
+        // get l10ncfg command line takes precedence over extensionConfiguration
         $l10ncfg = $input->getOption('config');
 
         if ($l10ncfg !== 'EXTCONF' && !empty($l10ncfg)) {
             //export single
             $l10ncfgs = explode(',', $l10ncfg);
-        } elseif (!empty($extConf['l10nmgr_cfg'])) {
+        } elseif (!empty($this->extensionConfiguration['l10nmgr_cfg'])) {
             //export multiple
-            $l10ncfgs = explode(',', $extConf['l10nmgr_cfg']);
+            $l10ncfgs = explode(',', $this->extensionConfiguration['l10nmgr_cfg']);
         } else {
             $output->writeln('<error>' . $this->getLanguageService()->getLL('error.no_l10ncfg.msg') . '</error>');
             $error = true;
@@ -149,9 +149,9 @@ class Export extends L10nCommand
         if ($tlang !== '0') {
             //export single
             $tlangs = explode(',', $tlang);
-        } elseif (!empty($extConf['l10nmgr_tlangs'])) {
+        } elseif (!empty($this->extensionConfiguration['l10nmgr_tlangs'])) {
             //export multiple
-            $tlangs = explode(',', $extConf['l10nmgr_tlangs']);
+            $tlangs = explode(',', $this->extensionConfiguration['l10nmgr_tlangs']);
         } else {
             $output->writeln('<error>' . $this->getLanguageService()->getLL('error.target_language_id.msg') . '</error>');
             $error = true;
@@ -215,7 +215,6 @@ class Export extends L10nCommand
     {
         $error = '';
         // Load the configuration
-        $lConf = $this->getExtConf();
         /** @var L10nConfiguration $l10nmgrCfgObj */
         $l10nmgrCfgObj = GeneralUtility::makeInstance(L10nConfiguration::class);
         $l10nmgrCfgObj->load($l10ncfg);
@@ -272,16 +271,16 @@ class Export extends L10nCommand
                 $xmlFileName = PATH_site . $l10nmgrGetXML->render();
                 $l10nmgrGetXML->saveExportInformation();
                 // If email notification is set send export files to responsible translator
-                if ($lConf['enable_notification'] == 1) {
-                    if (empty($lConf['email_recipient'])) {
+                if ($this->extensionConfiguration['enable_notification'] == 1) {
+                    if (empty($this->extensionConfiguration['email_recipient'])) {
                         $output->writeln('<error>' . $this->getLanguageService()->getLL('error.email.repient_missing.msg') . '</error>');
                     }
-                    $this->emailNotification($xmlFileName, $l10nmgrCfgObj, $tlang, $lConf);
+                    $this->emailNotification($xmlFileName, $l10nmgrCfgObj, $tlang);
                 } else {
                     $output->writeln('<error>' . $this->getLanguageService()->getLL('error.email.notification_disabled.msg') . '</error>');
                 }
                 // If FTP option is set upload files to remote server
-                if ($lConf['enable_ftp'] == 1) {
+                if ($this->extensionConfiguration['enable_ftp'] == 1) {
                     if (file_exists($xmlFileName)) {
                         $error .= $this->ftpUpload($xmlFileName, $l10nmgrGetXML->getFileName());
                     } else {
@@ -290,7 +289,7 @@ class Export extends L10nCommand
                 } else {
                     $output->writeln('<error>' . $this->getLanguageService()->getLL('error.ftp.disabled.msg') . '</error>');
                 }
-                if ($lConf['enable_notification'] == 0 && $lConf['enable_ftp'] == 0) {
+                if ($this->extensionConfiguration['enable_notification'] == 0 && $this->extensionConfiguration['enable_ftp'] == 0) {
                     $output->writeln(sprintf(
                         $this->getLanguageService()->getLL('export.file_saved.msg'),
                         $xmlFileName
@@ -334,23 +333,22 @@ class Export extends L10nCommand
     protected function ftpUpload($xmlFileName, $filename)
     {
         $error = '';
-        $lConf = $this->getExtConf();
-        $connection = ftp_connect($lConf['ftp_server']) or die('Connection failed');
+        $connection = ftp_connect($this->extensionConfiguration['ftp_server']) or die('Connection failed');
         if ($connection) {
-            if (@ftp_login($connection, $lConf['ftp_server_username'], $lConf['ftp_server_password'])) {
-                if (ftp_put($connection, $lConf['ftp_server_path'] . $filename, $xmlFileName, FTP_BINARY)) {
+            if (@ftp_login($connection, $this->extensionConfiguration['ftp_server_username'], $this->extensionConfiguration['ftp_server_password'])) {
+                if (ftp_put($connection, $this->extensionConfiguration['ftp_server_path'] . $filename, $xmlFileName, FTP_BINARY)) {
                     ftp_close($connection) or die("Couldn't close connection");
                 } else {
                     $error .= sprintf(
                             $this->getLanguageService()->getLL('error.ftp.connection.msg'),
-                            $lConf['ftp_server_path'],
+                            $this->extensionConfiguration['ftp_server_path'],
                             $filename
                         ) . "\n";
                 }
             } else {
                 $error .= sprintf(
                         $this->getLanguageService()->getLL('error.ftp.connection_user.msg'),
-                        $lConf['ftp_server_username']
+                        $this->extensionConfiguration['ftp_server_username']
                     ) . "\n";
                 ftp_close($connection) or die("Couldn't close connection");
             }
@@ -366,12 +364,11 @@ class Export extends L10nCommand
      * @param string $xmlFileName Name of the XML file
      * @param L10nConfiguration $l10nmgrCfgObj L10N Manager configuration object
      * @param int $tlang ID of the language to translate to
-     * @param $lConf
      */
-    protected function emailNotification($xmlFileName, $l10nmgrCfgObj, $tlang, $lConf)
+    protected function emailNotification($xmlFileName, $l10nmgrCfgObj, $tlang)
     {
         // If at least a recipient is indeed defined, proceed with sending the mail
-        $recipients = GeneralUtility::trimExplode(',', $lConf['email_recipient']);
+        $recipients = GeneralUtility::trimExplode(',', $this->extensionConfiguration['email_recipient']);
         if (count($recipients) > 0) {
             $fullFilename = PATH_site . 'uploads/tx_l10nmgr/jobs/out/' . $xmlFileName;
             // Get source & target language ISO codes
@@ -383,8 +380,8 @@ class Export extends L10nCommand
             $sourceLang = $sourceStaticLangArr['lg_iso_2'];
             $targetLang = $targetStaticLangArr['lg_iso_2'];
             // Collect mail data
-            $fromMail = $lConf['email_sender'];
-            $fromName = $lConf['email_sender_name'];
+            $fromMail = $this->extensionConfiguration['email_sender'];
+            $fromName = $this->extensionConfiguration['email_sender_name'];
             $subject = sprintf($this->getLanguageService()->getLL('email.suject.msg'), $sourceLang, $targetLang,
                 $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename']);
             // Assemble message body
@@ -403,7 +400,7 @@ class Export extends L10nCommand
                 'msg10' => $this->getLanguageService()->getLL('email.info.exportef_file.msg'),
                 'msg11' => $xmlFileName,
             ];
-            if ($lConf['email_attachment']) {
+            if ($this->extensionConfiguration['email_attachment']) {
                 $message['msg3'] = sprintf($this->getLanguageService()->getLL('email.new_translation_job_attached.msg'),
                     $sourceLang, $targetLang, $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename']);
             }
@@ -416,7 +413,7 @@ class Export extends L10nCommand
             $mailObject->setSubject($subject);
             $mailObject->setFormat('text/plain');
             $mailObject->setBody($msg);
-            if ($lConf['email_attachment']) {
+            if ($this->extensionConfiguration['email_attachment']) {
                 $attachment = Swift_Attachment::fromPath($fullFilename, 'text/xml');
                 $mailObject->attach($attachment);
             }
