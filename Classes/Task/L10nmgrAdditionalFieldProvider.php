@@ -22,6 +22,7 @@ namespace Localizationteam\L10nmgr\Task;
 
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
+use TYPO3\CMS\Core\Utility\DebugUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Lang\LanguageService;
 use TYPO3\CMS\Scheduler\AdditionalFieldProviderInterface;
@@ -38,7 +39,7 @@ use TYPO3\CMS\Scheduler\Task\AbstractTask;
  * @package TYPO3
  * @subpackage tx_l10nmgr
  */
-class LocalizationmanagerFileGarbageCollectionAdditionalFieldProvider implements AdditionalFieldProviderInterface
+class L10nmgrAdditionalFieldProvider implements AdditionalFieldProviderInterface
 {
     /**
      * @var LanguageService
@@ -157,7 +158,7 @@ class LocalizationmanagerFileGarbageCollectionAdditionalFieldProvider implements
      *
      * @param array $submittedData Contains data submitted by the user
      *
-     * @param LocalizationmanagerFileGarbageCollection|AbstractTask $task
+     * @param L10nmgrFileGarbageCollection|AbstractTask $task
      * @return void
      */
     public function saveAdditionalFields(array $submittedData, AbstractTask $task)

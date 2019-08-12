@@ -21,7 +21,6 @@
   },
   "require": {
     "sjbr/static-info-tables": "^6.7.0",
-    "typo3/cms-backend": "^9.5.0",
     "typo3/cms-core": "^9.5.0",
     "typo3/cms-lang": "^9.5.0",
     "typo3/cms-lowlevel": "^9.5.0",

@@ -52,7 +52,7 @@ class L10nCommand extends Command
     {
         if (!$this->languageService instanceof LanguageService) {
             $this->languageService = GeneralUtility::makeInstance(LanguageService::class);
-            $fileRef = 'EXT:l10nmgr/Resources/Private/Language/Cli/locallang.xml';
+            $fileRef = 'EXT:l10nmgr/Resources/Private/Language/Cli/locallang.xlf';
             $this->languageService->includeLLFile($fileRef);
             $this->languageService->init('');
         }

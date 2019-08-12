@@ -49,7 +49,7 @@ class Export extends L10nCommand
                 'config',
                 'c',
                 InputOption::VALUE_OPTIONAL,
-                "UIDs of the localization manager configurations to be used for export. Comma seperated values, no spaces.\nDefault is EXTCONF which means values are taken from extension configuration.",
+                "UIDs of the localization manager configurations to be used for export. Comma separated values, no spaces.\nDefault is EXTCONF which means values are taken from extension configuration.",
                 'EXTCONF'
             )
             ->addOption(
@@ -66,7 +66,7 @@ class Export extends L10nCommand
                 'CATXML'
             )
             ->addOption('hidden', null, InputOption::VALUE_NONE, 'Do not export hidden contents')
-            ->addOption('new', 'u', InputOption::VALUE_NONE, 'Export only new contents')
+            ->addOption('new', 'n', InputOption::VALUE_NONE, 'Export only new contents')
             ->addOption(
                 'srcPID',
                 'p',
