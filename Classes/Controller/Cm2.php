@@ -304,5 +304,3 @@ class Cm2 extends BaseScriptClass
         parent::menuConfig();
     }
 }
-
-?>
