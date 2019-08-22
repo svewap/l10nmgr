@@ -23,7 +23,10 @@ namespace Localizationteam\L10nmgr\Model;
 use PDO;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
+use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
+use TYPO3\CMS\Core\Utility\DebugUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Lang\LanguageService;
 
@@ -318,7 +321,16 @@ class CatXmlImportManager
         $dataHandler->start([], []);
         foreach ($delL10NData as $element) {
             list($table, $elementUid) = explode(':', $element);
+            /** @var $queryBuilder QueryBuilder */
             $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
+
+            /** @var $deletedRestriction DeletedRestriction */
+            $deletedRestriction = GeneralUtility::makeInstance(DeletedRestriction::class);
+
+            $queryBuilder
+                ->getRestrictions()
+                ->removeAll()
+                ->add($deletedRestriction);
             $delDataQuery = $queryBuilder->select('uid')
                 ->from($table)
                 ->where(
