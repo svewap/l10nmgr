@@ -25,6 +25,7 @@ use Exception;
 use RuntimeException;
 use SplFileInfo;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Scheduler\Task\AbstractTask;
 
 /**
  * L10N Manager file garbage collection task
