@@ -36,6 +36,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Swift_Attachment;
 use TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider;
 use TYPO3\CMS\Backend\Module\BaseScriptClass;
+use TYPO3\CMS\Backend\Routing\Exception\ResourceNotFoundException;
+use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\Router;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\DocumentTemplate;
@@ -161,6 +163,8 @@ class LocalizationManager extends BaseScriptClass
      * Main function of the module. Write the content to
      *
      * @return void
+     * @throws ResourceNotFoundException
+     * @throws RouteNotFoundException
      */
     protected function main()
     {
@@ -307,6 +311,8 @@ return false;
      * @param string $addParams Additional parameters to pass to the script.
      * @param string $script The script to send the &id to, if empty it's automatically found
      * @return string The completes script URL
+     * @throws \TYPO3\CMS\Backend\Routing\Exception\ResourceNotFoundException
+     * @throws \TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException
      */
     protected static function buildScriptUrl($mainParams, $addParams, $script = '')
     {
@@ -345,6 +351,8 @@ return false;
      * @param string $label
      *
      * @return string HTML code for checkbox
+     * @throws \TYPO3\CMS\Backend\Routing\Exception\ResourceNotFoundException
+     * @throws \TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException
      * @see getFuncMenu()
      */
     public static function getFuncCheck(
@@ -920,8 +928,10 @@ return false;
         // If any step fails, an exception is thrown
         $connection = ftp_connect($this->extensionConfiguration['ftp_server']);
         if ($connection) {
-            if (@ftp_login($connection, $this->extensionConfiguration['ftp_server_username'], $this->extensionConfiguration['ftp_server_password'])) {
-                if (ftp_put($connection, $this->extensionConfiguration['ftp_server_path'] . $xmlFileName, PATH_site . $filename,
+            if (@ftp_login($connection, $this->extensionConfiguration['ftp_server_username'],
+                $this->extensionConfiguration['ftp_server_password'])) {
+                if (ftp_put($connection, $this->extensionConfiguration['ftp_server_path'] . $xmlFileName,
+                    PATH_site . $filename,
                     FTP_BINARY)) {
                     ftp_close($connection);
                 } else {

@@ -156,4 +156,3 @@ $SOBE = GeneralUtility::makeInstance(Cm3::class);
 $SOBE->init();
 $SOBE->main();
 $SOBE->printContent();
-?>

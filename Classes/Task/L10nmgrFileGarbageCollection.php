@@ -25,6 +25,7 @@ use Exception;
 use RuntimeException;
 use SplFileInfo;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Scheduler\Task\AbstractTask;
 
 /**
  * L10N Manager file garbage collection task
@@ -36,7 +37,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  * @package TYPO3
  * @subpackage tx_l10nmgr
  */
-class L10nmgrFileGarbageCollection extends \TYPO3\CMS\Scheduler\Task\AbstractTask
+class L10nmgrFileGarbageCollection extends AbstractTask
 {
     /**
      * @var array List of directories in which files should be cleaned up

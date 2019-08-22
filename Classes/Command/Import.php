@@ -329,7 +329,6 @@ class Import extends L10nCommand
      * Imports data from one or more XML files
      * Several files may be contained in a ZIP archive
      *
-     * @return string Result output
      * @throws Exception
      */
     protected function importXMLFile($callParameters)
