@@ -30,6 +30,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Exception;
 use TYPO3\CMS\Core\Mail\MailMessage;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
@@ -132,7 +133,7 @@ class Export extends L10nCommand
 
         // get l10ncfg command line takes precedence over extensionConfiguration
         $l10ncfg = $input->getOption('config');
-
+        $l10ncfgs = [];
         if ($l10ncfg !== 'EXTCONF' && !empty($l10ncfg)) {
             //export single
             $l10ncfgs = explode(',', $l10ncfg);
@@ -146,6 +147,7 @@ class Export extends L10nCommand
 
         // get target languages
         $tlang = $input->getOption('target') ?? '0';
+        $tlangs = [];
         if ($tlang !== '0') {
             //export single
             $tlangs = explode(',', $tlang);
@@ -205,6 +207,7 @@ class Export extends L10nCommand
      *
      * @param int $l10ncfg ID of the configuration to load
      * @param int $tlang ID of the language to translate to
+     * @param string $format
      * @param InputInterface $input
      * @param OutputInterface $output
      *
@@ -308,6 +311,7 @@ class Export extends L10nCommand
      */
     protected function getStaticLangUid($sourceLangStaticId)
     {
+        /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_language');
         $result = $queryBuilder->select('uid')
             ->from('sys_language')

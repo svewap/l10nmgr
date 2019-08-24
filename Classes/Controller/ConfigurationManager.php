@@ -33,6 +33,7 @@ use TYPO3\CMS\Backend\Template\DocumentTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -83,6 +84,7 @@ class ConfigurationManager extends BaseScriptClass
      */
     public function __construct()
     {
+        parent::__construct();
         $this->iconFactory = GeneralUtility::makeInstance(IconFactory::class);
         $this->moduleTemplate = GeneralUtility::makeInstance(ModuleTemplate::class);
         $this->getLanguageService()->includeLLFile('EXT:l10nmgr/Resources/Private/Language/Modules/ConfigurationManager/locallang.xlf');
@@ -212,6 +214,7 @@ class ConfigurationManager extends BaseScriptClass
     protected function getAllConfigurations()
     {
         // Read all l10nmgr configurations from the database
+        /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_l10nmgr_cfg');
         $configurations = $queryBuilder->select('*')
             ->from('tx_l10nmgr_cfg')

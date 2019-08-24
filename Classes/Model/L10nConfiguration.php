@@ -25,6 +25,7 @@ use TYPO3\CMS\Backend\Tree\View\PageTreeView;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -195,6 +196,7 @@ class L10nConfiguration
         // Serialize back and save it to record:
         $l10ncfg['flexformdiff'] = serialize($flexFormDiffForAllLanguages);
 
+        /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_l10nmgr_cfg');
         $queryBuilder->update('tx_l10nmgr_cfg')
             ->set('flexformdiff', $l10ncfg['flexformdiff'])

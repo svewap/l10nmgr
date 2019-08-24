@@ -32,7 +32,9 @@ use TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools;
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Database\Query\Restriction\BackendWorkspaceRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\HiddenRestriction;
@@ -135,6 +137,7 @@ class Tools
     {
         $this->t8Tools = GeneralUtility::makeInstance(TranslationConfigurationProvider::class);
         // Find all system languages:
+        /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_language');
         $this->sys_languages = $queryBuilder->select('*')->from('sys_language')->execute()->fetchAll();
     }
@@ -497,6 +500,7 @@ class Tools
      */
     protected function getSingleRecordToTranslate($table, $uid, $previewLanguage = 0)
     {
+        /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
         $queryBuilder->getRestrictions()
             ->removeAll()
@@ -788,6 +792,7 @@ class Tools
         $constraintsB = [];
 
         // Look for translations of this record, index by language field value:
+        /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
         $queryBuilder->getRestrictions()
             ->removeAll()
@@ -1112,6 +1117,7 @@ class Tools
      */
     public function getRecordsToTranslateFromTable($table, $pageId, $previewLanguage = 0)
     {
+        /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
         $queryBuilder->getRestrictions()
             ->removeAll()
@@ -1202,6 +1208,7 @@ class Tools
      */
     protected function updateIndexTable($record)
     {
+        /** @var $databaseConnection Connection */
         $databaseConnection = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getConnectionForTable('tx_l10nmgr_index');
 
@@ -1221,6 +1228,7 @@ class Tools
      */
     public function flushIndexOfWorkspace($ws)
     {
+        /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_l10nmgr_index');
         $queryBuilder->delete('tx_l10nmgr_index')
             ->where(

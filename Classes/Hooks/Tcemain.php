@@ -35,6 +35,7 @@ use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -133,6 +134,7 @@ class Tcemain
     public function calcStat($p, $languageList, $noLink = false)
     {
         $output = '';
+        /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_l10nmgr_index');
         $queryBuilder->select('*')->from('tx_l10nmgr_index');
         $queryBuilder->where(
@@ -212,7 +214,7 @@ class Tcemain
                 . htmlspecialchars(
                     'parent.list_frame.location.href="' . $GLOBALS['BACK_PATH']
                     . $this->siteRelPath('l10nmgr')
-                    . 'cm2/index.php?table=' . $p[0] . '&uid=' . $p[1] . '&languageList=' . rawurlencode($languageList)
+                    . 'cm2/index.php?table=' . $p[0] . '&uid=' . $p[1] . '&languageList=' . rawurlencode(implode(',', $languageList))
                     . '"; return false;'
                 ) . '" target="listframe">' . $output . '</a>'
                 : $output;

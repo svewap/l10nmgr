@@ -194,11 +194,11 @@ class Zip
 
     /**
      * Returns an array with all files and folders in $extPath
-     * @paramarray $fileArr
-     * @paramstring $extPath
+     * @param array $fileArr
+     * @param string $extPath
      *
-     * @returnarrayArray with files and folders
-     * @accessprivate
+     * @return array Array with files and folders
+     * @access private
      */
     protected function getAllFilesAndFoldersInPath($fileArr, $extPath)
     {

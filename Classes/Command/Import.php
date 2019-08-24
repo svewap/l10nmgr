@@ -33,6 +33,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Exception;
 use TYPO3\CMS\Core\Mail\MailMessage;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
@@ -144,6 +145,8 @@ class Import extends L10nCommand
      * This method reads the command-line arguments and prepares a list of call parameters
      * It takes care of backwards-compatibility with the old way of calling the import script
      *
+     * @param InputInterface $input
+     * @param OutputInterface $output
      * @return array
      * @throws Exception
      */
@@ -287,6 +290,7 @@ class Import extends L10nCommand
     /**
      * Previews the source to import
      *
+     * @param string $stringParameter
      * @return string Result output
      * @throws Exception
      */
@@ -329,6 +333,7 @@ class Import extends L10nCommand
      * Imports data from one or more XML files
      * Several files may be contained in a ZIP archive
      *
+     * @param array $callParameters
      * @throws Exception
      */
     protected function importXMLFile($callParameters)
@@ -642,11 +647,12 @@ class Import extends L10nCommand
             $recipients = GeneralUtility::trimExplode(',', $this->extensionConfiguration['email_recipient_import']);
             if (count($recipients) > 0) {
                 // First of all get a list of all workspaces and all l10nmgr configurations to use in the reporting
+                /** @var $queryBuilder QueryBuilder */
                 $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_workspace');
-                $queryBuilder->select('uid', 'title')
+                $records = $queryBuilder->select('uid', 'title')
                     ->from('sys_workspace')
-                    ->execute();
-                $records = $queryBuilder->fetchAll();
+                    ->execute()
+                    ->fetchAll();
                 $workspaces = [];
                 if (!empty($records)) {
                     foreach ($records as $record) {
@@ -654,10 +660,10 @@ class Import extends L10nCommand
                     }
                 }
                 $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_l10nmgr_cfg');
-                $queryBuilder->select('uid', 'title')
+                $records = $queryBuilder->select('uid', 'title')
                     ->from('tx_l10nmgr_cfg')
-                    ->execute();
-                $records = $queryBuilder->fetchAll();
+                    ->execute()
+                    ->fetchAll();
                 $l10nConfigurations = [];
                 if (!empty($records)) {
                     foreach ($records as $record) {

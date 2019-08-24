@@ -49,7 +49,7 @@ class CatXmlImportManager
     /**
      * @var string $xml CATXML
      */
-    protected $xml = '';
+    protected $xmlString = '';
     /**
      * @var array $xmlNodes parsed XML
      */

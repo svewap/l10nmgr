@@ -30,6 +30,7 @@ use TYPO3\CMS\Backend\Module\BaseScriptClass;
 use TYPO3\CMS\Backend\Template\DocumentTemplate;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Lang\LanguageService;
@@ -142,8 +143,9 @@ class Cm2 extends BaseScriptClass
             } else {
                 $uidPid = 'recpid';
             }
+            /** @var $queryBuilder QueryBuilder */
             $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_l10nmgr_index');
-            $queryBuilder->select('*')
+            $records = $queryBuilder->select('*')
                 ->from('tx_l10nmgr_index')
                 ->where(
                     $queryBuilder->expr()->eq(
@@ -184,8 +186,8 @@ class Cm2 extends BaseScriptClass
                 ->orderBy('translation_lang')
                 ->addOrderBy('tablename')
                 ->addOrderBy('recuid')
-                ->execute();
-            $records = $queryBuilder->fetchAll();
+                ->execute()
+                ->fetchAll();
 
             //	\TYPO3\CMS\Core\Utility\GeneralUtility::debugRows($records,'Index entries for '.$table.':'.$uid);
             $tRows = [];
