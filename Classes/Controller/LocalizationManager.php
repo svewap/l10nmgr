@@ -118,6 +118,7 @@ class LocalizationManager extends BaseScriptClass
      */
     public function __construct()
     {
+        parent::__construct();
         $this->iconFactory = GeneralUtility::makeInstance(IconFactory::class);
         $this->moduleTemplate = GeneralUtility::makeInstance(ModuleTemplate::class);
         $this->getLanguageService()->includeLLFile('EXT:l10nmgr/Resources/Private/Language/Modules/LocalizationManager/locallang.xlf');
@@ -133,6 +134,8 @@ class LocalizationManager extends BaseScriptClass
      * @param ServerRequestInterface $request the current request
      * @param ResponseInterface $response
      * @return ResponseInterface the response with the content
+     * @throws ResourceNotFoundException
+     * @throws RouteNotFoundException
      */
     public function mainAction(ServerRequestInterface $request, ResponseInterface $response)
     {
@@ -266,6 +269,8 @@ return false;
      * @param string $label
      *
      * @return string HTML code for selector box
+     * @throws ResourceNotFoundException
+     * @throws RouteNotFoundException
      */
     public static function getFuncMenu(
         $mainParams,
@@ -311,8 +316,8 @@ return false;
      * @param string $addParams Additional parameters to pass to the script.
      * @param string $script The script to send the &id to, if empty it's automatically found
      * @return string The completes script URL
-     * @throws \TYPO3\CMS\Backend\Routing\Exception\ResourceNotFoundException
-     * @throws \TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException
+     * @throws ResourceNotFoundException
+     * @throws RouteNotFoundException
      */
     protected static function buildScriptUrl($mainParams, $addParams, $script = '')
     {
@@ -351,8 +356,8 @@ return false;
      * @param string $label
      *
      * @return string HTML code for checkbox
-     * @throws \TYPO3\CMS\Backend\Routing\Exception\ResourceNotFoundException
-     * @throws \TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException
+     * @throws ResourceNotFoundException
+     * @throws RouteNotFoundException
      * @see getFuncMenu()
      */
     public static function getFuncCheck(
@@ -389,11 +394,13 @@ return false;
      *
      * @paramL10nConfiguration $l10ncfgObj Localization Configuration record
      *
+     * @param $l10ncfgObj
      * @return void
+     * @throws ResourceNotFoundException
+     * @throws RouteNotFoundException
      */
     protected function moduleContent($l10ncfgObj)
     {
-        $subheader = '';
         switch ($this->MOD_SETTINGS["action"]) {
             case 'inlineEdit':
             case 'link':
@@ -463,6 +470,8 @@ return false;
     /**
      * @param L10nConfiguration $l10ncfgObj
      * @return string
+     * @throws ResourceNotFoundException
+     * @throws RouteNotFoundException
      */
     protected function excelExportImportAction($l10ncfgObj)
     {

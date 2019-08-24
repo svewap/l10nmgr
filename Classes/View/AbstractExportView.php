@@ -26,7 +26,9 @@ use Localizationteam\L10nmgr\Model\L10nConfiguration;
 use PDO;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageRendererResolver;
@@ -155,6 +157,7 @@ abstract class AbstractExportView
             'exportType'       => (int)$this->exportType,
         ];
 
+        /** @var $databaseConnection Connection */
         $databaseConnection = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getConnectionForTable('tx_l10nmgr_exportdata');
         $res = $databaseConnection->insert(
@@ -242,6 +245,7 @@ abstract class AbstractExportView
      */
     public function checkExports()
     {
+        /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_l10nmgr_exportdata');
         $numRows = $queryBuilder->count('*')
             ->from('tx_l10nmgr_exportdata')
@@ -320,6 +324,7 @@ abstract class AbstractExportView
      */
     protected function fetchExports()
     {
+        /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable('tx_l10nmgr_exportdata');
         $exports = $queryBuilder->select('crdate', 'l10ncfg_id', 'exportType', 'translation_lang', 'filename')

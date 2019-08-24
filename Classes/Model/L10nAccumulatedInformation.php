@@ -28,6 +28,7 @@ use TYPO3\CMS\Backend\Tree\View\PageTreeView;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\RootlineUtility;
 
@@ -182,7 +183,6 @@ class L10nAccumulatedInformation
         if ($previewLanguage) {
             $t8Tools->previewLanguages = [$previewLanguage];
         }
-        $fileList = '';
         // Traverse tree elements:
         /**
          * @var $rootlineUtility RootlineUtility
@@ -293,6 +293,7 @@ class L10nAccumulatedInformation
                         $fileList = implode(',',
                             array_keys(array_flip(GeneralUtility::intExplode(',', $fileList, true))));
                         if (!empty($fileList)) {
+                            /** @var $queryBuilder QueryBuilder */
                             $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_file_metadata');
                             $metaData = $queryBuilder->select('uid')
                                 ->from('sys_file_metadata')
@@ -363,6 +364,7 @@ class L10nAccumulatedInformation
 
     /**
      * @param string $indexList
+     * @param string $excludeList
      */
     protected function addPagesMarkedAsIncluded($indexList, $excludeList)
     {
@@ -371,6 +373,7 @@ class L10nAccumulatedInformation
         if ($indexList) {
             $this->includeIndex = array_flip(GeneralUtility::trimExplode(',', $indexList, true));
         }
+        /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
         $explicitlyIncludedPages = $queryBuilder->select('uid')
             ->from('pages')
@@ -393,6 +396,7 @@ class L10nAccumulatedInformation
                 }
             }
         }
+        /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
         $includingParentPages = $queryBuilder->select('uid')
             ->from('pages')
@@ -423,6 +427,7 @@ class L10nAccumulatedInformation
     {
         $level++;
         if ($uid > 0 && $level < 100) {
+            /** @var $queryBuilder QueryBuilder */
             $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
             $subPages = $queryBuilder->select('uid', 'pid', 'l10nmgr_configuration', 'l10nmgr_configuration_next_level')
                 ->from('pages')

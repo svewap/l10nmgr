@@ -26,6 +26,7 @@ use Psr\Log\LoggerAwareTrait;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Database\Query\Restriction\BackendWorkspaceRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\Database\RelationHandler;
@@ -279,6 +280,7 @@ class L10nBaseService implements LoggerAwareInterface
         string $orderBy = ''
     ): array {
         if (is_array($GLOBALS['TCA'][$theTable])) {
+            /** @var $queryBuilder QueryBuilder */
             $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($theTable);
 
             $queryBuilder->getRestrictions()
@@ -547,7 +549,6 @@ class L10nBaseService implements LoggerAwareInterface
             $flexToolObj = GeneralUtility::makeInstance(FlexFormTools::class);
             $gridElementsInstalled = ExtensionManagementUtility::isLoaded('gridelements');
             $fluxInstalled = ExtensionManagementUtility::isLoaded('flux');
-            $element = [];
             $TCEmain_data = [];
             $this->TCEmain_cmd = [];
             $Tlang = '';
@@ -621,6 +622,7 @@ class L10nBaseService implements LoggerAwareInterface
                                                     $this->TCEmain_cmd[$table][$elementUid]['localize'] = $Tlang;
                                                     $TCEmain_data[$table][$TuidString]['tablenames'] = 'pages';
                                                 } else {
+                                                    /** @var $queryBuilder QueryBuilder */
                                                     $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($element['tablenames']);
                                                     $parent = $queryBuilder->select('*')
                                                         ->from($element['tablenames'])
@@ -776,6 +778,7 @@ class L10nBaseService implements LoggerAwareInterface
                         } else {
                             if ($this->childMappingArray[$table][$TdefRecord]) {
                                 if ($this->childMappingArray[$table][$TdefRecord] === true) {
+                                    /** @var $queryBuilder QueryBuilder */
                                     $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
                                     $queryBuilder->getRestrictions()->removeAll()->add(GeneralUtility::makeInstance(DeletedRestriction::class));
 
@@ -871,6 +874,7 @@ class L10nBaseService implements LoggerAwareInterface
      */
     protected function getRawRecord(string $table, int $elementUid): array
     {
+        /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
         $queryBuilder->getRestrictions()->removeAll()->add(GeneralUtility::makeInstance(DeletedRestriction::class));
 
@@ -902,6 +906,7 @@ class L10nBaseService implements LoggerAwareInterface
             $this->checkedParentRecords[$parentField][$element['uid']] = true;
             $translatedParent = [];
             if ($element[$parentField] > 0) {
+                /** @var $queryBuilder QueryBuilder */
                 $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tt_content');
                 $queryBuilder->getRestrictions()->removeAll()->add(GeneralUtility::makeInstance(DeletedRestriction::class));
 

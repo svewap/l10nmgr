@@ -227,10 +227,10 @@ class ExcelXmlView extends AbstractExportView implements ExportViewInterface
     /**
      * Force a new source language to export the content to translate
      *
-     * @paraminteger $id
+     * @param integer $id
      *
-     * @accesspublic
-     * @returnvoid
+     * @access public
+     * @return void
      */
     public function setForcedSourceLanguage($id)
     {
