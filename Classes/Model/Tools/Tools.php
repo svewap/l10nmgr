@@ -40,6 +40,7 @@ use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\HiddenRestriction;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Utility\DiffUtility;
+use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 
@@ -601,6 +602,7 @@ class Tools
     {
         // Initialize:
         $tInfo = $this->translationInfo($table, $row['uid'], $sysLang, null, '', $previewLanguage);
+        $tvInstalled = ExtensionManagementUtility::isLoaded('templavoila');
         $this->detailsOutput = [];
         $this->flexFormDiff = $flexFormDiff;
         if (is_array($tInfo)) {
@@ -679,9 +681,10 @@ class Tools
                                         $field,
                                         $row
                                     );
-                                    if ($dataStructArray['meta']['langDisable']
+                                    if (!$tvInstalled
+                                        ||
+                                        $dataStructArray['meta']['langDisable']
                                         && $dataStructArray['meta']['langDatabaseOverlay'] == 1
-                                        || $table === 'tt_content' && $row['CType'] === 'fluidcontent_content'
                                     ) {
                                         // Create and call iterator object:
                                         /** @var FlexFormTools $flexObj */
