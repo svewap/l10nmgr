@@ -1,6 +1,7 @@
 {
   "name": "localizationteam/l10nmgr",
   "type": "typo3-cms-extension",
+  "version" : "9.0.0",
   "description": "Module for managing localization import and export",
   "homepage": "https://docs.typo3.org/typo3cms/extensions/l10nmgr/",
   "license": [
@@ -23,7 +24,6 @@
     "sjbr/static-info-tables": "^6.7.0",
     "typo3/cms-core": "^9.5.0",
     "typo3/cms-lang": "^9.5.0",
-    "typo3/cms-lowlevel": "^9.5.0",
     "typo3/cms-scheduler": "^9.5.0"
   },
   "autoload": {
