@@ -20,8 +20,8 @@ $EM_CONF[$_EXTKEY] = [
     'author_company'   => 'Localization Manager Team',
     'constraints'      => [
         'depends'   => [
-            'typo3'              => '9.5.0-9.5.99',
-            'scheduler'          => '9.5.0-9.5.99',
+            'typo3'              => '10.0.0-10.99.99',
+            'scheduler'          => '10.0.0-10.99.99',
             'static_info_tables' => '6.4.2-0.0.0',
         ],
         'conflicts' => [],
