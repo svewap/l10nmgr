@@ -112,7 +112,9 @@ class TranslationDataFactory implements LoggerAwareInterface
                             }
                             $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': IMPORT: ' . $translation[$attrs['table']][$attrs['elementUid']][$attrs['key']]);
                         }
-                    }
+                        if (!empty($translation[$attrs['table']][$attrs['elementUid']][$attrs['key']])) {
+                            $translation[$attrs['table']][$attrs['elementUid']][$attrs['key']] = str_replace([' &gt; ', ' &lt; '],[' > ', ' < '],$translation[$attrs['table']][$attrs['elementUid']][$attrs['key']]);
+                        }
                 }
             }
         }
@@ -151,7 +153,7 @@ class TranslationDataFactory implements LoggerAwareInterface
     {
         // Parse XML in a rude fashion:
         // Check if &nbsp; has to be substituted -> DOCTYPE -> entity?
-        $xmlNodes = GeneralUtility::xml2tree(
+        $xmlNodes = XmlTools::xml2tree(
             str_replace('&nbsp;', '&#160;', $fileContent)
         ); // For some reason PHP chokes on incoming &nbsp; in XML!
         $translation = [];
@@ -220,7 +222,7 @@ class TranslationDataFactory implements LoggerAwareInterface
     {
         /** @var RteHtmlParser $parseHTML */
         $parseHTML = GeneralUtility::makeInstance(RteHtmlParser::class);
-        $xmlNodes = GeneralUtility::xml2tree(
+        $xmlNodes = XmlTools::xml2tree(
             str_replace('&nbsp;', '&#160;', $fileContent),
             2
         ); // For some reason PHP chokes on incoming &nbsp; in XML!
