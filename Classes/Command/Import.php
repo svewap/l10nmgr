@@ -26,6 +26,7 @@ use Localizationteam\L10nmgr\Model\CatXmlImportManager;
 use Localizationteam\L10nmgr\Model\L10nBaseService;
 use Localizationteam\L10nmgr\Model\L10nConfiguration;
 use Localizationteam\L10nmgr\Model\MkPreviewLinkService;
+use Localizationteam\L10nmgr\Model\Tools\XmlTools;
 use Localizationteam\L10nmgr\Model\TranslationData;
 use Localizationteam\L10nmgr\Model\TranslationDataFactory;
 use Localizationteam\L10nmgr\Zip;
@@ -606,7 +607,7 @@ class Import extends L10nCommand
             );
         }
         // For some reason PHP chokes on incoming &nbsp; in XML!
-        $xmlNodes = GeneralUtility::xml2tree(str_replace('&nbsp;', '&#160;', $fileContent), 3);
+        $xmlNodes = XmlTools::xml2tree(str_replace('&nbsp;', '&#160;', $fileContent), 3);
         if (!is_array($xmlNodes)) {
             throw new Exception(
                 $this->getLanguageService()->getLL('import.manager.error.parsing.xml2tree.message') . $xmlNodes,
