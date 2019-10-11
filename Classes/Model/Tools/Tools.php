@@ -235,8 +235,12 @@ class Tools
                 if ($TCEformsCfg['l10n_mode'] == 'mergeIfNotBlank') {
                     $msg .= 'This field is optional. If not filled in, the default language value will be used.';
                 }
-                if (GeneralUtility::inList('shortcut,shortcut_mode,urltype,url_scheme',
-                        $kFieldName) && $kTableName === 'pages') {
+                if ((
+                        GeneralUtility::inList('shortcut,shortcut_mode,urltype,url_scheme', $kFieldName)
+                        && $kTableName === 'pages'
+                    )
+                    || $TCEformsCfg['labelField'] === $kFieldName
+                ) {
                     $this->bypassFilter = true;
                 }
                 $is_HIDE_L10N_SIBLINGS = false;
@@ -253,19 +257,22 @@ class Tools
                         'HIDE_L10N_SIBLINGS');
                 }
                 if (!$is_HIDE_L10N_SIBLINGS) {
-                    if (!GeneralUtility::isFirstPartOfStr($kFieldName, 't3ver_') || $TCEformsCfg['labelField'] === $kFieldName) {
-                        if (!$this->filters['l10n_categories'] || GeneralUtility::inList($this->filters['l10n_categories'],
-                                $TCEformsCfg['l10n_cat']) || $TCEformsCfg['labelField'] === $kFieldName) {
+                    if (!GeneralUtility::isFirstPartOfStr($kFieldName, 't3ver_')) {
+                        if (!$this->filters['l10n_categories']
+                            || GeneralUtility::inList($this->filters['l10n_categories'], $TCEformsCfg['l10n_cat'])
+                            || $this->bypassFilter
+                        ) {
                             if (!$this->filters['fieldTypes']
                                 || GeneralUtility::inList($this->filters['fieldTypes'], $TCEformsCfg['config']['type'])
-                                || $this->bypassFilter  || $TCEformsCfg['labelField'] === $kFieldName
+                                || $this->bypassFilter
                             ) {
                                 if (!$this->filters['noEmptyValues'] || !(!$dataValue && !$translationValue)
-                                    || !empty($previewLanguageValues[key($previewLanguageValues)]) || $TCEformsCfg['labelField'] === $kFieldName
+                                    || !empty($previewLanguageValues[key($previewLanguageValues)])
+                                    || $this->bypassFilter
                                 ) {
                                     // Checking that no translation value exists either; if a translation value is found it is considered that it should be translated
                                     // even if the default value is empty for some reason.
-                                    if (!$this->filters['noIntegers'] || !MathUtility::canBeInterpretedAsInteger($dataValue) || $this->bypassFilter || $TCEformsCfg['labelField'] === $kFieldName) {
+                                    if (!$this->filters['noIntegers'] || !MathUtility::canBeInterpretedAsInteger($dataValue) || $this->bypassFilter) {
                                         $this->detailsOutput['fields'][$key] = [
                                             'defaultValue'          => $dataValue,
                                             'translationValue'      => $translationValue,
