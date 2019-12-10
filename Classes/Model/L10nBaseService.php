@@ -736,7 +736,7 @@ class L10nBaseService implements LoggerAwareInterface
                                     'TCEmain_data' => $TCEmain_data,
                                     'TCEmain_cmd'  => $this->TCEmain_cmd,
                                 ];
-                                $this->TCEmain_cmd = GeneralUtility::callUserFunction($hookObj, $parameters, $this);
+                                $this->TCEmain_data = GeneralUtility::callUserFunction($hookObj, $parameters, $this);
                             }
                         }
                     }
