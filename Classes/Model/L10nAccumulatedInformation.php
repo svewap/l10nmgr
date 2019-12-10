@@ -273,7 +273,7 @@ class L10nAccumulatedInformation
                                                 $this->_increaseInternalCounters($accum[$pageId]['items'][$table][$row['uid']]['fields']);
                                             }
                                         } else {
-                                            if (is_array($row) && !isset($excludeIndex[$table . ':' . $row['uid']])) {
+                                            if (is_array($row) && !isset($this->excludeIndex[$table . ':' . $row['uid']])) {
                                                 $accum[$pageId]['items'][$table][$row['uid']] = $t8Tools->translationDetails(
                                                     $table,
                                                     $row,
