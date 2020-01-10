@@ -69,7 +69,7 @@ class Export extends L10nCommand
                 'CATXML'
             )
             ->addOption('hidden', null, InputOption::VALUE_NONE, 'Do not export hidden contents')
-            ->addOption('new', 'n', InputOption::VALUE_NONE, 'Export only new contents')
+            ->addOption('new', null, InputOption::VALUE_NONE, 'Export only new contents')
             ->addOption(
                 'srcPID',
                 'p',
