@@ -104,6 +104,8 @@ class Import extends L10nCommand
         // Load the extension's configuration
         $this->extensionConfiguration = $this->getExtConf();
 
+        // Ensure the _cli_ user is authenticated
+        $this->getBackendUser()->backendCheckLogin();
         // Parse the command-line arguments
         try {
             $callParameters = $this->initializeCallParameters($input, $output);
