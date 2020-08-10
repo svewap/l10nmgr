@@ -23,11 +23,13 @@ namespace Localizationteam\L10nmgr\Model;
 use Localizationteam\L10nmgr\Constants;
 use Localizationteam\L10nmgr\LanguageRestriction\Collection\LanguageRestrictionCollection;
 use Localizationteam\L10nmgr\Model\Tools\Tools;
+use PDO;
 use TYPO3\CMS\Backend\Tree\View\PageTreeView;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\RootlineUtility;
 
@@ -96,6 +98,7 @@ class L10nAccumulatedInformation
 
     /**
      * Constructor
+     * Check for deprecated configuration throws false positive in extension scanner.
      *
      * @param $tree
      * @param $l10ncfg
@@ -182,7 +185,6 @@ class L10nAccumulatedInformation
         if ($previewLanguage) {
             $t8Tools->previewLanguages = [$previewLanguage];
         }
-        $fileList = '';
         // Traverse tree elements:
         /**
          * @var $rootlineUtility RootlineUtility
@@ -273,7 +275,7 @@ class L10nAccumulatedInformation
                                                 $this->_increaseInternalCounters($accum[$pageId]['items'][$table][$row['uid']]['fields']);
                                             }
                                         } else {
-                                            if (is_array($row) && !isset($excludeIndex[$table . ':' . $row['uid']])) {
+                                            if (is_array($row) && !isset($this->excludeIndex[$table . ':' . $row['uid']])) {
                                                 $accum[$pageId]['items'][$table][$row['uid']] = $t8Tools->translationDetails(
                                                     $table,
                                                     $row,
@@ -289,17 +291,18 @@ class L10nAccumulatedInformation
                             }
                         }
                     }
-                    if ($table === 'sys_file_reference' && !empty($fileList)) {
+                    if ($table === 'sys_file_reference' && !empty($fileList) && GeneralUtility::inList($l10ncfg['tablelist'], 'sys_file_metadata')) {
                         $fileList = implode(',',
                             array_keys(array_flip(GeneralUtility::intExplode(',', $fileList, true))));
                         if (!empty($fileList)) {
+                            /** @var $queryBuilder QueryBuilder */
                             $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_file_metadata');
                             $metaData = $queryBuilder->select('uid')
                                 ->from('sys_file_metadata')
                                 ->where(
                                     $queryBuilder->expr()->eq(
                                         'sys_language_uid',
-                                        $queryBuilder->createNamedParameter((int)$previewLanguage, \PDO::PARAM_INT)
+                                        $queryBuilder->createNamedParameter((int)$previewLanguage, PDO::PARAM_INT)
                                     ),
                                     $queryBuilder->expr()->in(
                                         'file',
@@ -363,6 +366,7 @@ class L10nAccumulatedInformation
 
     /**
      * @param string $indexList
+     * @param string $excludeList
      */
     protected function addPagesMarkedAsIncluded($indexList, $excludeList)
     {
@@ -371,13 +375,14 @@ class L10nAccumulatedInformation
         if ($indexList) {
             $this->includeIndex = array_flip(GeneralUtility::trimExplode(',', $indexList, true));
         }
+        /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
         $explicitlyIncludedPages = $queryBuilder->select('uid')
             ->from('pages')
             ->where(
                 $queryBuilder->expr()->eq(
                     'l10nmgr_configuration',
-                    $queryBuilder->createNamedParameter(Constants::L10NMGR_CONFIGURATION_INCLUDE, \PDO::PARAM_INT)
+                    $queryBuilder->createNamedParameter(Constants::L10NMGR_CONFIGURATION_INCLUDE, PDO::PARAM_INT)
                 )
             )
             ->orderBy('uid')
@@ -393,13 +398,14 @@ class L10nAccumulatedInformation
                 }
             }
         }
+        /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
         $includingParentPages = $queryBuilder->select('uid')
             ->from('pages')
             ->where(
                 $queryBuilder->expr()->eq(
                     'l10nmgr_configuration_next_level',
-                    $queryBuilder->createNamedParameter(Constants::L10NMGR_CONFIGURATION_INCLUDE, \PDO::PARAM_INT)
+                    $queryBuilder->createNamedParameter(Constants::L10NMGR_CONFIGURATION_INCLUDE, PDO::PARAM_INT)
                 )
             )
             ->orderBy('uid')
@@ -423,13 +429,14 @@ class L10nAccumulatedInformation
     {
         $level++;
         if ($uid > 0 && $level < 100) {
+            /** @var $queryBuilder QueryBuilder */
             $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
             $subPages = $queryBuilder->select('uid', 'pid', 'l10nmgr_configuration', 'l10nmgr_configuration_next_level')
                 ->from('pages')
                 ->where(
                     $queryBuilder->expr()->eq(
                         'pid',
-                        $queryBuilder->createNamedParameter((int)$uid, \PDO::PARAM_INT)
+                        $queryBuilder->createNamedParameter((int)$uid, PDO::PARAM_INT)
                     )
                 )
                 ->orderBy('uid')

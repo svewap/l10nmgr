@@ -1,4 +1,5 @@
 <?php
+
 namespace Localizationteam\L10nmgr\Controller;
 
 /***************************************************************
@@ -18,6 +19,7 @@ namespace Localizationteam\L10nmgr\Controller;
  * GNU General Public License for more details.
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Module 'Workspace Tasks' for the 'l10nmgr' extension.
  *
@@ -25,7 +27,6 @@ namespace Localizationteam\L10nmgr\Controller;
  */
 
 use TYPO3\CMS\Backend\Routing\UriBuilder;
-use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -60,7 +61,7 @@ class Module2
         $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
         $this->content .= '
 	<frameset cols="' . $width . ',*">
-	<frame name="nav_frame" src="' .  $uriBuilder->buildUriFromRoute('LocalizationManager_TranslationTasks') . '" marginwidth="0" marginheight="0" scrolling="auto" />
+	<frame name="nav_frame" src="' . $uriBuilder->buildUriFromRoute('LocalizationManager_TranslationTasks') . '" marginwidth="0" marginheight="0" scrolling="auto" />
 	<frame name="list_frame" src="" marginwidth="0" marginheight="0" scrolling="auto" />
 	</frameset>
 	</html>

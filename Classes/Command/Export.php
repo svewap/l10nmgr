@@ -24,14 +24,16 @@ namespace Localizationteam\L10nmgr\Command;
 use Localizationteam\L10nmgr\Model\L10nConfiguration;
 use Localizationteam\L10nmgr\View\CatXmlView;
 use Localizationteam\L10nmgr\View\ExcelXmlView;
-use Localizationteam\L10nmgr\View\ExportViewInterface;
+use Swift_Attachment;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Exception;
+use TYPO3\CMS\Core\Mail\MailMessage;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
@@ -51,7 +53,7 @@ class Export extends L10nCommand
                 'config',
                 'c',
                 InputOption::VALUE_OPTIONAL,
-                "UIDs of the localization manager configurations to be used for export. Comma seperated values, no spaces.\nDefault is EXTCONF which means values are taken from extension configuration.",
+                "UIDs of the localization manager configurations to be used for export. Comma separated values, no spaces.\nDefault is EXTCONF which means values are taken from extension configuration.",
                 'EXTCONF'
             )
             ->addOption(
@@ -68,7 +70,7 @@ class Export extends L10nCommand
                 'CATXML'
             )
             ->addOption('hidden', null, InputOption::VALUE_NONE, 'Do not export hidden contents')
-            ->addOption('new', 'u', InputOption::VALUE_NONE, 'Export only new contents')
+            ->addOption('new', null, InputOption::VALUE_NONE, 'Export only new contents')
             ->addOption(
                 'srcPID',
                 'p',
@@ -116,7 +118,7 @@ class Export extends L10nCommand
     /**
      * Executes the command for straigthening content elements
      *
-     * @param InputInterface  $input
+     * @param InputInterface $input
      * @param OutputInterface $output
      * @return int|void|null
      */
@@ -125,20 +127,20 @@ class Export extends L10nCommand
         $error = false;
         $time_start = microtime(true);
 
-        $extConf = $this->getExtConf();
+        $this->extensionConfiguration = $this->getExtConf();
 
         // get format (CATXML,EXCEL)
         $format = $input->getOption('format');
 
-        // get l10ncfg command line takes precedence over extConf
+        // get l10ncfg command line takes precedence over extensionConfiguration
         $l10ncfg = $input->getOption('config');
-
+        $l10ncfgs = [];
         if ($l10ncfg !== 'EXTCONF' && !empty($l10ncfg)) {
             //export single
             $l10ncfgs = explode(',', $l10ncfg);
-        } elseif (!empty($extConf['l10nmgr_cfg'])) {
+        } elseif (!empty($this->extensionConfiguration['l10nmgr_cfg'])) {
             //export multiple
-            $l10ncfgs = explode(',', $extConf['l10nmgr_cfg']);
+            $l10ncfgs = explode(',', $this->extensionConfiguration['l10nmgr_cfg']);
         } else {
             $output->writeln('<error>' . $this->getLanguageService()->getLL('error.no_l10ncfg.msg') . '</error>');
             $error = true;
@@ -146,12 +148,13 @@ class Export extends L10nCommand
 
         // get target languages
         $tlang = $input->getOption('target') ?? '0';
+        $tlangs = [];
         if ($tlang !== '0') {
             //export single
             $tlangs = explode(',', $tlang);
-        } elseif (!empty($extConf['l10nmgr_tlangs'])) {
+        } elseif (!empty($this->extensionConfiguration['l10nmgr_tlangs'])) {
             //export multiple
-            $tlangs = explode(',', $extConf['l10nmgr_tlangs']);
+            $tlangs = explode(',', $this->extensionConfiguration['l10nmgr_tlangs']);
         } else {
             $output->writeln('<error>' . $this->getLanguageService()->getLL('error.target_language_id.msg') . '</error>');
             $error = true;
@@ -203,9 +206,10 @@ class Export extends L10nCommand
     /**
      * exportCATXML which is called over cli
      *
-     * @param int             $l10ncfg ID of the configuration to load
-     * @param int             $tlang   ID of the language to translate to
-     * @param InputInterface  $input
+     * @param int $l10ncfg ID of the configuration to load
+     * @param int $tlang ID of the language to translate to
+     * @param string $format
+     * @param InputInterface $input
      * @param OutputInterface $output
      *
      * @return string An error message in case of failure
@@ -215,7 +219,6 @@ class Export extends L10nCommand
     {
         $error = '';
         // Load the configuration
-        $lConf = $this->getExtConf();
         /** @var L10nConfiguration $l10nmgrCfgObj */
         $l10nmgrCfgObj = GeneralUtility::makeInstance(L10nConfiguration::class);
         $l10nmgrCfgObj->load($l10ncfg);
@@ -226,13 +229,13 @@ class Export extends L10nCommand
                 $l10nmgrGetXML = GeneralUtility::makeInstance(CatXmlView::class, $l10nmgrCfgObj, $tlang);
                 if ($input->hasOption('baseUrl')) {
                     $baseUrl = $input->getOption('baseUrl');
-                    $baseUrl = rtrim($baseUrl, '/') .  '/';
+                    $baseUrl = rtrim($baseUrl, '/') . '/';
                     $l10nmgrGetXML->setBaseUrl($baseUrl);
                 }
                 $l10nmgrGetXML->setOverrideParams(
                     [
                         'noxmlcheck' => !(bool)$input->getOption('checkXml'),
-                        'utf8' => (bool)$input->getOption('utf8')
+                        'utf8' => (bool)$input->getOption('utf8'),
                     ]
                 );
             } elseif ($format == 'EXCEL') {
@@ -269,20 +272,19 @@ class Export extends L10nCommand
                 $output->writeln('<error>' . $l10nmgrGetXML->renderExportsCli() . LF . '</error>');
             } else {
                 // Save export to XML file
-                $xmlFileName = Environment::getPublicPath() . $l10nmgrGetXML->render();
+                $xmlFileName = Environment::getPublicPath() . '/' . $l10nmgrGetXML->render();
                 $l10nmgrGetXML->saveExportInformation();
                 // If email notification is set send export files to responsible translator
-                if ($lConf['enable_notification'] == 1) {
-                    if (empty($lConf['email_recipient'])) {
+                if ($this->extensionConfiguration['enable_notification'] == 1) {
+                    if (empty($this->extensionConfiguration['email_recipient'])) {
                         $output->writeln('<error>' . $this->getLanguageService()->getLL('error.email.repient_missing.msg') . '</error>');
                     }
-                    // ToDo: make email configuration run again
-                    // $this->emailNotification($xmlFileName, $l10nmgrCfgObj, $tlang);
+                    $this->emailNotification($xmlFileName, $l10nmgrCfgObj, $tlang);
                 } else {
                     $output->writeln('<error>' . $this->getLanguageService()->getLL('error.email.notification_disabled.msg') . '</error>');
                 }
                 // If FTP option is set upload files to remote server
-                if ($lConf['enable_ftp'] == 1) {
+                if ($this->extensionConfiguration['enable_ftp'] == 1) {
                     if (file_exists($xmlFileName)) {
                         $error .= $this->ftpUpload($xmlFileName, $l10nmgrGetXML->getFileName());
                     } else {
@@ -291,7 +293,7 @@ class Export extends L10nCommand
                 } else {
                     $output->writeln('<error>' . $this->getLanguageService()->getLL('error.ftp.disabled.msg') . '</error>');
                 }
-                if ($lConf['enable_notification'] == 0 && $lConf['enable_ftp'] == 0) {
+                if ($this->extensionConfiguration['enable_notification'] == 0 && $this->extensionConfiguration['enable_ftp'] == 0) {
                     $output->writeln(sprintf(
                         $this->getLanguageService()->getLL('export.file_saved.msg'),
                         $xmlFileName
@@ -305,48 +307,12 @@ class Export extends L10nCommand
     }
 
     /**
-     * The function ftpUpload puts an export on a remote FTP server for further processing
-     *
-     * @param string $xmlFileName Path to the file to upload
-     * @param string $filename    Name of the file to upload to
-     *
-     * @return string Error message
-     */
-    protected function ftpUpload($xmlFileName, $filename)
-    {
-        $error = '';
-        $lConf = $this->getExtConf();
-        $connection = ftp_connect($lConf['ftp_server']) or die('Connection failed');
-        if ($connection) {
-            if (@ftp_login($connection, $lConf['ftp_server_username'], $lConf['ftp_server_password'])) {
-                if (ftp_put($connection, $lConf['ftp_server_path'] . $filename, $xmlFileName, FTP_BINARY)) {
-                    ftp_close($connection) or die("Couldn't close connection");
-                } else {
-                    $error .= sprintf(
-                            $this->getLanguageService()->getLL('error.ftp.connection.msg'),
-                            $lConf['ftp_server_path'],
-                            $filename
-                        ) . "\n";
-                }
-            } else {
-                $error .= sprintf(
-                        $this->getLanguageService()->getLL('error.ftp.connection_user.msg'),
-                        $lConf['ftp_server_username']
-                    ) . "\n";
-                ftp_close($connection) or die("Couldn't close connection");
-            }
-        } else {
-            $error .= $this->getLanguageService()->getLL('error.ftp.connection_failed.msg');
-        }
-        return $error;
-    }
-
-    /**
      * @param $sourceLangStaticId
      * @return int
      */
     protected function getStaticLangUid($sourceLangStaticId)
     {
+        /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_language');
         $result = $queryBuilder->select('uid')
             ->from('sys_language')
@@ -362,84 +328,101 @@ class Export extends L10nCommand
     }
 
     /**
-     * fixme
-     *
      * The function emailNotification sends an email with a translation job to the recipient specified in the extension config.
      *
-     * @param string            $xmlFileName   Name of the XML file
+     * @param string $xmlFileName Name of the XML file
      * @param L10nConfiguration $l10nmgrCfgObj L10N Manager configuration object
-     * @param int               $tlang         ID of the language to translate to
+     * @param int $tlang ID of the language to translate to
      */
     protected function emailNotification($xmlFileName, $l10nmgrCfgObj, $tlang)
     {
-        // Get source & target language ISO codes
-        $sourceStaticLangArr = BackendUtility::getRecord(
-            'static_languages',
-            $l10nmgrCfgObj->l10ncfg['sourceLangStaticId'],
-            'lg_iso_2'
-        );
-        $targetStaticLang = BackendUtility::getRecord('sys_language', $tlang, 'static_lang_isocode');
-        $targetStaticLangArr = BackendUtility::getRecord(
-            'static_languages',
-            $targetStaticLang['static_lang_isocode'],
-            'lg_iso_2'
-        );
-        $sourceLang = $sourceStaticLangArr['lg_iso_2'];
-        $targetLang = $targetStaticLangArr['lg_iso_2'];
-        // Construct email message
-        /** @var t3lib_htmlmail $email */
-        $email = GeneralUtility::makeInstance('t3lib_htmlmail');
-        $email->start();
-        $email->useQuotedPrintable();
-        $email->subject = sprintf(
-            $this->getLanguageService()->getLL('email.suject.msg'),
-            $sourceLang,
-            $targetLang,
-            $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename']
-        );
-        if (empty($this->getBackendUser()->user['email']) || empty($this->getBackendUser()->user['realName'])) {
-            $email->from_email = $this->lConf['email_sender'];
-            $email->from_name = $this->lConf['email_sender_name'];
-            $email->replyto_email = $this->lConf['email_sender'];
-            $email->replyto_name = $this->lConf['email_sender_name'];
+        // If at least a recipient is indeed defined, proceed with sending the mail
+        $recipients = GeneralUtility::trimExplode(',', $this->extensionConfiguration['email_recipient']);
+        if (count($recipients) > 0) {
+            $fullFilename = Environment::getPublicPath() . '/' . 'uploads/tx_l10nmgr/jobs/out/' . $xmlFileName;
+            // Get source & target language ISO codes
+            $sourceStaticLangArr = BackendUtility::getRecord('static_languages',
+                $l10nmgrCfgObj->l10ncfg['sourceLangStaticId'], 'lg_iso_2');
+            $targetStaticLang = BackendUtility::getRecord('sys_language', $tlang, 'static_lang_isocode');
+            $targetStaticLangArr = BackendUtility::getRecord('static_languages',
+                $targetStaticLang['static_lang_isocode'], 'lg_iso_2');
+            $sourceLang = $sourceStaticLangArr['lg_iso_2'];
+            $targetLang = $targetStaticLangArr['lg_iso_2'];
+            // Collect mail data
+            $fromMail = $this->extensionConfiguration['email_sender'];
+            $fromName = $this->extensionConfiguration['email_sender_name'];
+            $subject = sprintf($this->getLanguageService()->getLL('email.suject.msg'), $sourceLang, $targetLang,
+                $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename']);
+            // Assemble message body
+            $message = [
+                'msg1' => $this->getLanguageService()->getLL('email.greeting.msg'),
+                'msg2' => '',
+                'msg3' => sprintf($this->getLanguageService()->getLL('email.new_translation_job.msg'), $sourceLang,
+                    $targetLang,
+                    $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename']),
+                'msg4' => $this->getLanguageService()->getLL('email.info.msg'),
+                'msg5' => $this->getLanguageService()->getLL('email.info.import.msg'),
+                'msg6' => '',
+                'msg7' => $this->getLanguageService()->getLL('email.goodbye.msg'),
+                'msg8' => $fromName,
+                'msg9' => '--',
+                'msg10' => $this->getLanguageService()->getLL('email.info.exportef_file.msg'),
+                'msg11' => $xmlFileName,
+            ];
+            if ($this->extensionConfiguration['email_attachment']) {
+                $message['msg3'] = sprintf($this->getLanguageService()->getLL('email.new_translation_job_attached.msg'),
+                    $sourceLang, $targetLang, $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename']);
+            }
+            $msg = implode(chr(10), $message);
+            // Instantiate the mail object, set all necessary properties and send the mail
+            /** @var MailMessage $mailObject */
+            $mailObject = GeneralUtility::makeInstance(MailMessage::class);
+            $mailObject->setFrom([$fromMail => $fromName]);
+            $mailObject->setTo($recipients);
+            $mailObject->setSubject($subject);
+            $mailObject->setFormat('text/plain');
+            $mailObject->setBody($msg);
+            if ($this->extensionConfiguration['email_attachment']) {
+                $attachment = Swift_Attachment::fromPath($fullFilename, 'text/xml');
+                $mailObject->attach($attachment);
+            }
+            $mailObject->send();
+        }
+    }
+
+    /**
+     * The function ftpUpload puts an export on a remote FTP server for further processing
+     *
+     * @param string $xmlFileName Path to the file to upload
+     * @param string $filename Name of the file to upload to
+     *
+     * @return string Error message
+     */
+    protected function ftpUpload($xmlFileName, $filename)
+    {
+        $error = '';
+        $connection = ftp_connect($this->extensionConfiguration['ftp_server']) or die('Connection failed');
+        if ($connection) {
+            if (@ftp_login($connection, $this->extensionConfiguration['ftp_server_username'], $this->extensionConfiguration['ftp_server_password'])) {
+                if (ftp_put($connection, $this->extensionConfiguration['ftp_server_path'] . $filename, $xmlFileName, FTP_BINARY)) {
+                    ftp_close($connection) or die("Couldn't close connection");
+                } else {
+                    $error .= sprintf(
+                            $this->getLanguageService()->getLL('error.ftp.connection.msg'),
+                            $this->extensionConfiguration['ftp_server_path'],
+                            $filename
+                        ) . "\n";
+                }
+            } else {
+                $error .= sprintf(
+                        $this->getLanguageService()->getLL('error.ftp.connection_user.msg'),
+                        $this->extensionConfiguration['ftp_server_username']
+                    ) . "\n";
+                ftp_close($connection) or die("Couldn't close connection");
+            }
         } else {
-            $email->from_email = $this->getBackendUser()->user['email'];
-            $email->from_name = $this->getBackendUser()->user['realName'];
-            $email->replyto_email = $this->getBackendUser()->user['email'];
-            $email->replyto_name = $this->getBackendUser()->user['realName'];
+            $error .= $this->getLanguageService()->getLL('error.ftp.connection_failed.msg');
         }
-        $email->organisation = $this->lConf['email_sender_organisation'];
-        $message = [
-            'msg1' => $this->getLanguageService()->getLL('email.greeting.msg'),
-            'msg2' => '',
-            'msg3' => sprintf(
-                $this->getLanguageService()->getLL('email.new_translation_job.msg'),
-                $sourceLang,
-                $targetLang,
-                $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename']
-            ),
-            'msg4' => $this->getLanguageService()->getLL('email.info.msg'),
-            'msg5' => $this->getLanguageService()->getLL('email.info.import.msg'),
-            'msg6' => '',
-            'msg7' => $this->getLanguageService()->getLL('email.goodbye.msg'),
-            'msg8' => $email->from_name,
-            'msg9' => '--',
-            'msg10' => $this->getLanguageService()->getLL('email.info.exportef_file.msg'),
-            'msg11' => $xmlFileName,
-        ];
-        if ($this->lConf['email_attachment']) {
-            $message['msg3'] = sprintf(
-                $this->getLanguageService()->getLL('email.new_translation_job_attached.msg'),
-                $sourceLang,
-                $targetLang,
-                $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename']
-            );
-        }
-        $msg = implode(chr(10), $message);
-        $email->addPlain($msg);
-        if ($this->lConf['email_attachment']) {
-            $email->addAttachment($xmlFileName);
-        }
-        $email->send($this->lConf['email_recipient']);
+        return $error;
     }
 }

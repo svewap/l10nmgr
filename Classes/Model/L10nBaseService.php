@@ -20,12 +20,14 @@ namespace Localizationteam\L10nmgr\Model;
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+use PDO;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Database\Query\Restriction\BackendWorkspaceRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\Database\RelationHandler;
@@ -79,12 +81,15 @@ class L10nBaseService implements LoggerAwareInterface
      */
     protected $flexFormDiffArray;
 
+    /**
+     * Check for deprecated configuration throws false positive in extension scanner.
+     */
     public function __construct()
     {
         // Load the extension's configuration
         $this->extensionConfiguration = empty($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['l10nmgr'])
-            ? GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('l10nmgr')
-            : $GLOBALS['TYPO3_CONF_VARS']['EXTENSIO1NS']['l10nmgr'];
+            ? unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['l10nmgr'])
+            : $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['l10nmgr'];
     }
 
     /**
@@ -277,8 +282,10 @@ class L10nBaseService implements LoggerAwareInterface
         string $theValue,
         string $whereClause = '',
         string $orderBy = ''
-    ): array {
+    ): array
+    {
         if (is_array($GLOBALS['TCA'][$theTable])) {
+            /** @var $queryBuilder QueryBuilder */
             $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($theTable);
 
             $queryBuilder->getRestrictions()
@@ -337,7 +344,8 @@ class L10nBaseService implements LoggerAwareInterface
     protected function remapInputDataForExistingTranslations(
         L10nConfiguration $configurationObject,
         TranslationData $translationData
-    ) {
+    )
+    {
         // feature is not enabled
         if (!$configurationObject->getData('overrideexistingtranslations')) {
             return;
@@ -467,7 +475,7 @@ class L10nBaseService implements LoggerAwareInterface
                                         );
                                         $_flexFormDiffArray[$key] = [
                                             'translated' => $inputArray[$table][$elementUid][$key],
-                                            'default'    => $tData['defaultValue'],
+                                            'default' => $tData['defaultValue'],
                                         ];
                                     } else {
                                         $TCEmain_data[$Ttable][$elementUid][$Tfield] = $inputArray[$table][$elementUid][$key];
@@ -547,7 +555,6 @@ class L10nBaseService implements LoggerAwareInterface
             $flexToolObj = GeneralUtility::makeInstance(FlexFormTools::class);
             $gridElementsInstalled = ExtensionManagementUtility::isLoaded('gridelements');
             $fluxInstalled = ExtensionManagementUtility::isLoaded('flux');
-            $element = [];
             $TCEmain_data = [];
             $this->TCEmain_cmd = [];
             $Tlang = '';
@@ -621,6 +628,7 @@ class L10nBaseService implements LoggerAwareInterface
                                                     $this->TCEmain_cmd[$table][$elementUid]['localize'] = $Tlang;
                                                     $TCEmain_data[$table][$TuidString]['tablenames'] = 'pages';
                                                 } else {
+                                                    /** @var $queryBuilder QueryBuilder */
                                                     $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($element['tablenames']);
                                                     $parent = $queryBuilder->select('*')
                                                         ->from($element['tablenames'])
@@ -629,14 +637,14 @@ class L10nBaseService implements LoggerAwareInterface
                                                                 $GLOBALS['TCA'][$element['tablenames']]['ctrl']['transOrigPointerField'],
                                                                 $queryBuilder->createNamedParameter(
                                                                     (int)$element['uid_foreign'],
-                                                                    \PDO::PARAM_INT
+                                                                    PDO::PARAM_INT
                                                                 )
                                                             ),
                                                             $queryBuilder->expr()->eq(
                                                                 'sys_language_uid',
                                                                 $queryBuilder->createNamedParameter(
                                                                     (int)$Tlang,
-                                                                    \PDO::PARAM_INT
+                                                                    PDO::PARAM_INT
                                                                 )
                                                             )
                                                         )
@@ -688,7 +696,7 @@ class L10nBaseService implements LoggerAwareInterface
                                         if (is_array($hooks)) {
                                             foreach ($hooks as $hookObj) {
                                                 $parameters = [
-                                                    'data'        => $data,
+                                                    'data' => $data,
                                                     'TCEmain_cmd' => $this->TCEmain_cmd,
                                                 ];
                                                 $this->TCEmain_cmd = GeneralUtility::callUserFunction(
@@ -712,7 +720,7 @@ class L10nBaseService implements LoggerAwareInterface
                                         );
                                         $_flexFormDiffArray[$key] = [
                                             'translated' => $inputArray[$table][$elementUid][$key],
-                                            'default'    => $tData['defaultValue'],
+                                            'default' => $tData['defaultValue'],
                                         ];
                                     } else {
                                         $TCEmain_data[$Ttable][$TuidString][$Tfield] = $inputArray[$table][$elementUid][$key];
@@ -732,9 +740,9 @@ class L10nBaseService implements LoggerAwareInterface
                             foreach ($hooks as $hookObj) {
                                 $parameters = [
                                     'TCEmain_data' => $TCEmain_data,
-                                    'TCEmain_cmd'  => $this->TCEmain_cmd,
+                                    'TCEmain_cmd' => $this->TCEmain_cmd,
                                 ];
-                                $this->TCEmain_cmd = GeneralUtility::callUserFunction($hookObj, $parameters, $this);
+                                $this->TCEmain_data = GeneralUtility::callUserFunction($hookObj, $parameters, $this);
                             }
                         }
                     }
@@ -776,6 +784,7 @@ class L10nBaseService implements LoggerAwareInterface
                         } else {
                             if ($this->childMappingArray[$table][$TdefRecord]) {
                                 if ($this->childMappingArray[$table][$TdefRecord] === true) {
+                                    /** @var $queryBuilder QueryBuilder */
                                     $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
                                     $queryBuilder->getRestrictions()->removeAll()->add(GeneralUtility::makeInstance(DeletedRestriction::class));
 
@@ -785,11 +794,11 @@ class L10nBaseService implements LoggerAwareInterface
                                         ->where(
                                             $queryBuilder->expr()->eq(
                                                 $GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField'],
-                                                $queryBuilder->createNamedParameter((int)$TdefRecord, \PDO::PARAM_INT)
+                                                $queryBuilder->createNamedParameter((int)$TdefRecord, PDO::PARAM_INT)
                                             ),
                                             $queryBuilder->expr()->eq(
                                                 'sys_language_uid',
-                                                $queryBuilder->createNamedParameter((int)$Tlang, \PDO::PARAM_INT)
+                                                $queryBuilder->createNamedParameter((int)$Tlang, PDO::PARAM_INT)
                                             )
                                         )
                                         ->execute()
@@ -871,6 +880,7 @@ class L10nBaseService implements LoggerAwareInterface
      */
     protected function getRawRecord(string $table, int $elementUid): array
     {
+        /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
         $queryBuilder->getRestrictions()->removeAll()->add(GeneralUtility::makeInstance(DeletedRestriction::class));
 
@@ -880,7 +890,7 @@ class L10nBaseService implements LoggerAwareInterface
             ->where(
                 $queryBuilder->expr()->eq(
                     'uid',
-                    $queryBuilder->createNamedParameter((int)$elementUid, \PDO::PARAM_INT)
+                    $queryBuilder->createNamedParameter((int)$elementUid, PDO::PARAM_INT)
                 )
             )
             ->execute()
@@ -902,6 +912,7 @@ class L10nBaseService implements LoggerAwareInterface
             $this->checkedParentRecords[$parentField][$element['uid']] = true;
             $translatedParent = [];
             if ($element[$parentField] > 0) {
+                /** @var $queryBuilder QueryBuilder */
                 $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tt_content');
                 $queryBuilder->getRestrictions()->removeAll()->add(GeneralUtility::makeInstance(DeletedRestriction::class));
 
@@ -911,11 +922,11 @@ class L10nBaseService implements LoggerAwareInterface
                     ->where(
                         $queryBuilder->expr()->eq(
                             $GLOBALS['TCA']['tt_content']['ctrl']['transOrigPointerField'],
-                            $queryBuilder->createNamedParameter((int)$element[$parentField], \PDO::PARAM_INT)
+                            $queryBuilder->createNamedParameter((int)$element[$parentField], PDO::PARAM_INT)
                         ),
                         $queryBuilder->expr()->eq(
                             'sys_language_uid',
-                            $queryBuilder->createNamedParameter((int)$Tlang, \PDO::PARAM_INT)
+                            $queryBuilder->createNamedParameter((int)$Tlang, PDO::PARAM_INT)
                         )
                     )
                     ->execute()

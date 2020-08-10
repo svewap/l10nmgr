@@ -1,4 +1,5 @@
 <?php
+
 namespace Localizationteam\L10nmgr\Controller;
 
 /***************************************************************
@@ -18,20 +19,22 @@ namespace Localizationteam\L10nmgr\Controller;
  * GNU General Public License for more details.
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Module 'L10N Manager' for the 'l10nmgr' extension.
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
+
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TYPO3\CMS\Backend\Module\BaseScriptClass;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
+use TYPO3\CMS\Backend\Template\DocumentTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Imaging\IconFactory;
-use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -42,23 +45,23 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  * @packageTYPO3
  * @subpackage tx_l10nmgr
  */
-class ConfigurationManager extends BaseScriptClass
+class ConfigurationManager extends BaseModule
 {
     var $pageinfo;
     /**
      * Document Template Object
      *
-     * @var \TYPO3\CMS\Backend\Template\DocumentTemplate
+     * @var DocumentTemplate
      */
     public $doc;
     /**
      * @var array Cache of the page details already fetched from the database
      */
-    protected $pageDetails = array();
+    protected $pageDetails = [];
     /**
      * @var array Cache of the language records already fetched from the database
      */
-    protected $languageDetails = array();
+    protected $languageDetails = [];
     /**
      * ModuleTemplate Container
      *
@@ -81,12 +84,13 @@ class ConfigurationManager extends BaseScriptClass
      */
     public function __construct()
     {
+        parent::__construct();
         $this->iconFactory = GeneralUtility::makeInstance(IconFactory::class);
         $this->moduleTemplate = GeneralUtility::makeInstance(ModuleTemplate::class);
         $this->getLanguageService()->includeLLFile('EXT:l10nmgr/Resources/Private/Language/Modules/ConfigurationManager/locallang.xlf');
-        $this->MCONF = array(
+        $this->MCONF = [
             'name' => $this->moduleName,
-        );
+        ];
     }
 
     /**
@@ -181,11 +185,11 @@ class ConfigurationManager extends BaseScriptClass
                 $content .= '<td>' . $configurationDetails . '</td>';
                 $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
                 $content .= '<td><a href="' . $uriBuilder->buildUriFromRoute('LocalizationManager',
-                        array(
+                        [
                             'id' => $record['pid'],
                             'srcPID' => $this->id,
                             'exportUID' => $record['uid'],
-                        )) . '">' . $record['title'] . '</a>' . '</td>';
+                        ]) . '">' . $record['title'] . '</a>' . '</td>';
                 // Get the full page path
                 // If very long, make sure to still display the full path
                 $pagePath = BackendUtility::getRecordPath($record['pid'], '1', 20, 50);
@@ -211,6 +215,7 @@ class ConfigurationManager extends BaseScriptClass
     protected function getAllConfigurations()
     {
         // Read all l10nmgr configurations from the database
+        /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_l10nmgr_cfg');
         $configurations = $queryBuilder->select('*')
             ->from('tx_l10nmgr_cfg')
@@ -219,7 +224,7 @@ class ConfigurationManager extends BaseScriptClass
             ->fetchAll();
         // Filter out the configurations which the user is allowed to see, base on the page access rights
         $pagePermissionsClause = $this->getBackendUser()->getPagePermsClause(1);
-        $allowedConfigurations = array();
+        $allowedConfigurations = [];
         foreach ($configurations as $row) {
             if (BackendUtility::readPageAccess($row['pid'], $pagePermissionsClause) !== false) {
                 $allowedConfigurations[] = $row;

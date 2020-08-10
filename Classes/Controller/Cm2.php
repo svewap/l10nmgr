@@ -1,4 +1,5 @@
 <?php
+
 namespace Localizationteam\L10nmgr\Controller;
 /***************************************************************
  * Copyright notice
@@ -17,16 +18,19 @@ namespace Localizationteam\L10nmgr\Controller;
  * GNU General Public License for more details.
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * l10nmgr module cm2
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
+
 use Localizationteam\L10nmgr\Model\Tools\Tools;
-use TYPO3\CMS\Backend\Module\BaseScriptClass;
+use PDO;
 use TYPO3\CMS\Backend\Template\DocumentTemplate;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Lang\LanguageService;
@@ -38,7 +42,7 @@ use TYPO3\CMS\Lang\LanguageService;
  * @packageTYPO3
  * @subpackage tx_l10nmgr
  */
-class Cm2 extends BaseScriptClass
+class Cm2 extends BaseModule
 {
     /**
      * @var LanguageService
@@ -139,8 +143,9 @@ class Cm2 extends BaseScriptClass
             } else {
                 $uidPid = 'recpid';
             }
+            /** @var $queryBuilder QueryBuilder */
             $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_l10nmgr_index');
-            $queryBuilder->select('*')
+            $records = $queryBuilder->select('*')
                 ->from('tx_l10nmgr_index')
                 ->where(
                     $queryBuilder->expr()->eq(
@@ -149,7 +154,7 @@ class Cm2 extends BaseScriptClass
                     ),
                     $queryBuilder->expr()->eq(
                         $uidPid,
-                        $queryBuilder->createNamedParameter((int)$uid, \PDO::PARAM_INT)
+                        $queryBuilder->createNamedParameter((int)$uid, PDO::PARAM_INT)
                     ),
                     $queryBuilder->expr()->in(
                         'translation_lang',
@@ -157,35 +162,35 @@ class Cm2 extends BaseScriptClass
                     ),
                     $queryBuilder->expr()->eq(
                         'workspace',
-                        $queryBuilder->createNamedParameter((int)$this->getBackendUser()->workspace, \PDO::PARAM_INT)
+                        $queryBuilder->createNamedParameter((int)$this->getBackendUser()->workspace, PDO::PARAM_INT)
                     ),
                     $queryBuilder->expr()->orX(
                         $queryBuilder->expr()->gt(
                             'flag_new',
-                            $queryBuilder->createNamedParameter(0, \PDO::PARAM_INT)
+                            $queryBuilder->createNamedParameter(0, PDO::PARAM_INT)
                         ),
                         $queryBuilder->expr()->gt(
                             'flag_update',
-                            $queryBuilder->createNamedParameter(0, \PDO::PARAM_INT)
+                            $queryBuilder->createNamedParameter(0, PDO::PARAM_INT)
                         ),
                         $queryBuilder->expr()->gt(
                             'flag_noChange',
-                            $queryBuilder->createNamedParameter(0, \PDO::PARAM_INT)
+                            $queryBuilder->createNamedParameter(0, PDO::PARAM_INT)
                         ),
                         $queryBuilder->expr()->gt(
                             'flag_unknown',
-                            $queryBuilder->createNamedParameter(0, \PDO::PARAM_INT)
+                            $queryBuilder->createNamedParameter(0, PDO::PARAM_INT)
                         )
                     )
                 )
                 ->orderBy('translation_lang')
                 ->addOrderBy('tablename')
                 ->addOrderBy('recuid')
-                ->execute();
-            $records = $queryBuilder->fetchAll();
+                ->execute()
+                ->fetchAll();
 
             //	\TYPO3\CMS\Core\Utility\GeneralUtility::debugRows($records,'Index entries for '.$table.':'.$uid);
-            $tRows = array();
+            $tRows = [];
             $tRows[] = '<tr class="bgColor2 tableheader">
 	<td colspan="2">Base element:</td>
 	<td colspan="2">Translation:</td>
@@ -301,5 +306,3 @@ class Cm2 extends BaseScriptClass
         parent::menuConfig();
     }
 }
-
-?>

@@ -1,4 +1,5 @@
 <?php
+
 namespace Localizationteam\L10nmgr\View;
 
 /***************************************************************
@@ -18,6 +19,7 @@ namespace Localizationteam\L10nmgr\View;
  * GNU General Public License for more details.
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 use Localizationteam\L10nmgr\Model\L10nConfiguration;
 use Localizationteam\L10nmgr\Model\Tools\Utf8Tools;
 use Localizationteam\L10nmgr\Model\Tools\XmlTools;
@@ -88,7 +90,7 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
         $accum = $accumObj->getInfoArray();
         /** @var XmlTools $xmlTool */
         $xmlTool = GeneralUtility::makeInstance(XmlTools::class);
-        $output = array();
+        $output = [];
         $targetIso = '';
         if (empty($this->baseUrl)) {
             $this->baseUrl = GeneralUtility::getIndpEnv("TYPO3_SITE_URL");
@@ -194,12 +196,12 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
         // Provide a hook for specific manipulations before building the actual XML
         if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['l10nmgr']['exportCatXmlPreProcess'])) {
             foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['l10nmgr']['exportCatXmlPreProcess'] as $classReference) {
-                $processingObject = GeneralUtility::getUserObj($classReference);
+                $processingObject = GeneralUtility::makeInstance($classReference);
                 $output = $processingObject->processBeforeExportingCatXml($output, $this);
             }
         }
         // get ISO2L code for source language
-        $staticLangArr = array();
+        $staticLangArr = [];
         if ($this->l10ncfgObj->getData('sourceLangStaticId') && ExtensionManagementUtility::isLoaded('static_info_tables')) {
             $staticLangArr = BackendUtility::getRecord(
                 'static_languages',
@@ -229,25 +231,6 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
     }
 
     /**
-     * Adds keys and values of the JSON encoded meta data field to the XML head section
-     *
-     * @return string The XML to add to the head section
-     */
-    protected function additionalHeaderData()
-    {
-        $additionalHeaderData = '';
-        if (!empty($this->l10ncfgObj->getData('metadata'))) {
-            $additionalHeaderDataArray = json_decode($this->l10ncfgObj->getData('metadata'));
-            if (is_array($additionalHeaderDataArray) && !empty($additionalHeaderDataArray)) {
-                foreach ($additionalHeaderDataArray as $key => $value) {
-                    $additionalHeaderData .= "\t\t" . '<' . $key . '>' . (string)$value . '</' . $key . '>' . "\n";
-                }
-            }
-        }
-        return $additionalHeaderData;
-    }
-
-    /**
      * Renders the list of internal message as XML tags
      *
      * @return string The XML structure to output
@@ -265,6 +248,25 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
                 . '</t3_skippedItem>' . "\r";
         }
         return $messages;
+    }
+
+    /**
+     * Adds keys and values of the JSON encoded meta data field to the XML head section
+     *
+     * @return string The XML to add to the head section
+     */
+    protected function additionalHeaderData()
+    {
+        $additionalHeaderData = '';
+        if (!empty($this->l10ncfgObj->getData('metadata'))) {
+            $additionalHeaderDataArray = json_decode($this->l10ncfgObj->getData('metadata'));
+            if (is_array($additionalHeaderDataArray) && !empty($additionalHeaderDataArray)) {
+                foreach ($additionalHeaderDataArray as $key => $value) {
+                    $additionalHeaderData .= "\t\t" . '<' . $key . '>' . (string)$value . '</' . $key . '>' . "\n";
+                }
+            }
+        }
+        return $additionalHeaderData;
     }
 
     /**

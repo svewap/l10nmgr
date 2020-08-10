@@ -1,4 +1,5 @@
 <?php
+
 namespace Localizationteam\L10nmgr\Task;
 
 /***************************************************************
@@ -18,10 +19,12 @@ namespace Localizationteam\L10nmgr\Task;
  * GNU General Public License for more details.
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 use DirectoryIterator;
 use Exception;
 use RuntimeException;
 use SplFileInfo;
+use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Scheduler\Task\AbstractTask;
 
@@ -35,16 +38,16 @@ use TYPO3\CMS\Scheduler\Task\AbstractTask;
  * @package TYPO3
  * @subpackage tx_l10nmgr
  */
-class LocalizationmanagerFileGarbageCollection extends AbstractTask
+class L10nmgrFileGarbageCollection extends AbstractTask
 {
     /**
      * @var array List of directories in which files should be cleaned up
      */
-    protected static $targetDirectories = array(
+    protected static $targetDirectories = [
         'uploads/tx_l10nmgr/saved_files',
         'uploads/tx_l10nmgr/jobs/out',
-        'uploads/tx_l10nmgr/jobs/in'
-    );
+        'uploads/tx_l10nmgr/jobs/in',
+    ];
     /**
      * @var int Age of files to delete
      */
@@ -62,7 +65,7 @@ class LocalizationmanagerFileGarbageCollection extends AbstractTask
     public function execute()
     {
         // There is no file ctime on windows, so this task disables itself if OS = win
-        if (TYPO3_OS == 'WIN') {
+        if (Environment::isWindows()) {
             throw new Exception('This task is not reliable on Windows OS', 1323272367);
         }
         // Calculate a reference timestamp, based on age of files to delete
@@ -82,12 +85,12 @@ class LocalizationmanagerFileGarbageCollection extends AbstractTask
      * Gets a list of all files in a directory recursively and removes
      * old ones.
      *
-     * @throws RuntimeException If folders are not found or files can not be deleted
-     *
      * @param string $directory Path to the directory
      * @param integer $timestamp Timestamp of the last file modification
      *
      * @return boolean TRUE if success
+     * @throws RuntimeException If folders are not found or files can not be deleted
+     *
      */
     protected function cleanUpDirectory($directory, $timestamp)
     {
@@ -103,7 +106,8 @@ class LocalizationmanagerFileGarbageCollection extends AbstractTask
         foreach ($directoryContent as $fileObject) {
             // Remove files that are older than given timestamp and don't match the exclude pattern
             if ($fileObject->isFile()
-                && !preg_match('/' . $this->excludePattern . '/i', $fileObject->getFilename()) && $fileObject->getCTime() < $timestamp
+                && !preg_match('/' . $this->excludePattern . '/i',
+                    $fileObject->getFilename()) && $fileObject->getCTime() < $timestamp
             ) {
                 if (!(@unlink($fileObject->getRealPath()))) {
                     throw new RuntimeException(

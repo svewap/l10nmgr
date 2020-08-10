@@ -1,4 +1,5 @@
 <?php
+
 namespace Localizationteam\L10nmgr\Model;
 
 /***************************************************************
@@ -18,8 +19,13 @@ namespace Localizationteam\L10nmgr\Model;
  * GNU General Public License for more details.
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
+use Localizationteam\L10nmgr\Model\Tools\XmlTools;
+use PDO;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
+use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Lang\LanguageService;
@@ -44,7 +50,7 @@ class CatXmlImportManager
     /**
      * @var string $xml CATXML
      */
-    protected $xml = '';
+    protected $xmlString = '';
     /**
      * @var array $xmlNodes parsed XML
      */
@@ -79,7 +85,7 @@ class CatXmlImportManager
     public function parseAndCheckXMLFile()
     {
         $fileContent = GeneralUtility::getUrl($this->file);
-        $this->xmlNodes = GeneralUtility::xml2tree(
+        $this->xmlNodes = XmlTools::xml2tree(
             str_replace(
                 '&nbsp;',
                 '&#160;',
@@ -185,7 +191,7 @@ class CatXmlImportManager
     public function parseAndCheckXMLString()
     {
         $catXmlString = $this->xmlString;
-        $this->xmlNodes = GeneralUtility::xml2tree(
+        $this->xmlNodes = XmlTools::xml2tree(
             str_replace('&nbsp;', '&#160;', $catXmlString),
             3
         ); // For some reason PHP chokes on incoming &nbsp; in XML!
@@ -315,21 +321,30 @@ class CatXmlImportManager
         $dataHandler->start([], []);
         foreach ($delL10NData as $element) {
             list($table, $elementUid) = explode(':', $element);
+            /** @var $queryBuilder QueryBuilder */
             $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
+
+            /** @var $deletedRestriction DeletedRestriction */
+            $deletedRestriction = GeneralUtility::makeInstance(DeletedRestriction::class);
+
+            $queryBuilder
+                ->getRestrictions()
+                ->removeAll()
+                ->add($deletedRestriction);
             $delDataQuery = $queryBuilder->select('uid')
                 ->from($table)
                 ->where(
                     $queryBuilder->expr()->eq(
                         $GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField'],
-                        $queryBuilder->createNamedParameter($elementUid, \PDO::PARAM_INT)
+                        $queryBuilder->createNamedParameter($elementUid, PDO::PARAM_INT)
                     ),
                     $queryBuilder->expr()->eq(
                         $GLOBALS['TCA'][$table]['ctrl']['languageField'],
-                        $queryBuilder->createNamedParameter($this->headerData['t3_sysLang'], \PDO::PARAM_INT)
+                        $queryBuilder->createNamedParameter($this->headerData['t3_sysLang'], PDO::PARAM_INT)
                     ),
                     $queryBuilder->expr()->eq(
                         't3ver_wsid',
-                        $queryBuilder->createNamedParameter($this->headerData['t3_workspaceId'], \PDO::PARAM_INT)
+                        $queryBuilder->createNamedParameter($this->headerData['t3_workspaceId'], PDO::PARAM_INT)
                     )
                 )
                 ->execute()

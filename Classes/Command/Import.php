@@ -26,6 +26,7 @@ use Localizationteam\L10nmgr\Model\CatXmlImportManager;
 use Localizationteam\L10nmgr\Model\L10nBaseService;
 use Localizationteam\L10nmgr\Model\L10nConfiguration;
 use Localizationteam\L10nmgr\Model\MkPreviewLinkService;
+use Localizationteam\L10nmgr\Model\Tools\XmlTools;
 use Localizationteam\L10nmgr\Model\TranslationData;
 use Localizationteam\L10nmgr\Model\TranslationDataFactory;
 use Localizationteam\L10nmgr\Zip;
@@ -34,6 +35,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Exception;
 use TYPO3\CMS\Core\Mail\MailMessage;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
@@ -41,11 +43,6 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class Import extends L10nCommand
 {
-    /**
-     * @var array Extension's configuration as from the EM
-     */
-    protected $extensionConfiguration = [];
-
     /**
      * @var int ID of the language being handled
      */
@@ -98,7 +95,7 @@ class Import extends L10nCommand
     /**
      * Executes the command for straigthening content elements
      *
-     * @param InputInterface  $input
+     * @param InputInterface $input
      * @param OutputInterface $output
      * @return int|void|null
      */
@@ -108,6 +105,8 @@ class Import extends L10nCommand
         // Load the extension's configuration
         $this->extensionConfiguration = $this->getExtConf();
 
+        // Ensure the _cli_ user is authenticated
+        $this->getBackendUser()->backendCheckLogin();
         // Parse the command-line arguments
         try {
             $callParameters = $this->initializeCallParameters($input, $output);
@@ -150,6 +149,8 @@ class Import extends L10nCommand
      * This method reads the command-line arguments and prepares a list of call parameters
      * It takes care of backwards-compatibility with the old way of calling the import script
      *
+     * @param InputInterface $input
+     * @param OutputInterface $output
      * @return array
      * @throws Exception
      */
@@ -162,7 +163,8 @@ class Import extends L10nCommand
         if ($input->getOption('task') === 'importString' || $input->getOption('task') === 'importFile' || $input->getOption('task') === 'preview') {
             $callParameters['task'] = $input->getOption('task');
         } else {
-            throw new Exception('Please specify a task with --task. Either "importString", "preview" or "importFile".', 1539950024);
+            throw new Exception('Please specify a task with --task. Either "importString", "preview" or "importFile".',
+                1539950024);
         }
 
         // Get the preview flag
@@ -190,7 +192,7 @@ class Import extends L10nCommand
      * @param string $xml XML string to parse
      *
      * @return int ID of the workspace to import to
-     * @throws \TYPO3\CMS\Core\Exception
+     * @throws Exception
      * @throws Exception
      */
     protected function getWsIdFromCATXML($xml)
@@ -292,6 +294,7 @@ class Import extends L10nCommand
     /**
      * Previews the source to import
      *
+     * @param string $stringParameter
      * @return string Result output
      * @throws Exception
      */
@@ -334,7 +337,7 @@ class Import extends L10nCommand
      * Imports data from one or more XML files
      * Several files may be contained in a ZIP archive
      *
-     * @return string Result output
+     * @param array $callParameters
      * @throws Exception
      */
     protected function importXMLFile($callParameters)
@@ -484,8 +487,8 @@ class Import extends L10nCommand
     /**
      * Gets all available XML or ZIP files from the FTP server
      *
-     * @throws Exception
      * @return array List of files, as local paths
+     * @throws Exception
      */
     protected function getFilesFromFtp()
     {
@@ -518,9 +521,9 @@ class Import extends L10nCommand
             if ($filesToDownload != false) {
                 // Check that download directory exists
                 $downloadFolder = 'uploads/tx_l10nmgr/jobs/in/';
-                $downloadPath = Environment::getPublicPath() . $downloadFolder;
+                $downloadPath = Environment::getPublicPath() . '/' . $downloadFolder;
                 if (!is_dir(GeneralUtility::getFileAbsFileName($downloadPath))) {
-                    GeneralUtility::mkdir_deep(Environment::getPublicPath() . $downloadFolder);
+                    GeneralUtility::mkdir_deep(Environment::getPublicPath() . '/' . $downloadFolder);
                 }
                 foreach ($filesToDownload as $aFile) {
                     // Ignore current directory and reference to upper level
@@ -572,8 +575,8 @@ class Import extends L10nCommand
     /**
      * Check file types from a list of files
      *
-     * @param array  $files Array of files to be checked
-     * @param string $ext   File extension to be tested for
+     * @param array $files Array of files to be checked
+     * @param string $ext File extension to be tested for
      *
      * @return array Files that passed test
      */
@@ -594,7 +597,7 @@ class Import extends L10nCommand
      * @param string $filepath Path to the file
      *
      * @return bool
-     * @throws \TYPO3\CMS\Core\Exception
+     * @throws Exception
      */
     protected function getXMLFileHead($filepath)
     {
@@ -607,7 +610,7 @@ class Import extends L10nCommand
             );
         }
         // For some reason PHP chokes on incoming &nbsp; in XML!
-        $xmlNodes = GeneralUtility::xml2tree(str_replace('&nbsp;', '&#160;', $fileContent), 3);
+        $xmlNodes = XmlTools::xml2tree(str_replace('&nbsp;', '&#160;', $fileContent), 3);
         if (!is_array($xmlNodes)) {
             throw new Exception(
                 $this->getLanguageService()->getLL('import.manager.error.parsing.xml2tree.message') . $xmlNodes,
@@ -648,25 +651,26 @@ class Import extends L10nCommand
             $recipients = GeneralUtility::trimExplode(',', $this->extensionConfiguration['email_recipient_import']);
             if (count($recipients) > 0) {
                 // First of all get a list of all workspaces and all l10nmgr configurations to use in the reporting
+                /** @var $queryBuilder QueryBuilder */
                 $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_workspace');
-                $queryBuilder->select('uid', 'title')
+                $records = $queryBuilder->select('uid', 'title')
                     ->from('sys_workspace')
-                    ->execute();
-                $records = $queryBuilder->fetchAll();
+                    ->execute()
+                    ->fetchAll();
                 $workspaces = [];
                 if (!empty($records)) {
-                    foreach($records as $record) {
+                    foreach ($records as $record) {
                         $workspaces[$record['uid']] = $record;
                     }
                 }
                 $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_l10nmgr_cfg');
-                $queryBuilder->select('uid', 'title')
+                $records = $queryBuilder->select('uid', 'title')
                     ->from('tx_l10nmgr_cfg')
-                    ->execute();
-                $records = $queryBuilder->fetchAll();
+                    ->execute()
+                    ->fetchAll();
                 $l10nConfigurations = [];
                 if (!empty($records)) {
-                    foreach($records as $record) {
+                    foreach ($records as $record) {
                         $l10nConfigurations[$record['uid']] = $record;
                     }
                 }

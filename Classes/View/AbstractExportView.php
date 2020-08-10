@@ -23,16 +23,19 @@ namespace Localizationteam\L10nmgr\View;
  ***************************************************************/
 
 use Localizationteam\L10nmgr\Model\L10nConfiguration;
+use PDO;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Core\Environment;
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
+use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageRendererResolver;
 use TYPO3\CMS\Core\Utility\DiffUtility;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Core\Localization\LanguageService;
 
 /**
  * Abstract class for all export views
@@ -152,9 +155,10 @@ abstract class AbstractExportView
             'title' => (string)$this->l10ncfgObj->getData('title'),
             'cruser_id' => (int)$this->l10ncfgObj->getData('cruser_id'),
             'filename' => (string)$this->getFilename(),
-            'exportType' => (int)$this->exportType
+            'exportType' => (int)$this->exportType,
         ];
 
+        /** @var $databaseConnection Connection */
         $databaseConnection = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getConnectionForTable('tx_l10nmgr_exportdata');
         $res = $databaseConnection->insert(
@@ -165,7 +169,7 @@ abstract class AbstractExportView
         if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['l10nmgr']['exportView'])) {
             $params = [
                 'uid' => (int)$databaseConnection->lastInsertId('tx_l10nmgr_exportdata'),
-                'data' => $field_values
+                'data' => $field_values,
             ];
             foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['l10nmgr']['exportView'] as $classData) {
                 $postSaveProcessor = GeneralUtility::makeInstance($classData);
@@ -242,21 +246,22 @@ abstract class AbstractExportView
      */
     public function checkExports()
     {
+        /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_l10nmgr_exportdata');
         $numRows = $queryBuilder->count('*')
             ->from('tx_l10nmgr_exportdata')
             ->where(
                 $queryBuilder->expr()->eq(
                     'l10ncfg_id',
-                    $queryBuilder->createNamedParameter((int)$this->l10ncfgObj->getData('uid'), \PDO::PARAM_INT)
+                    $queryBuilder->createNamedParameter((int)$this->l10ncfgObj->getData('uid'), PDO::PARAM_INT)
                 ),
                 $queryBuilder->expr()->eq(
                     'exportType',
-                    $queryBuilder->createNamedParameter($this->exportType, \PDO::PARAM_STR)
+                    $queryBuilder->createNamedParameter($this->exportType, PDO::PARAM_STR)
                 ),
                 $queryBuilder->expr()->eq(
                     'translation_lang',
-                    $queryBuilder->createNamedParameter($this->sysLang, \PDO::PARAM_INT)
+                    $queryBuilder->createNamedParameter($this->sysLang, PDO::PARAM_INT)
                 )
             )
             ->execute()
@@ -274,7 +279,7 @@ abstract class AbstractExportView
     {
         $content = [];
         $exports = $this->fetchExports();
-        foreach ($exports AS $export => $exportData) {
+        foreach ($exports as $export => $exportData) {
             $content[$export] = sprintf('
 <tr class="db_list_normal">
 	<td>%s</td>
@@ -315,11 +320,12 @@ abstract class AbstractExportView
     /**
      * Fetches saved exports based on configuration, export format and target language.
      *
-     * @author Andreas Otto <andreas.otto@dkd.de>
      * @return array Information about exports.
+     * @author Andreas Otto <andreas.otto@dkd.de>
      */
     protected function fetchExports()
     {
+        /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable('tx_l10nmgr_exportdata');
         $exports = $queryBuilder->select('crdate', 'l10ncfg_id', 'exportType', 'translation_lang', 'filename')
@@ -327,15 +333,15 @@ abstract class AbstractExportView
             ->where(
                 $queryBuilder->expr()->eq(
                     'l10ncfg_id',
-                    $queryBuilder->createNamedParameter((int)$this->l10ncfgObj->getData('uid'), \PDO::PARAM_INT)
+                    $queryBuilder->createNamedParameter((int)$this->l10ncfgObj->getData('uid'), PDO::PARAM_INT)
                 ),
                 $queryBuilder->expr()->eq(
                     'exportType',
-                    $queryBuilder->createNamedParameter($this->exportType, \PDO::PARAM_STR)
+                    $queryBuilder->createNamedParameter($this->exportType, PDO::PARAM_STR)
                 ),
                 $queryBuilder->expr()->eq(
                     'translation_lang',
-                    $queryBuilder->createNamedParameter($this->sysLang, \PDO::PARAM_INT)
+                    $queryBuilder->createNamedParameter($this->sysLang, PDO::PARAM_INT)
                 )
             )
             ->orderBy('crdate', 'DESC')
@@ -388,7 +394,7 @@ abstract class AbstractExportView
                 $exportData['l10ncfg_id'],
                 $exportData['exportType'],
                 $exportData['translation_lang'],
-                sprintf('%suploads/tx_l10nmgr/jobs/out/%s', Environment::getPublicPath(), $exportData['filename'])
+                sprintf('%suploads/tx_l10nmgr/jobs/out/%s', Environment::getPublicPath() . '/', $exportData['filename'])
             );
         }
         $out = sprintf(
@@ -413,7 +419,7 @@ abstract class AbstractExportView
     public function saveExportFile($fileContent)
     {
         $fileExportName = 'uploads/tx_l10nmgr/jobs/out/' . $this->getFilename();
-        GeneralUtility::writeFile(Environment::getPublicPath() . $fileExportName, $fileContent);
+        GeneralUtility::writeFile(Environment::getPublicPath() . '/' . $fileExportName, $fileContent);
         return $fileExportName;
     }
 
@@ -487,7 +493,7 @@ abstract class AbstractExportView
     {
         $this->internalMessages[] = [
             'message' => $message,
-            'key' => $key
+            'key' => $key,
         ];
     }
 }

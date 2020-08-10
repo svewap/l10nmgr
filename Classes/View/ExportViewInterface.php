@@ -1,4 +1,5 @@
 <?php
+
 namespace Localizationteam\L10nmgr\View;
 
 /***************************************************************
@@ -18,7 +19,6 @@ namespace Localizationteam\L10nmgr\View;
  * GNU General Public License for more details.
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
-
 interface ExportViewInterface
 {
     public function setForcedSourceLanguage(int $forceLanguage);

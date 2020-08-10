@@ -26,12 +26,13 @@ namespace Localizationteam\L10nmgr;
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 
+use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
-use TYPO3\CMS\Lang\LanguageService;
 
 /**
  * Context menu processing
@@ -78,8 +79,9 @@ class ClickMenu
                 ];
                 try {
                     $uri = $uriBuilder->buildUriFromRoute('ConfigurationManager_LocalizationManager', $urlParameters);
-                } catch (\TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException $e) {
-                    $uri = $uriBuilder->buildUriFromRoutePath('ConfigurationManager_LocalizationManager', $urlParameters);
+                } catch (RouteNotFoundException $e) {
+                    $uri = $uriBuilder->buildUriFromRoutePath('ConfigurationManager_LocalizationManager',
+                        $urlParameters);
                 }
                 $url = (string)$uri;
 

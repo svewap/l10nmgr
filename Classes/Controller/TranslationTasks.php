@@ -1,5 +1,7 @@
 <?php
+
 namespace Localizationteam\L10nmgr\Controller;
+
 /***************************************************************
  * Copyright notice
  * (c) 2007 Kasper Skårhøj <kasperYYYY@typo3.com>
@@ -17,25 +19,27 @@ namespace Localizationteam\L10nmgr\Controller;
  * GNU General Public License for more details.
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
+
 /**
  * Module 'Workspace Tasks' for the 'l10nmgr' extension.
  *
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
+
 use Localizationteam\L10nmgr\Hooks\Tcemain;
 use Localizationteam\L10nmgr\Model\Tools\Tools;
-use TYPO3\CMS\Backend\Module\BaseScriptClass;
 use TYPO3\CMS\Backend\Template\DocumentTemplate;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
 
-class TranslationTasks extends BaseScriptClass
+class TranslationTasks extends BaseModule
 {
     /**
      * @var DocumentTemplate
@@ -110,6 +114,7 @@ class TranslationTasks extends BaseScriptClass
      */
     protected function moduleContent()
     {
+        /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_l10nmgr_priorities');
         // Selecting priorities:
         $priorities = $queryBuilder->select('*')
@@ -117,7 +122,7 @@ class TranslationTasks extends BaseScriptClass
             ->orderBy('sorting')
             ->execute()
             ->fetchAll();
-        $tRows = array();
+        $tRows = [];
         $c = 0;
         foreach ($priorities as $priorityRecord) {
             if ($lTable = $this->languageRows($priorityRecord['languages'], $priorityRecord['element'])) {
@@ -153,7 +158,7 @@ class TranslationTasks extends BaseScriptClass
         $this->sysLanguages = $this->l10nMgrTools->t8Tools->getSystemLanguages($firstEl[0] == 'pages' ? $firstEl[1] : $inputRecord['pid']);
         $languages = $this->getLanguages($languageList, $this->sysLanguages);
         if (count($languages)) {
-            $tRows = array();
+            $tRows = [];
             // Header:
             $cells = '<td class="bgColor2 tableheader">Element:</td>';
             foreach ($languages as $l) {
@@ -164,20 +169,22 @@ class TranslationTasks extends BaseScriptClass
             }
             $tRows[] = $cells;
             foreach ($elements as $el) {
-                $rec_on = array();
+                $rec_on = [];
                 // Get CURRENT online record and icon based on "t3ver_oid":
                 if ($el[0] !== '' && $el[1] > 0) {
                     $rec_on = BackendUtility::getRecord($el[0], $el[1]);
                 }
                 $icon = GeneralUtility::makeInstance(IconFactory::class)->getIconForRecord($el[0], $rec_on);
                 $icon = BackendUtility::wrapClickMenuOnIcon($icon, $el[0], $rec_on['uid'], 2);
-                $linkToIt = '<a href="#" onclick="' . htmlspecialchars('parent.list_frame.location.href="' . $GLOBALS['BACK_PATH'] . PathUtility::stripPathSitePrefix(ExtensionManagementUtility::extPath("l10nmgr")) . 'cm2/index.php?table=' . $el[0] . '&uid=' . $el[1] . '"; return false;') . '" target="listframe">
+                $linkToIt = '<a href="#" onclick="' . htmlspecialchars('parent.list_frame.location.href="' . $GLOBALS['BACK_PATH'] . PathUtility::stripPathSitePrefix(ExtensionManagementUtility::extPath('l10nmgr')) . 'cm2/index.php?table=' . $el[0] . '&uid=' . $el[1] . '"; return false;') . '" target="listframe">
 	' . BackendUtility::getRecordTitle($el[0], $rec_on, true) . '
 	</a>';
                 if ($el[0] == 'pages') {
                     // If another page module was specified, replace the default Page module with the new one
                     $newPageModule = trim($this->getBackendUser()->getTSConfig()['options.']['overridePageModule']);
                     $pageModule = BackendUtility::isModuleSetInTBE_MODULES($newPageModule) ? $newPageModule : 'web_layout';
+                    $path_module_path = GeneralUtility::resolveBackPath($GLOBALS['BACK_PATH'] . '../' . substr($GLOBALS['TBE_MODULES']['_PATHS'][$pageModule],
+                            strlen(Environment::getPublicPath() . '/')));
                     $onclick = 'parent.list_frame.location.href="' . $path_module_path . '?id=' . $el[1] . '"; return false;';
                     $path_module_path = GeneralUtility::resolveBackPath($GLOBALS['BACK_PATH'] . '../' . substr($GLOBALS['TBE_MODULES']['_PATHS'][$pageModule],
                             strlen(Environment::getPublicPath())));
@@ -188,7 +195,7 @@ class TranslationTasks extends BaseScriptClass
                 $cells = '<td>' . $icon . $linkToIt . $pmLink . '</td>';
                 foreach ($languages as $l) {
                     if ($l >= 1) {
-                        $cells .= '<td align="center">' . $hookObj->calcStat(array($el[0], $el[1]), $l) . '</td>';
+                        $cells .= '<td align="center">' . $hookObj->calcStat([$el[0], $el[1]], $l) . '</td>';
                     }
                 }
                 $tRows[] = $cells;

@@ -195,7 +195,7 @@ class ExcelXmlView extends AbstractExportView implements ExportViewInterface
         // Provide a hook for specific manipulations before building the actual XML
         if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['l10nmgr']['exportExcelXmlPreProcess'])) {
             foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['l10nmgr']['exportExcelXmlPreProcess'] as $classReference) {
-                $processingObject = GeneralUtility::getUserObj($classReference);
+                $processingObject = GeneralUtility::makeInstance($classReference);
                 $output = $processingObject->processBeforeExportingExcelXml($output, $this);
             }
         }
@@ -227,10 +227,10 @@ class ExcelXmlView extends AbstractExportView implements ExportViewInterface
     /**
      * Force a new source language to export the content to translate
      *
-     * @paraminteger $id
+     * @param integer $id
      *
-     * @accesspublic
-     * @returnvoid
+     * @access public
+     * @return void
      */
     public function setForcedSourceLanguage($id)
     {

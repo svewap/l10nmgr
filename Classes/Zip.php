@@ -170,7 +170,7 @@ class Zip
     public function extractFile($file)
     {
         if (is_file($file)) {
-            $tempDir = Environment::getPublicPath() . 'typo3temp/' . md5(microtime()) . '/';
+            $tempDir = Environment::getPublicPath() . '/typo3temp/' . md5(microtime()) . '/';
             GeneralUtility::mkdir($tempDir);
             if (is_dir($tempDir)) {
                 // This is if I want to check the content:
@@ -195,11 +195,11 @@ class Zip
 
     /**
      * Returns an array with all files and folders in $extPath
-     * @paramarray $fileArr
-     * @paramstring $extPath
+     * @param array $fileArr
+     * @param string $extPath
      *
-     * @returnarrayArray with files and folders
-     * @accessprivate
+     * @return array Array with files and folders
+     * @access private
      */
     protected function getAllFilesAndFoldersInPath($fileArr, $extPath)
     {
@@ -228,7 +228,7 @@ class Zip
      */
     public function removeDir($tempDir)
     {
-        $testDir = Environment::getPublicPath() . 'typo3temp/';
+        $testDir = Environment::getPublicPath() . '/typo3temp/';
         if (!GeneralUtility::isFirstPartOfStr($tempDir, $testDir)) {
             die($tempDir . ' was not within ' . $testDir);
         }

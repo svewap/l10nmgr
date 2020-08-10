@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Localizationteam\L10nmgr\Command;
 
@@ -28,12 +28,18 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 class L10nCommand extends Command
 {
     /**
+     * @var array Extension's configuration as from the EM
+     */
+    protected $extensionConfiguration = [];
+
+    /**
      * @var LanguageService
      */
     private $languageService;
 
     /**
      * The function loadExtConf loads the extension configuration.
+     * Check for deprecated configuration throws false positive in extension scanner.
      *
      * @return array
      */
@@ -53,7 +59,7 @@ class L10nCommand extends Command
     {
         if (!$this->languageService instanceof LanguageService) {
             $this->languageService = GeneralUtility::makeInstance(LanguageService::class);
-            $fileRef = 'EXT:l10nmgr/Resources/Private/Language/Cli/locallang.xml';
+            $fileRef = 'EXT:l10nmgr/Resources/Private/Language/Cli/locallang.xlf';
             $this->languageService->includeLLFile($fileRef);
             $this->languageService->init('');
         }
