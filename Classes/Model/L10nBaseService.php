@@ -282,8 +282,7 @@ class L10nBaseService implements LoggerAwareInterface
         string $theValue,
         string $whereClause = '',
         string $orderBy = ''
-    ): array
-    {
+    ): array {
         if (is_array($GLOBALS['TCA'][$theTable])) {
             /** @var $queryBuilder QueryBuilder */
             $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($theTable);
@@ -344,8 +343,7 @@ class L10nBaseService implements LoggerAwareInterface
     protected function remapInputDataForExistingTranslations(
         L10nConfiguration $configurationObject,
         TranslationData $translationData
-    )
-    {
+    ) {
         // feature is not enabled
         if (!$configurationObject->getData('overrideexistingtranslations')) {
             return;
