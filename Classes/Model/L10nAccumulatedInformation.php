@@ -177,7 +177,7 @@ class L10nAccumulatedInformation
             $previewLanguage = current(
                 GeneralUtility::intExplode(
                     ',',
-                    $this->getBackendUser()->getTSConfig('options.additionalPreviewLanguages')['value'] ?? ''
+                    $this->getBackendUser()->getTSConfig()['options.']['additionalPreviewLanguages'] ?? ''
                 )
             );
         }
