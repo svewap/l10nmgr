@@ -119,7 +119,6 @@ class LocalizationManager extends BaseModule
      */
     public function __construct()
     {
-        parent::__construct();
         $this->iconFactory = GeneralUtility::makeInstance(IconFactory::class);
         $this->moduleTemplate = GeneralUtility::makeInstance(ModuleTemplate::class);
         $this->getLanguageService()->includeLLFile('EXT:l10nmgr/Resources/Private/Language/Modules/LocalizationManager/locallang.xlf');
@@ -281,8 +280,7 @@ return false;
         $script = '',
         $addParams = '',
         $label = ''
-    )
-    {
+    ) {
         if (!is_array($menuItems)) {
             return '';
         }
@@ -371,8 +369,7 @@ return false;
         $addParams = '',
         $tagParams = '',
         $label = ''
-    )
-    {
+    ) {
         $scriptUrl = self::buildScriptUrl($mainParams, $addParams, $script);
         $onClick = 'jumpToUrl(' . GeneralUtility::quoteJSvalue($scriptUrl . '&' . $elementName . '=') . '+(this.checked?1:0),this);';
         return
