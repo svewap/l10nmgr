@@ -602,10 +602,10 @@ class Import extends L10nCommand
     protected function getXMLFileHead($filepath)
     {
         $getURLReport = [];
-        $fileContent = GeneralUtility::getUrl($filepath, 0, false, $getURLReport);
-        if ($getURLReport['error']) {
+        $fileContent = GeneralUtility::getUrl($filepath);
+        if ($fileContent === false) {
             throw new Exception(
-                "File or URL cannot be read.\n \\TYPO3\\CMS\\Core\\Utility\\GeneralUtility::getURL() error code: " . $getURLReport['error'] . "\n \\TYPO3\\CMS\\Core\\Utility\\GeneralUtility::getURL() message: “" . $getURLReport['message'] . '”',
+                "File or URL cannot be read.\n \\TYPO3\\CMS\\Core\\Utility\\GeneralUtility::getURL() error code: ",
                 1390394945
             );
         }
