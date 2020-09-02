@@ -31,6 +31,7 @@ use PDO;
 use TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
@@ -39,6 +40,7 @@ use TYPO3\CMS\Core\Database\Query\Restriction\BackendWorkspaceRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\HiddenRestriction;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
+use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Utility\DiffUtility;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -472,7 +474,7 @@ class Tools
             ? BackendUtility::getRecord($table, $uid)
             : $this->getSingleRecordToTranslate($table, $uid, $languageID);
 
-        if (is_array($rec) && $rec['pid'] != -1) {
+        if (is_array($rec) && $rec['pid'] != -1 && $this->canUserEditRecord($table, $rec)) {
             $pid = $table == 'pages' ? $rec['uid'] : $rec['pid'];
             if ($this->bypassFilter || $this->filterIndex($table, $uid, $pid)) {
                 BackendUtility::workspaceOL($table, $rec);
@@ -508,13 +510,28 @@ class Tools
      */
     protected function getSingleRecordToTranslate($table, $uid, $previewLanguage = 0)
     {
+        $fields = ['*'];
+        if (!$GLOBALS['BE_USER']->isAdmin()) {
+            $fields = $this->getAllowedFieldsForTable($table);
+            $fields = array_filter(array_merge(
+                $fields,
+                [
+                    'uid',
+                    'pid',
+                    $GLOBALS['TCA'][$table]['ctrl']['languageField'],
+                    $GLOBALS['TCA'][$table]['ctrl']['translationSource'],
+                    $GLOBALS['TCA'][$table]['ctrl']['transOrigDiffSourceField'],
+                    $GLOBALS['TCA'][$table]['ctrl']['transOrigPointerField'],
+                ]
+            ));
+        }
         /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
         $queryBuilder->getRestrictions()
             ->removeAll()
             ->add(GeneralUtility::makeInstance(DeletedRestriction::class))
             ->add(GeneralUtility::makeInstance(BackendWorkspaceRestriction::class));
-        $queryBuilder->select('*')->from($table);
+        $queryBuilder->select(...$fields)->from($table);
         if ($previewLanguage > 0) {
             $constraints = [];
             $constraints[] = $queryBuilder->expr()->eq(
@@ -672,7 +689,11 @@ class Tools
                                 );
                             }
                         }
+                        $allowedFields = $this->getAllowedFieldsForTable($tInfo['translation_table']);
                         foreach ($GLOBALS['TCA'][$tInfo['translation_table']]['columns'] as $field => $cfg) {
+                            if (!in_array($field, $allowedFields)) {
+                                continue;
+                            }
                             $cfg['labelField'] = trim($GLOBALS['TCA'][$tInfo['translation_table']]['ctrl']['label']);
                             if ($GLOBALS['TCA'][$tInfo['translation_table']]['ctrl']['languageField'] !== $field
                                 && $GLOBALS['TCA'][$tInfo['translation_table']]['ctrl']['transOrigPointerField'] !== $field
@@ -1127,6 +1148,10 @@ class Tools
      */
     public function getRecordsToTranslateFromTable($table, $pageId, $previewLanguage = 0)
     {
+        if (!$this->canUserEditRecord('pages', BackendUtility::getRecord('pages', $pageId))) {
+            return [];
+        }
+
         /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
         $queryBuilder->getRestrictions()
@@ -1187,7 +1212,16 @@ class Tools
             );
         }
 
-        return $queryBuilder->execute()->fetchAll();
+        $resource = $queryBuilder->execute();
+        $results = [];
+        while (($data = $resource->fetch(\PDO::FETCH_ASSOC))) {
+            if ($this->canUserEditRecord($table, $data)) {
+                $results[] = $data;
+            }
+        }
+        $resource->closeCursor();
+
+        return $results;
     }
 
     /**
@@ -1328,4 +1362,90 @@ class Tools
         }
         return [$remove, $TCEmain_cmd, $TCEmain_data, $errorLog];
     }
+
+    /**
+     * Fetches allowed fields for the current Backend user. This function is public to allow using it from
+     * other classes and hooks.
+     *
+     * @param string $table
+     * @return string[]
+     */
+    public function getAllowedFieldsForTable($table)
+    {
+        $cache = GeneralUtility::makeInstance(CacheManager::class)->getCache('cache_runtime');
+        $key = 'l10nmgr-allowed-fields-' . $table;
+        if ($cache->has($key)) {
+            $allowedFields = $cache->get($key);
+        } else {
+            $allowedFields = array_keys($GLOBALS['TCA'][$table]['columns']);
+            if (!$GLOBALS['BE_USER']->isAdmin()) {
+                $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
+                $dataHandler->start([], []);
+                $excludedFields = $dataHandler->getExcludeListArray();
+                unset($dataHandler);
+                // Filter elements for the current table only
+                $excludedFields = array_filter($excludedFields, function ($element) use ($table) {
+                    return GeneralUtility::isFirstPartOfStr($element, $table);
+                });
+                // Remove table prefix
+                array_walk($excludedFields, function (&$element) use ($table) {
+                    $element = substr($element, strlen($table) + 1);
+                });
+                $allowedFields = array_diff($allowedFields, $excludedFields);
+            }
+            $cache->set($key, $allowedFields);
+        }
+
+        return $allowedFields;
+    }
+
+    /**
+     * Checks if the user can edit the record. This function is public to allow using it from
+     * hooks or other classes.
+     *
+     * @param string $tableName
+     * @param array $record
+     * @return bool
+     */
+    public function canUserEditRecord($tableName, $record)
+    {
+        if ($GLOBALS['BE_USER']->isAdmin()) {
+            return true;
+        }
+
+        $cache = GeneralUtility::makeInstance(CacheManager::class)->getCache('cache_runtime');
+        $keyFormat = 'l10nmgr-allowed-state-%s-%d';
+        $key = sprintf($keyFormat, $tableName, $record['uid']);
+
+        if ($cache->has($key)) {
+            $result = $cache->get($key);
+        } else {
+            if ($tableName === 'pages') {
+                // See EXT:recordlist/Classes/RecordList::main()
+                $permissions = $GLOBALS['BE_USER']->calcPerms($record);
+                $result = ($permissions & Permission::PAGE_EDIT) && ($GLOBALS['BE_USER']->isAdmin() || (int)$record['editlock'] === 0);
+            } else {
+                $result = true;
+                if ($record['pid'] > 0) {
+                    $pageKey = sprintf($keyFormat, 'pages', $record['pid']);
+                    if ($cache->has($pageKey)) {
+                        $result = $cache->get($pageKey);
+                    } else {
+                        $pageRecord = BackendUtility::getRecord('pages', $record['pid']);
+                        $result = $this->canUserEditRecord('pages', $pageRecord);
+                    }
+                }
+                if ($result) {
+                    // Additional record check
+                    $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
+                    $dataHandler->start([], []);
+                    $result = $dataHandler->checkRecordUpdateAccess($tableName, $record['uid']) && $GLOBALS['BE_USER']->recordEditAccessInternals($tableName, $record['uid']);
+                }
+            }
+            $cache->set($key, $result);
+        }
+
+        return $result;
+    }
+
 }

@@ -97,6 +97,9 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
         }
         // Traverse the structure and generate XML output:
         foreach ($accum as $pId => $page) {
+            if (empty($accum[$pId]['items'])) {
+                continue;
+            }
             $output[] = "\t" . '<pageGrp id="' . $pId . '" sourceUrl="' . $this->baseUrl . 'index.php?id=' . $pId . '">' . "\n";
             foreach ($accum[$pId]['items'] as $table => $elements) {
                 foreach ($elements as $elementUid => $data) {
