@@ -19,7 +19,7 @@ $enableStatHook = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
     \TYPO3\CMS\Core\Configuration\ExtensionConfiguration::class
 )->get('l10nmgr', 'enable_stat_hook');
 if ($enableStatHook) {
-    $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['recStatInfoHooks']['tx_l10nmgr'] = 'EXT:l10nmgr/Classes/Hooks/Tcemain.php:Tcemain->stat';
+    $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['recStatInfoHooks']['tx_l10nmgr'] = \Localizationteam\L10nmgr\Hooks\Tcemain::class . '->stat';
 }
 
 // Add file cleanup task
