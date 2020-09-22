@@ -265,23 +265,31 @@ class Tools
                     $is_HIDE_L10N_SIBLINGS = GeneralUtility::isFirstPartOfStr($TCEformsCfg['displayCond'],
                         'HIDE_L10N_SIBLINGS');
                 }
+                $l10nmgrBypassFilter = isset($TCEformsCfg['l10nmgr']) && isset($TCEformsCfg['l10nmgr']['bypassFilter']);
                 if (!$is_HIDE_L10N_SIBLINGS) {
                     if (!GeneralUtility::isFirstPartOfStr($kFieldName, 't3ver_')) {
                         if (!$this->filters['l10n_categories']
                             || GeneralUtility::inList($this->filters['l10n_categories'], $TCEformsCfg['l10n_cat'])
+                            || $l10nmgrBypassFilter && $TCEformsCfg['l10nmgr']['bypassFilter']['l10n_categories'] === true
                             || $this->bypassFilter
                         ) {
                             if (!$this->filters['fieldTypes']
                                 || GeneralUtility::inList($this->filters['fieldTypes'], $TCEformsCfg['config']['type'])
+                                || $l10nmgrBypassFilter && $TCEformsCfg['l10nmgr']['bypassFilter']['fieldTypes'] === true
                                 || $this->bypassFilter
                             ) {
                                 if (!$this->filters['noEmptyValues'] || !(!$dataValue && !$translationValue)
                                     || !empty($previewLanguageValues[key($previewLanguageValues)])
+                                    || $l10nmgrBypassFilter && $TCEformsCfg['l10nmgr']['bypassFilter']['noEmptyValues'] === true
                                     || $this->bypassFilter
                                 ) {
                                     // Checking that no translation value exists either; if a translation value is found it is considered that it should be translated
                                     // even if the default value is empty for some reason.
-                                    if (!$this->filters['noIntegers'] || !MathUtility::canBeInterpretedAsInteger($dataValue) || $this->bypassFilter) {
+                                    if (!$this->filters['noIntegers']
+                                        || !MathUtility::canBeInterpretedAsInteger($dataValue)
+                                        || $l10nmgrBypassFilter && $TCEformsCfg['l10nmgr']['bypassFilter']['noIntegers'] === true
+                                        || $this->bypassFilter
+                                    ) {
                                         $this->detailsOutput['fields'][$key] = [
                                             'defaultValue' => $dataValue,
                                             'translationValue' => $translationValue,
