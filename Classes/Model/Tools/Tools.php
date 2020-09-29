@@ -269,7 +269,7 @@ class Tools
                 $exclude = false;
                 $bypassFilter = [];
                 if (!empty($l10nmgrConfiguration)) {
-                    $exclude = (bool)$l10nmgrConfiguration['exclude'];
+                    $exclude = $l10nmgrConfiguration['exclude'];
                     $bypassFilter = $l10nmgrConfiguration['bypassFilter'];
                 }
                 if (!$is_HIDE_L10N_SIBLINGS && !$exclude) {
@@ -281,19 +281,19 @@ class Tools
                         ) {
                             if (!$this->filters['fieldTypes']
                                 || GeneralUtility::inList($this->filters['fieldTypes'], $TCEformsCfg['config']['type'])
-                                || $bypassFilter && (bool)$bypassFilter['fieldTypes']
+                                || $bypassFilter && $bypassFilter['fieldTypes']
                                 || $this->bypassFilter
                             ) {
                                 if (!$this->filters['noEmptyValues'] || !(!$dataValue && !$translationValue)
                                     || !empty($previewLanguageValues[key($previewLanguageValues)])
-                                    || $bypassFilter && (bool)$bypassFilter['noEmptyValues']
+                                    || $bypassFilter && $bypassFilter['noEmptyValues']
                                     || $this->bypassFilter
                                 ) {
                                     // Checking that no translation value exists either; if a translation value is found it is considered that it should be translated
                                     // even if the default value is empty for some reason.
                                     if (!$this->filters['noIntegers']
                                         || !MathUtility::canBeInterpretedAsInteger($dataValue)
-                                        || $bypassFilter && (bool)$bypassFilter['noIntegers']
+                                        || $bypassFilter && $bypassFilter['noIntegers']
                                         || $this->bypassFilter
                                     ) {
                                         $this->detailsOutput['fields'][$key] = [
