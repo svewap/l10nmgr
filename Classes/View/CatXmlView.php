@@ -203,20 +203,21 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
                 $output = $processingObject->processBeforeExportingCatXml($output, $this);
             }
         }
+        $XML = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+        $XML .= '<!DOCTYPE TYPO3L10N [ <!ENTITY nbsp " "> ]>' . "\n" . '<TYPO3L10N>' . "\n";
+        $XML .= "\t" . '<head>' . "\n";
+        $XML .= "\t\t" . '<t3_l10ncfg>' . $this->l10ncfgObj->getData('uid') . '</t3_l10ncfg>' . "\n";
+        $XML .= "\t\t" . '<t3_sysLang>' . $sysLang . '</t3_sysLang>' . "\n";
         // get ISO2L code for source language
-        $staticLangArr = [];
         if ($this->l10ncfgObj->getData('sourceLangStaticId') && ExtensionManagementUtility::isLoaded('static_info_tables')) {
             $staticLangArr = BackendUtility::getRecord(
                 'static_languages',
                 $this->l10ncfgObj->getData('sourceLangStaticId'),
                 'lg_iso_2'
             );
+        } else {
+            $staticLangArr = [];
         }
-        $XML = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        $XML .= '<!DOCTYPE TYPO3L10N [ <!ENTITY nbsp " "> ]>' . "\n" . '<TYPO3L10N>' . "\n";
-        $XML .= "\t" . '<head>' . "\n";
-        $XML .= "\t\t" . '<t3_l10ncfg>' . $this->l10ncfgObj->getData('uid') . '</t3_l10ncfg>' . "\n";
-        $XML .= "\t\t" . '<t3_sysLang>' . $sysLang . '</t3_sysLang>' . "\n";
         $XML .= "\t\t" . '<t3_sourceLang>' . $staticLangArr['lg_iso_2'] . '</t3_sourceLang>' . "\n";
         $XML .= "\t\t" . '<t3_targetLang>' . $targetIso . '</t3_targetLang>' . "\n";
         $XML .= "\t\t" . '<t3_baseURL>' . $this->baseUrl . '</t3_baseURL>' . "\n";

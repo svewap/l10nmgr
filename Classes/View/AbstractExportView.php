@@ -33,6 +33,7 @@ use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageRendererResolver;
+use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\DiffUtility;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -50,6 +51,10 @@ abstract class AbstractExportView
      * @var string
      */
     var $filename = '';
+    /**
+     * @var Site The site configuration object
+     */
+    protected $site;
     /**
      * @var L10nConfiguration The language configuration object
      */
@@ -100,6 +105,10 @@ abstract class AbstractExportView
     {
         $this->sysLang = $sysLang;
         $this->l10ncfgObj = $l10ncfgObj;
+        // Load system languages into menu:
+        /** @var SiteFinder $siteFinder */
+        $siteFinder = GeneralUtility::makeInstance(SiteFinder::class);
+        $this->site = $siteFinder->getSiteByPageId($l10ncfgObj->getData('pid'));
     }
 
     /**
@@ -208,30 +217,35 @@ abstract class AbstractExportView
         } else {
             $fileType = 'catxml';
         }
-        if ($this->l10ncfgObj->getData('sourceLangStaticId') && ExtensionManagementUtility::isLoaded('static_info_tables')) {
-            $staticLangArr = BackendUtility::getRecord(
-                'static_languages',
-                $this->l10ncfgObj->getData('sourceLangStaticId'),
-                'lg_iso_2'
-            );
-        }
         if ($this->sysLang && ExtensionManagementUtility::isLoaded('static_info_tables')) {
+            if ($this->l10ncfgObj->getData('sourceLangStaticId')) {
+                $staticLangArr = BackendUtility::getRecord(
+                    'static_languages',
+                    $this->l10ncfgObj->getData('sourceLangStaticId'),
+                    'lg_iso_2'
+                );
+            }
             $targetLangSysLangArr = BackendUtility::getRecord('sys_language', $this->sysLang);
             $targetLangArr = BackendUtility::getRecord(
                 'static_languages',
                 $targetLangSysLangArr['static_lang_isocode']
             );
-        }
-        // Set sourceLang for filename
-        if (isset($staticLangArr['lg_iso_2']) && !empty($staticLangArr['lg_iso_2'])) {
-            $sourceLang = $staticLangArr['lg_iso_2'];
-        }
-        // Use locale for targetLang in filename if available
-        if (isset($targetLangArr['lg_collate_locale']) && !empty($targetLangArr['lg_collate_locale'])) {
-            $targetLang = $targetLangArr['lg_collate_locale'];
-            // Use two letter ISO code if locale is not available
-        } elseif (isset($targetLangArr['lg_iso_2']) && !empty($targetLangArr['lg_iso_2'])) {
-            $targetLang = $targetLangArr['lg_iso_2'];
+            // Set sourceLang for filename
+            if (isset($staticLangArr['lg_iso_2']) && !empty($staticLangArr['lg_iso_2'])) {
+                $sourceLang = $staticLangArr['lg_iso_2'];
+            }
+            // Use locale for targetLang in filename if available
+            if (isset($targetLangArr['lg_collate_locale']) && !empty($targetLangArr['lg_collate_locale'])) {
+                $targetLang = $targetLangArr['lg_collate_locale'];
+                // Use two letter ISO code if locale is not available
+            } elseif (isset($targetLangArr['lg_iso_2']) && !empty($targetLangArr['lg_iso_2'])) {
+                $targetLang = $targetLangArr['lg_iso_2'];
+            }
+        } else {
+            $sourceLanguageConfiguration = $this->site->getLanguages()[0];
+            $sourceLang = $sourceLanguageConfiguration->getHreflang() ?: $sourceLanguageConfiguration->getTwoLetterIsoCode();
+            $targetLanguageConfiguration = $this->site->getLanguages()[$this->sysLang];
+            $targetLang = $targetLanguageConfiguration->getHreflang() ?: $targetLanguageConfiguration->getTwoLetterIsoCode();
         }
         $fileNamePrefix = (trim($this->l10ncfgObj->getData('filenameprefix'))) ? $this->l10ncfgObj->getData('filenameprefix') . '_' . $fileType : $fileType;
         // Setting filename:
