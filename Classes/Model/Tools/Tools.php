@@ -1354,12 +1354,17 @@ class Tools
                     $sortBy = $GLOBALS['TCA'][$table]['ctrl']['default_sortby'];
                 }
             }
+            $TSconfig = BackendUtility::getPagesTSconfig($pageId);
+            if (isset($TSconfig['tx_l10nmgr']) && isset($TSconfig['tx_l10nmgr']['sortexports']) && isset($TSconfig['tx_l10nmgr']['sortexports'][$table])) {
+                $sortBy = $TSconfig['tx_l10nmgr']['sortexports'][$table];
+            }
             if ($sortBy) {
                 foreach (QueryHelper::parseOrderBy((string)$sortBy) as $orderPair) {
                     [$fieldName, $order] = $orderPair;
                     $queryBuilder->addOrderBy($fieldName, $order);
                 }
             }
+
         }
 
         $resource = $queryBuilder->execute();
