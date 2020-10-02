@@ -22,6 +22,7 @@ CREATE TABLE tx_l10nmgr_cfg
     filenameprefix               tinytext,
     overrideexistingtranslations tinyint(4) DEFAULT '0',
     pretranslatecontent          tinyint(4) DEFAULT '0',
+    sortexports                  tinyint(4) DEFAULT '0',
 
     PRIMARY KEY (uid),
     KEY parent (pid)

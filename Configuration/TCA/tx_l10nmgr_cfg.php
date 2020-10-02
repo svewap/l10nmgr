@@ -14,7 +14,7 @@ return [
         'fe_admin_fieldList' => 'title, depth, tablelist, exclude',
     ],
     'interface'   => [
-        'showRecordFieldList' => 'title,depth,pages,sourceLangStaticId,tablelist,exclude,incfcewithdefaultlanguage,pretranslatecontent,overrideexistingtranslations',
+        'showRecordFieldList' => 'title,depth,pages,sourceLangStaticId,tablelist,exclude,incfcewithdefaultlanguage,pretranslatecontent,overrideexistingtranslations, sortexports',
     ],
     'columns'     => [
         'title'                        => [
@@ -163,9 +163,17 @@ return [
                 'default' => 0,
             ],
         ],
+        'sortexports' => [
+            'exclude' => 1,
+            'label'   => $l10n . ':tx_l10nmgr_cfg.sortexports',
+            'config'  => [
+                'type'    => 'check',
+                'default' => 0,
+            ],
+        ],
     ],
     'types'       => [
-        0 => ['showitem' => 'title,filenameprefix, depth, pages, sourceLangStaticId, tablelist, exclude, include, metadata, displaymode, incfcewithdefaultlanguage, pretranslatecontent, overrideexistingtranslations'],
+        0 => ['showitem' => 'title,filenameprefix, depth, pages, sourceLangStaticId, tablelist, exclude, include, metadata, displaymode, incfcewithdefaultlanguage, pretranslatecontent, overrideexistingtranslations, sortexports'],
     ],
     'palettes'    => [
         '1' => ['showitem' => ''],

@@ -244,7 +244,7 @@ class L10nAccumulatedInformation
                                 $this->_increaseInternalCounters($accum[$pageId]['items'][$table][$pageId]['fields']);
                             }
                         } else {
-                            $allRows = $t8Tools->getRecordsToTranslateFromTable($table, $pageId);
+                            $allRows = $t8Tools->getRecordsToTranslateFromTable($table, $pageId, 0, (bool)$l10ncfg['sortexports']);
                             if (is_array($allRows)) {
                                 if (count($allRows)) {
                                     // Now, for each record, look for localization:
