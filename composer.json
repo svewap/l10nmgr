@@ -21,7 +21,6 @@
     "issues": "https://forge.typo3.org/projects/extension-l10nmgr/issues"
   },
   "require": {
-    "sjbr/static-info-tables": "^6.9.0",
     "typo3/cms-core": "^10.0.0",
     "typo3/cms-lang": "^10.0.0",
     "typo3/cms-scheduler": "^10.0.0"
