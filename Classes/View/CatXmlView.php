@@ -215,11 +215,16 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
                 $this->l10ncfgObj->getData('sourceLangStaticId'),
                 'lg_iso_2'
             );
+            $XML .= "\t\t" . '<t3_sourceLang>' . $staticLangArr['lg_iso_2'] . '</t3_sourceLang>' . "\n";
+            $XML .= "\t\t" . '<t3_targetLang>' . $targetIso . '</t3_targetLang>' . "\n";
         } else {
-            $staticLangArr = [];
+            $sourceLanguageConfiguration = $this->site->getLanguages()[0];
+            $sourceLang = $sourceLanguageConfiguration->getHreflang() ?: $sourceLanguageConfiguration->getTwoLetterIsoCode();
+            $targetLanguageConfiguration = $this->site->getLanguages()[$this->sysLang];
+            $targetLang = $targetLanguageConfiguration->getHreflang() ?: $targetLanguageConfiguration->getTwoLetterIsoCode();
+            $XML .= "\t\t" . '<t3_sourceLang>' . $sourceLang . '</t3_sourceLang>' . "\n";
+            $XML .= "\t\t" . '<t3_targetLang>' . $targetLang . '</t3_targetLang>' . "\n";
         }
-        $XML .= "\t\t" . '<t3_sourceLang>' . $staticLangArr['lg_iso_2'] . '</t3_sourceLang>' . "\n";
-        $XML .= "\t\t" . '<t3_targetLang>' . $targetIso . '</t3_targetLang>' . "\n";
         $XML .= "\t\t" . '<t3_baseURL>' . $this->baseUrl . '</t3_baseURL>' . "\n";
         $XML .= "\t\t" . '<t3_workspaceId>' . $this->getBackendUser()->workspace . '</t3_workspaceId>' . "\n";
         $XML .= "\t\t" . '<t3_count>' . $accumObj->getFieldCount() . '</t3_count>' . "\n";

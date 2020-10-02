@@ -992,8 +992,7 @@ return false;
             $sourceStaticLangArr = BackendUtility::getRecord('static_languages',
                 $l10nmgrCfgObj->l10ncfg['sourceLangStaticId'], 'lg_iso_2');
             $targetStaticLang = BackendUtility::getRecord('sys_language', $tlang, 'static_lang_isocode');
-            $targetStaticLangArr = BackendUtility::getRecord('static_languages',
-                $targetStaticLang['static_lang_isocode'], 'lg_iso_2');
+            $targetStaticLangArr = BackendUtility::getRecord('static_languages', $targetStaticLang['static_lang_isocode'], 'lg_iso_2');
             $sourceLang = $sourceStaticLangArr['lg_iso_2'];
             $targetLang = $targetStaticLangArr['lg_iso_2'];
             // Collect mail data
