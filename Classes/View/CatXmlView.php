@@ -97,6 +97,9 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
         }
         // Traverse the structure and generate XML output:
         foreach ($accum as $pId => $page) {
+            if (empty($accum[$pId]['items'])) {
+                continue;
+            }
             $output[] = "\t" . '<pageGrp id="' . $pId . '" sourceUrl="' . $this->baseUrl . 'index.php?id=' . $pId . '">' . "\n";
             foreach ($accum[$pId]['items'] as $table => $elements) {
                 foreach ($elements as $elementUid => $data) {
@@ -200,27 +203,36 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
                 $output = $processingObject->processBeforeExportingCatXml($output, $this);
             }
         }
+        $XML = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+        $XML .= '<!DOCTYPE TYPO3L10N [ <!ENTITY nbsp " "> ]>' . "\n" . '<TYPO3L10N>' . "\n";
+        $XML .= "\t" . '<head>' . "\n";
+        $XML .= "\t\t" . '<t3_l10ncfg>' . $this->l10ncfgObj->getData('uid') . '</t3_l10ncfg>' . "\n";
+        $XML .= "\t\t" . '<t3_sysLang>' . $sysLang . '</t3_sysLang>' . "\n";
         // get ISO2L code for source language
-        $staticLangArr = [];
         if ($this->l10ncfgObj->getData('sourceLangStaticId') && ExtensionManagementUtility::isLoaded('static_info_tables')) {
             $staticLangArr = BackendUtility::getRecord(
                 'static_languages',
                 $this->l10ncfgObj->getData('sourceLangStaticId'),
                 'lg_iso_2'
             );
+            $XML .= "\t\t" . '<t3_sourceLang>' . $staticLangArr['lg_iso_2'] . '</t3_sourceLang>' . "\n";
+            $XML .= "\t\t" . '<t3_targetLang>' . $targetIso . '</t3_targetLang>' . "\n";
+        } else {
+            $sourceLanguageConfiguration = $this->site->getLanguages()[0];
+            $sourceLang = $sourceLanguageConfiguration->getHreflang() ?: $sourceLanguageConfiguration->getTwoLetterIsoCode();
+            $targetLanguageConfiguration = $this->site->getLanguages()[$this->sysLang];
+            $targetLang = $targetLanguageConfiguration->getHreflang() ?: $targetLanguageConfiguration->getTwoLetterIsoCode();
+            $XML .= "\t\t" . '<t3_sourceLang>' . $sourceLang . '</t3_sourceLang>' . "\n";
+            $XML .= "\t\t" . '<t3_targetLang>' . $targetLang . '</t3_targetLang>' . "\n";
         }
-        $XML = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        $XML .= '<!DOCTYPE TYPO3L10N [ <!ENTITY nbsp " "> ]>' . "\n" . '<TYPO3L10N>' . "\n";
-        $XML .= "\t" . '<head>' . "\n";
-        $XML .= "\t\t" . '<t3_l10ncfg>' . $this->l10ncfgObj->getData('uid') . '</t3_l10ncfg>' . "\n";
-        $XML .= "\t\t" . '<t3_sysLang>' . $sysLang . '</t3_sysLang>' . "\n";
-        $XML .= "\t\t" . '<t3_sourceLang>' . $staticLangArr['lg_iso_2'] . '</t3_sourceLang>' . "\n";
-        $XML .= "\t\t" . '<t3_targetLang>' . $targetIso . '</t3_targetLang>' . "\n";
         $XML .= "\t\t" . '<t3_baseURL>' . $this->baseUrl . '</t3_baseURL>' . "\n";
         $XML .= "\t\t" . '<t3_workspaceId>' . $this->getBackendUser()->workspace . '</t3_workspaceId>' . "\n";
         $XML .= "\t\t" . '<t3_count>' . $accumObj->getFieldCount() . '</t3_count>' . "\n";
         $XML .= "\t\t" . '<t3_wordCount>' . $accumObj->getWordCount() . '</t3_wordCount>' . "\n";
-        $XML .= "\t\t" . '<t3_internal>' . "\r\t" . $this->renderInternalMessage() . "\t\t" . '</t3_internal>' . "\n";
+        $internalMessages = trim($this->renderInternalMessage());
+        if ($internalMessages) {
+            $XML .= "\t\t" . '<t3_internal>' . "\r\t" . $internalMessages . "\t\t" . '</t3_internal>' . "\n";
+        }
         $XML .= "\t\t" . '<t3_formatVersion>' . L10NMGR_FILEVERSION . '</t3_formatVersion>' . "\n";
         $XML .= "\t\t" . '<t3_l10nmgrVersion>' . L10NMGR_VERSION . '</t3_l10nmgrVersion>' . "\n";
         $XML .= $this->additionalHeaderData();

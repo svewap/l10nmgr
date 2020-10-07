@@ -32,7 +32,6 @@ use Localizationteam\L10nmgr\View\ExcelXmlView;
 use Localizationteam\L10nmgr\View\L10nConfigurationDetailView;
 use Localizationteam\L10nmgr\View\L10nHtmlListView;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use Swift_Attachment;
 use TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider;
 use TYPO3\CMS\Backend\Routing\Exception\ResourceNotFoundException;
@@ -44,6 +43,7 @@ use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Http\HtmlResponse;
+use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Mail\MailMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
@@ -525,7 +525,8 @@ return false;
             $translationData->setPreviewLanguage($this->previewLanguage);
             GeneralUtility::unlink_tempfile($uploadedTempFile);
             $service->saveTranslation($l10ncfgObj, $translationData);
-            $info .= '<br /><br />' . $this->moduleTemplate->icons(1) . $this->getLanguageService()->getLL('import.success.message') . '<br /><br />';
+            $icon = $this->iconFactory->getIcon('status-dialog-notification', Icon::SIZE_SMALL)->render();
+            $info .= '<br /><br />' . $icon . $this->getLanguageService()->getLL('import.success.message') . '<br /><br />';
         }
         // If export of XML is asked for, do that (this will exit and push a file for download)
         if (GeneralUtility::_POST('export_excel')) {
@@ -683,7 +684,8 @@ return false;
                 $translationData->setLanguage($this->sysLanguage);
                 $translationData->setPreviewLanguage($this->previewLanguage);
                 $service->saveTranslation($l10ncfgObj, $translationData);
-                $actionInfo .= '<br /><br />' . $this->moduleTemplate->icons(1) . 'Import done<br /><br />(Command count:' . $service->lastTCEMAINCommandsCount . ')';
+                $icon = $this->iconFactory->getIcon('status-dialog-notification', Icon::SIZE_SMALL)->render();
+                $actionInfo .= '<br /><br />' . $icon . 'Import done<br /><br />(Command count:' . $service->lastTCEMAINCommandsCount . ')';
             } else {
                 // Relevant processing of XML Import with the help of the Importmanager
                 /** @var CatXmlImportManager $importManager */
@@ -716,7 +718,8 @@ return false;
                     //$actionInfo.="<pre>".var_export($GLOBALS['BE_USER'],true)."</pre>";
                     unset($importManager);
                     $service->saveTranslation($l10ncfgObj, $translationData);
-                    $actionInfo .= '<br />' . $this->moduleTemplate->icons(-1) . $this->getLanguageService()->getLL('import.xml.done.message') . '<br /><br />(Command count:' . $service->lastTCEMAINCommandsCount . ')';
+                    $icon = $this->iconFactory->getIcon('status-dialog-ok', Icon::SIZE_SMALL)->render();
+                    $actionInfo .= '<br />' . $icon . $this->getLanguageService()->getLL('import.xml.done.message') . '<br /><br />(Command count:' . $service->lastTCEMAINCommandsCount . ')';
                 }
             }
             GeneralUtility::unlink_tempfile($uploadedTempFile);
@@ -989,8 +992,7 @@ return false;
             $sourceStaticLangArr = BackendUtility::getRecord('static_languages',
                 $l10nmgrCfgObj->l10ncfg['sourceLangStaticId'], 'lg_iso_2');
             $targetStaticLang = BackendUtility::getRecord('sys_language', $tlang, 'static_lang_isocode');
-            $targetStaticLangArr = BackendUtility::getRecord('static_languages',
-                $targetStaticLang['static_lang_isocode'], 'lg_iso_2');
+            $targetStaticLangArr = BackendUtility::getRecord('static_languages', $targetStaticLang['static_lang_isocode'], 'lg_iso_2');
             $sourceLang = $sourceStaticLangArr['lg_iso_2'];
             $targetLang = $targetStaticLangArr['lg_iso_2'];
             // Collect mail data

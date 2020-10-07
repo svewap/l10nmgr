@@ -127,6 +127,9 @@ class Export extends L10nCommand
         $error = false;
         $time_start = microtime(true);
 
+        // Ensure the _cli_ user is authenticated
+        $this->getBackendUser()->backendCheckLogin();
+
         $this->extensionConfiguration = $this->getExtConf();
 
         // get format (CATXML,EXCEL)
@@ -244,7 +247,7 @@ class Export extends L10nCommand
             } else {
                 throw new Exception("Wrong format. Use 'CATXML' or 'EXCEL'");
             }
-            // Check  if sourceLangStaticId is set in configuration and set setForcedSourceLanguage to this value
+            // Check if sourceLangStaticId is set in configuration and set setForcedSourceLanguage to this value
             if ($l10nmgrCfgObj->getData('sourceLangStaticId') && ExtensionManagementUtility::isLoaded('static_info_tables')) {
                 $forceLanguage = $this->getStaticLangUid($l10nmgrCfgObj->getData('sourceLangStaticId'));
                 $l10nmgrGetXML->setForcedSourceLanguage($forceLanguage);
