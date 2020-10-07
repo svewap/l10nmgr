@@ -22,6 +22,7 @@ CREATE TABLE tx_l10nmgr_cfg
     filenameprefix               tinytext,
     overrideexistingtranslations tinyint(4) DEFAULT '0',
     pretranslatecontent          tinyint(4) DEFAULT '0',
+    sortexports                  tinyint(4) DEFAULT '0',
 
     PRIMARY KEY (uid),
     KEY parent (pid)
@@ -120,4 +121,11 @@ CREATE TABLE sys_language_l10nmgr_language_restricted_record_mm
 
     KEY uid_local_foreign (uid_local, uid_foreign),
     KEY uid_foreign_tablefield (uid_foreign, tablenames(40), fieldname(3), sorting_foreign)
+);
+
+#
+# Table structure for table 'sys_language'
+#
+CREATE TABLE sys_language (
+	static_lang_isocode int(11) unsigned DEFAULT '0' NOT NULL
 );

@@ -121,7 +121,7 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
                                             } else {
                                                 $dataForTranslation = $tData['defaultValue'];
                                             }
-                                            $_isTranformedXML = false;
+                                            $_isTransformedXML = false;
                                             // Following checks are not enough! Fields that could be transformed to be XML conform are not transformed! textpic fields are not isRTE=1!!! No idea why...
                                             //DZ 2010-09-08
                                             // > if > else loop instead of ||
@@ -131,13 +131,13 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
                                             //echo $key."\n";
                                             if ($tData['fieldType'] == 'text' && $tData['isRTE']
                                                 || (preg_match('/templavoila_flex/', $key))) {
-                                                $dataForTranslationTranformed = $xmlTool->RTE2XML($dataForTranslation);
-                                                if ($dataForTranslationTranformed !== false) {
-                                                    $_isTranformedXML = true;
-                                                    $dataForTranslation = $dataForTranslationTranformed;
+                                                $dataForTranslationTransformed = $xmlTool->RTE2XML($dataForTranslation);
+                                                if ($dataForTranslationTransformed !== false) {
+                                                    $_isTransformedXML = true;
+                                                    $dataForTranslation = $dataForTranslationTransformed;
                                                 }
                                             }
-                                            if ($_isTranformedXML) {
+                                            if ($_isTransformedXML) {
                                                 $output[] = "\t\t"
                                                     . '<data table="' . $table . '" elementUid="' . $elementUid . '" key="' . $key . '" transformations="1">' . $dataForTranslation . '</data>' . "\n";
                                             } else {
@@ -199,31 +199,40 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
         // Provide a hook for specific manipulations before building the actual XML
         if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['l10nmgr']['exportCatXmlPreProcess'])) {
             foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['l10nmgr']['exportCatXmlPreProcess'] as $classReference) {
-                $processingObject = GeneralUtility::getUserObj($classReference);
+                $processingObject = GeneralUtility::makeInstance($classReference);
                 $output = $processingObject->processBeforeExportingCatXml($output, $this);
             }
-        }
-        // get ISO2L code for source language
-        $staticLangArr = [];
-        if ($this->l10ncfgObj->getData('sourceLangStaticId') && ExtensionManagementUtility::isLoaded('static_info_tables')) {
-            $staticLangArr = BackendUtility::getRecord(
-                'static_languages',
-                $this->l10ncfgObj->getData('sourceLangStaticId'),
-                'lg_iso_2'
-            );
         }
         $XML = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         $XML .= '<!DOCTYPE TYPO3L10N [ <!ENTITY nbsp " "> ]>' . "\n" . '<TYPO3L10N>' . "\n";
         $XML .= "\t" . '<head>' . "\n";
         $XML .= "\t\t" . '<t3_l10ncfg>' . $this->l10ncfgObj->getData('uid') . '</t3_l10ncfg>' . "\n";
         $XML .= "\t\t" . '<t3_sysLang>' . $sysLang . '</t3_sysLang>' . "\n";
-        $XML .= "\t\t" . '<t3_sourceLang>' . $staticLangArr['lg_iso_2'] . '</t3_sourceLang>' . "\n";
-        $XML .= "\t\t" . '<t3_targetLang>' . $targetIso . '</t3_targetLang>' . "\n";
+        // get ISO2L code for source language
+        if ($this->l10ncfgObj->getData('sourceLangStaticId') && ExtensionManagementUtility::isLoaded('static_info_tables')) {
+            $staticLangArr = BackendUtility::getRecord(
+                'static_languages',
+                $this->l10ncfgObj->getData('sourceLangStaticId'),
+                'lg_iso_2'
+            );
+            $XML .= "\t\t" . '<t3_sourceLang>' . $staticLangArr['lg_iso_2'] . '</t3_sourceLang>' . "\n";
+            $XML .= "\t\t" . '<t3_targetLang>' . $targetIso . '</t3_targetLang>' . "\n";
+        } else {
+            $sourceLanguageConfiguration = $this->site->getLanguages()[0];
+            $sourceLang = $sourceLanguageConfiguration->getHreflang() ?: $sourceLanguageConfiguration->getTwoLetterIsoCode();
+            $targetLanguageConfiguration = $this->site->getLanguages()[$this->sysLang];
+            $targetLang = $targetLanguageConfiguration->getHreflang() ?: $targetLanguageConfiguration->getTwoLetterIsoCode();
+            $XML .= "\t\t" . '<t3_sourceLang>' . $sourceLang . '</t3_sourceLang>' . "\n";
+            $XML .= "\t\t" . '<t3_targetLang>' . $targetLang . '</t3_targetLang>' . "\n";
+        }
         $XML .= "\t\t" . '<t3_baseURL>' . $this->baseUrl . '</t3_baseURL>' . "\n";
         $XML .= "\t\t" . '<t3_workspaceId>' . $this->getBackendUser()->workspace . '</t3_workspaceId>' . "\n";
         $XML .= "\t\t" . '<t3_count>' . $accumObj->getFieldCount() . '</t3_count>' . "\n";
         $XML .= "\t\t" . '<t3_wordCount>' . $accumObj->getWordCount() . '</t3_wordCount>' . "\n";
-        $XML .= "\t\t" . '<t3_internal>' . "\r\t" . $this->renderInternalMessage() . "\t\t" . '</t3_internal>' . "\n";
+        $internalMessages = trim($this->renderInternalMessage());
+        if ($internalMessages) {
+            $XML .= "\t\t" . '<t3_internal>' . "\r\t" . $internalMessages . "\t\t" . '</t3_internal>' . "\n";
+        }
         $XML .= "\t\t" . '<t3_formatVersion>' . L10NMGR_FILEVERSION . '</t3_formatVersion>' . "\n";
         $XML .= "\t\t" . '<t3_l10nmgrVersion>' . L10NMGR_VERSION . '</t3_l10nmgrVersion>' . "\n";
         $XML .= $this->additionalHeaderData();

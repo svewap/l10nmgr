@@ -10,20 +10,23 @@ if (!defined('TYPO3_MODE')) {
 ');
 
 //! increase with every change to XML Format
-define('L10NMGR_FILEVERSION', '1.2');
-define('L10NMGR_VERSION', '9.5.0');
+define('L10NMGR_FILEVERSION', '2.0');
+define('L10NMGR_VERSION', '10.0.0');
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processDatamapClass']['tx_l10nmgr'] = \Localizationteam\L10nmgr\Hooks\Tcemain::class;
-$_EXTCONF_ARRAY = unserialize($_EXTCONF);
 
-if ($_EXTCONF_ARRAY['enable_stat_hook']) {
+// Enable stats
+$enableStatHook = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
+    \TYPO3\CMS\Core\Configuration\ExtensionConfiguration::class
+)->get('l10nmgr', 'enable_stat_hook');
+if ($enableStatHook) {
     $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['recStatInfoHooks']['tx_l10nmgr'] = \Localizationteam\L10nmgr\Hooks\Tcemain::class . '->stat';
 }
 
 // Add file cleanup task
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks'][\Localizationteam\L10nmgr\Task\L10nmgrFileGarbageCollection::class] = [
-    'extension'        => $_EXTKEY,
-    'title'            => 'LLL:EXT:' . $_EXTKEY . '/Resources/Private/Language/Task/locallang.xlf:fileGarbageCollection.name',
-    'description'      => 'LLL:EXT:' . $_EXTKEY . '/Resources/Private/Language/Task/locallang.xlf:fileGarbageCollection.description',
+    'extension'        => 'l10nmgr',
+    'title'            => 'LLL:EXT:l10nmgr/Resources/Private/Language/Task/locallang.xlf:fileGarbageCollection.name',
+    'description'      => 'LLL:EXT:l10nmgr/Resources/Private/Language/Task/locallang.xlf:fileGarbageCollection.description',
     'additionalFields' => \Localizationteam\L10nmgr\Task\L10nmgrAdditionalFieldProvider::class,
 ];
 
@@ -37,4 +40,3 @@ $signalSlotDispatcher->connect(
     'addLanguageRestrictionDatabaseSchemaToTablesDefinition'
 );
 unset($signalSlotDispatcher);
-

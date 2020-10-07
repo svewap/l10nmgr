@@ -27,12 +27,12 @@ use Localizationteam\L10nmgr\Model\L10nBaseService;
 use Localizationteam\L10nmgr\Model\L10nConfiguration;
 use Localizationteam\L10nmgr\Model\MkPreviewLinkService;
 use Localizationteam\L10nmgr\Model\Tools\XmlTools;
-use Localizationteam\L10nmgr\Model\TranslationData;
 use Localizationteam\L10nmgr\Model\TranslationDataFactory;
 use Localizationteam\L10nmgr\Zip;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Exception;
@@ -129,11 +129,11 @@ class Import extends L10nCommand
                     break;
                 default:
                     $output->writeln('<error>Please specify a task with --task. Either "importString", "preview" or "importFile".</error>');
-                    return;
+                    return 1;
             }
         } catch (Exception $e) {
             $output->writeln('<error>' . $e->getMessage() . '</error>');
-            return;
+            return 1;
         }
         // Calculate duration and output result message
         $end = microtime(true);
@@ -142,6 +142,7 @@ class Import extends L10nCommand
         $output->writeln(sprintf($this->getLanguageService()->getLL('import.process.duration.message'), $time));
         // Send reporting mail
         $this->sendMailNotification();
+        return 0;
     }
 
     /**
@@ -278,7 +279,6 @@ class Import extends L10nCommand
                 $out .= $previewLink;
             }
         }
-        /** @var $translationData TranslationData */
         $translationData = $factory->getTranslationDataFromCATXMLNodes($importManager->getXMLNodes());
         $translationData->setLanguage($this->sysLanguage);
         $translationData->setPreviewLanguage($this->previewLanguage);
@@ -412,7 +412,6 @@ class Import extends L10nCommand
                             $out .= $previewLink;
                         }
                     }
-                    /** @var $translationData TranslationData */
                     $translationData = $factory->getTranslationDataFromCATXMLNodes($importManager->getXMLNodes());
                     $translationData->setLanguage($this->sysLanguage);
                     $translationData->setPreviewLanguage($this->previewLanguage);
@@ -421,8 +420,8 @@ class Import extends L10nCommand
                     // Store some information about the imported file
                     // This is used later for reporting by mail
                     $this->filesImported[$xmlFile] = [
-                        'workspace'     => $xmlFileHead['t3_workspaceId'][0]['XMLvalue'],
-                        'language'      => $xmlFileHead['t3_targetLang'][0]['XMLvalue'],
+                        'workspace' => $xmlFileHead['t3_workspaceId'][0]['XMLvalue'],
+                        'language' => $xmlFileHead['t3_targetLang'][0]['XMLvalue'],
                         'configuration' => $xmlFileHead['t3_l10ncfg'][0]['XMLvalue'],
                     ];
                 }
@@ -520,9 +519,9 @@ class Import extends L10nCommand
             if ($filesToDownload != false) {
                 // Check that download directory exists
                 $downloadFolder = 'uploads/tx_l10nmgr/jobs/in/';
-                $downloadPath = PATH_site . $downloadFolder;
+                $downloadPath = Environment::getPublicPath() . '/' . $downloadFolder;
                 if (!is_dir(GeneralUtility::getFileAbsFileName($downloadPath))) {
-                    GeneralUtility::mkdir_deep(PATH_site . $downloadFolder);
+                    GeneralUtility::mkdir_deep(Environment::getPublicPath() . '/' . $downloadFolder);
                 }
                 foreach ($filesToDownload as $aFile) {
                     // Ignore current directory and reference to upper level
@@ -601,10 +600,10 @@ class Import extends L10nCommand
     protected function getXMLFileHead($filepath)
     {
         $getURLReport = [];
-        $fileContent = GeneralUtility::getUrl($filepath, 0, false, $getURLReport);
-        if ($getURLReport['error']) {
+        $fileContent = GeneralUtility::getUrl($filepath);
+        if ($fileContent === false) {
             throw new Exception(
-                "File or URL cannot be read.\n \\TYPO3\\CMS\\Core\\Utility\\GeneralUtility::getURL() error code: " . $getURLReport['error'] . "\n \\TYPO3\\CMS\\Core\\Utility\\GeneralUtility::getURL() message: “" . $getURLReport['message'] . '”',
+                "File or URL cannot be read.\n \\TYPO3\\CMS\\Core\\Utility\\GeneralUtility::getURL() error code: ",
                 1390394945
             );
         }

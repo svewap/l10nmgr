@@ -6,7 +6,7 @@
  * Only the data in the array - everything else is removed by next
  * writing. "version" and "dependencies" must not be touched!
  ***************************************************************/
-$EM_CONF[$_EXTKEY] = [
+$EM_CONF['l10nmgr'] = [
     'title'            => 'Localization Manager',
     'description'      => 'Module for managing localization import and export',
     'category'         => 'module',
@@ -21,8 +21,7 @@ $EM_CONF[$_EXTKEY] = [
     'constraints'      => [
         'depends'   => [
             'typo3'              => '10.0.0-10.99.99',
-            'scheduler'          => '10.0.0-10.99.99',
-            'static_info_tables' => '6.4.2-0.0.0',
+            'scheduler'          => '10.0.0-10.99.99'
         ],
         'conflicts' => [],
         'suggests'  => [],

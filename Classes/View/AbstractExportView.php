@@ -26,12 +26,14 @@ use Localizationteam\L10nmgr\Model\L10nConfiguration;
 use PDO;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageRendererResolver;
+use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\DiffUtility;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -49,6 +51,10 @@ abstract class AbstractExportView
      * @var string
      */
     var $filename = '';
+    /**
+     * @var Site The site configuration object
+     */
+    protected $site;
     /**
      * @var L10nConfiguration The language configuration object
      */
@@ -99,6 +105,10 @@ abstract class AbstractExportView
     {
         $this->sysLang = $sysLang;
         $this->l10ncfgObj = $l10ncfgObj;
+        // Load system languages into menu:
+        /** @var SiteFinder $siteFinder */
+        $siteFinder = GeneralUtility::makeInstance(SiteFinder::class);
+        $this->site = $siteFinder->getSiteByPageId($l10ncfgObj->getData('pid'));
     }
 
     /**
@@ -144,17 +154,17 @@ abstract class AbstractExportView
         $date = time();
         // query to insert the data in the database
         $field_values = [
-            'source_lang'      => (int)$this->forcedSourceLanguage ? (int)$this->forcedSourceLanguage : 0,
+            'source_lang' => (int)$this->forcedSourceLanguage ? (int)$this->forcedSourceLanguage : 0,
             'translation_lang' => (int)$this->sysLang,
-            'crdate'           => $date,
-            'tstamp'           => $date,
-            'l10ncfg_id'       => (int)$this->l10ncfgObj->getData('uid'),
-            'pid'              => (int)$this->l10ncfgObj->getData('pid'),
-            'tablelist'        => (string)$this->l10ncfgObj->getData('tablelist'),
-            'title'            => (string)$this->l10ncfgObj->getData('title'),
-            'cruser_id'        => (int)$this->l10ncfgObj->getData('cruser_id'),
-            'filename'         => (string)$this->getFilename(),
-            'exportType'       => (int)$this->exportType,
+            'crdate' => $date,
+            'tstamp' => $date,
+            'l10ncfg_id' => (int)$this->l10ncfgObj->getData('uid'),
+            'pid' => (int)$this->l10ncfgObj->getData('pid'),
+            'tablelist' => (string)$this->l10ncfgObj->getData('tablelist'),
+            'title' => (string)$this->l10ncfgObj->getData('title'),
+            'cruser_id' => (int)$this->l10ncfgObj->getData('cruser_id'),
+            'filename' => (string)$this->getFilename(),
+            'exportType' => (int)$this->exportType,
         ];
 
         /** @var $databaseConnection Connection */
@@ -167,7 +177,7 @@ abstract class AbstractExportView
 
         if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['l10nmgr']['exportView'])) {
             $params = [
-                'uid'  => (int)$databaseConnection->lastInsertId('tx_l10nmgr_exportdata'),
+                'uid' => (int)$databaseConnection->lastInsertId('tx_l10nmgr_exportdata'),
                 'data' => $field_values,
             ];
             foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['l10nmgr']['exportView'] as $classData) {
@@ -207,30 +217,35 @@ abstract class AbstractExportView
         } else {
             $fileType = 'catxml';
         }
-        if ($this->l10ncfgObj->getData('sourceLangStaticId') && ExtensionManagementUtility::isLoaded('static_info_tables')) {
-            $staticLangArr = BackendUtility::getRecord(
-                'static_languages',
-                $this->l10ncfgObj->getData('sourceLangStaticId'),
-                'lg_iso_2'
-            );
-        }
         if ($this->sysLang && ExtensionManagementUtility::isLoaded('static_info_tables')) {
+            if ($this->l10ncfgObj->getData('sourceLangStaticId')) {
+                $staticLangArr = BackendUtility::getRecord(
+                    'static_languages',
+                    $this->l10ncfgObj->getData('sourceLangStaticId'),
+                    'lg_iso_2'
+                );
+            }
             $targetLangSysLangArr = BackendUtility::getRecord('sys_language', $this->sysLang);
             $targetLangArr = BackendUtility::getRecord(
                 'static_languages',
                 $targetLangSysLangArr['static_lang_isocode']
             );
-        }
-        // Set sourceLang for filename
-        if (isset($staticLangArr['lg_iso_2']) && !empty($staticLangArr['lg_iso_2'])) {
-            $sourceLang = $staticLangArr['lg_iso_2'];
-        }
-        // Use locale for targetLang in filename if available
-        if (isset($targetLangArr['lg_collate_locale']) && !empty($targetLangArr['lg_collate_locale'])) {
-            $targetLang = $targetLangArr['lg_collate_locale'];
-            // Use two letter ISO code if locale is not available
-        } elseif (isset($targetLangArr['lg_iso_2']) && !empty($targetLangArr['lg_iso_2'])) {
-            $targetLang = $targetLangArr['lg_iso_2'];
+            // Set sourceLang for filename
+            if (isset($staticLangArr['lg_iso_2']) && !empty($staticLangArr['lg_iso_2'])) {
+                $sourceLang = $staticLangArr['lg_iso_2'];
+            }
+            // Use locale for targetLang in filename if available
+            if (isset($targetLangArr['lg_collate_locale']) && !empty($targetLangArr['lg_collate_locale'])) {
+                $targetLang = $targetLangArr['lg_collate_locale'];
+                // Use two letter ISO code if locale is not available
+            } elseif (isset($targetLangArr['lg_iso_2']) && !empty($targetLangArr['lg_iso_2'])) {
+                $targetLang = $targetLangArr['lg_iso_2'];
+            }
+        } else {
+            $sourceLanguageConfiguration = $this->site->getLanguages()[0];
+            $sourceLang = $sourceLanguageConfiguration->getHreflang() ?: $sourceLanguageConfiguration->getTwoLetterIsoCode();
+            $targetLanguageConfiguration = $this->site->getLanguages()[$this->sysLang];
+            $targetLang = $targetLanguageConfiguration->getHreflang() ?: $targetLanguageConfiguration->getTwoLetterIsoCode();
         }
         $fileNamePrefix = (trim($this->l10ncfgObj->getData('filenameprefix'))) ? $this->l10ncfgObj->getData('filenameprefix') . '_' . $fileType : $fileType;
         // Setting filename:
@@ -278,7 +293,7 @@ abstract class AbstractExportView
     {
         $content = [];
         $exports = $this->fetchExports();
-        foreach ($exports AS $export => $exportData) {
+        foreach ($exports as $export => $exportData) {
             $content[$export] = sprintf('
 <tr class="db_list_normal">
 	<td>%s</td>
@@ -290,7 +305,7 @@ abstract class AbstractExportView
                 $exportData['translation_lang'], sprintf('<a href="%suploads/tx_l10nmgr/jobs/out/%s">%s</a>',
                     GeneralUtility::getIndpEnv('TYPO3_SITE_URL'), $exportData['filename'], $exportData['filename']));
         }
-        $out = sprintf('
+        return sprintf('
 <table class="table table-striped table-hover">
 	<thead>
 	<tr class="t3-row-header">
@@ -313,7 +328,6 @@ abstract class AbstractExportView
             ),
             implode(chr(10), $content)
         );
-        return $out;
     }
 
     /**
@@ -327,7 +341,7 @@ abstract class AbstractExportView
         /** @var $queryBuilder QueryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable('tx_l10nmgr_exportdata');
-        $exports = $queryBuilder->select('crdate', 'l10ncfg_id', 'exportType', 'translation_lang', 'filename')
+        return $queryBuilder->select('crdate', 'l10ncfg_id', 'exportType', 'translation_lang', 'filename')
             ->from('tx_l10nmgr_exportdata')
             ->where(
                 $queryBuilder->expr()->eq(
@@ -346,8 +360,6 @@ abstract class AbstractExportView
             ->orderBy('crdate', 'DESC')
             ->execute()
             ->fetchAll();
-
-        return $exports;
     }
 
     /**
@@ -393,10 +405,10 @@ abstract class AbstractExportView
                 $exportData['l10ncfg_id'],
                 $exportData['exportType'],
                 $exportData['translation_lang'],
-                sprintf('%suploads/tx_l10nmgr/jobs/out/%s', PATH_site, $exportData['filename'])
+                sprintf('%suploads/tx_l10nmgr/jobs/out/%s', Environment::getPublicPath() . '/', $exportData['filename'])
             );
         }
-        $out = sprintf(
+        return sprintf(
             '%-15s%-15s%-15s%-15s%s%s%s',
             $this->getLanguageService()->getLL('export.overview.date.label'),
             $this->getLanguageService()->getLL('export.overview.configuration.label'),
@@ -406,7 +418,6 @@ abstract class AbstractExportView
             LF,
             implode(LF, $content)
         );
-        return $out;
     }
 
     /**
@@ -418,7 +429,7 @@ abstract class AbstractExportView
     public function saveExportFile($fileContent)
     {
         $fileExportName = 'uploads/tx_l10nmgr/jobs/out/' . $this->getFilename();
-        GeneralUtility::writeFile(PATH_site . $fileExportName, $fileContent);
+        GeneralUtility::writeFile(Environment::getPublicPath() . '/' . $fileExportName, $fileContent);
         return $fileExportName;
     }
 
@@ -492,7 +503,7 @@ abstract class AbstractExportView
     {
         $this->internalMessages[] = [
             'message' => $message,
-            'key'     => $key,
+            'key' => $key,
         ];
     }
 }
