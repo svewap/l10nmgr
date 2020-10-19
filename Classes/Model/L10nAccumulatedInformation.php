@@ -184,6 +184,7 @@ class L10nAccumulatedInformation
         if ($previewLanguage) {
             $t8Tools->previewLanguages = [$previewLanguage];
         }
+
         // Traverse tree elements:
         /**
          * @var $rootlineUtility RootlineUtility
@@ -305,7 +306,7 @@ class L10nAccumulatedInformation
                                 ->where(
                                     $queryBuilder->expr()->eq(
                                         'sys_language_uid',
-                                        $queryBuilder->createNamedParameter((int)$previewLanguage, PDO::PARAM_INT)
+                                        0
                                     ),
                                     $queryBuilder->expr()->in(
                                         'file',
