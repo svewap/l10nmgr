@@ -79,6 +79,10 @@ abstract class AbstractExportView
      */
     protected $modeNoHidden = false;
     /**
+     * @var string
+     */
+    protected $customer;
+    /**
      * @var int
      */
     protected $exportType;
@@ -141,6 +145,16 @@ abstract class AbstractExportView
     public function setModeOnlyNew()
     {
         $this->modeOnlyNew = true;
+    }
+
+    /**
+     * Sets the customer name for the export
+     * @param string $customer
+     * @return void
+     */
+    public function setCustomer($customer)
+    {
+        $this->customer = $customer;
     }
 
     /**
