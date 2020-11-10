@@ -367,20 +367,8 @@ class Tools
                 if (
                     isset($GLOBALS['TCA'][$table]['types'][$TCAtype]['columnsOverrides'])
                     && isset($GLOBALS['TCA'][$table]['types'][$TCAtype]['columnsOverrides'][$field])
-                    && (
-                        (
-                            isset($GLOBALS['TCA'][$table]['types'][$TCAtype]['columnsOverrides'][$field]['config']['defaultExtras'])
-                            && strpos(
-                                $GLOBALS['TCA'][$table]['types'][$TCAtype]['columnsOverrides'][$field]['config']['defaultExtras'],
-                                'richtext'
-                            ) !== false
-                        )
-                        ||
-                        (
-                            isset($GLOBALS['TCA'][$table]['types'][$TCAtype]['columnsOverrides'][$field]['config']['enableRichtext'])
-                            && $GLOBALS['TCA'][$table]['types'][$TCAtype]['columnsOverrides'][$field]['config']['enableRichtext']
-                        )
-                    )
+                    && isset($GLOBALS['TCA'][$table]['types'][$TCAtype]['columnsOverrides'][$field]['config']['enableRichtext'])
+                    && $GLOBALS['TCA'][$table]['types'][$TCAtype]['columnsOverrides'][$field]['config']['enableRichtext']
                 ) {
                     $isRTE = true;
                 } else {
