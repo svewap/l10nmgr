@@ -18,9 +18,6 @@ return [
     'feInterface' => [
         'fe_admin_fieldList' => 'hidden, title, description, languages, element',
     ],
-    'interface'   => [
-        'showRecordFieldList' => 'hidden,title,description,languages,element',
-    ],
     'columns'     => [
         'hidden'      => [
             'exclude' => 1,

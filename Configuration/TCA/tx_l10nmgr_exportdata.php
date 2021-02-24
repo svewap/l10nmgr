@@ -17,9 +17,6 @@ return [
     'feInterface' => [
         'fe_admin_fieldList' => 'title, source_lang, l10ncfg_id, crdate, delete, exclude',
     ],
-    'interface'   => [
-        'showRecordFieldList' => 'title,crdate,tablelist,translation_lang,source_lang,configuration,l10ncfg_id,filename',
-    ],
     'columns'     => [
         'title'            => [
             'exclude' => 1,

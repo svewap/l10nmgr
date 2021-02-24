@@ -14,9 +14,6 @@ if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('static_info_ta
         'feInterface' => [
             'fe_admin_fieldList' => 'title, depth, tablelist, exclude',
         ],
-        'interface'   => [
-            'showRecordFieldList' => 'title,depth,pages,sourceLangStaticId,tablelist,exclude,incfcewithdefaultlanguage,pretranslatecontent,overrideexistingtranslations,sortexports',
-        ],
         'columns'     => [
             'title'                        => [
                 'exclude' => 1,
