@@ -11,6 +11,7 @@ namespace Localizationteam\L10nmgr\LanguageRestriction;
 use InvalidArgumentException;
 use Localizationteam\L10nmgr\Constants;
 use RuntimeException;
+use TYPO3\CMS\Core\Database\Event\AlterTableDefinitionStatementsEvent;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
@@ -336,17 +337,16 @@ class LanguageRestrictionRegistry implements SingletonInterface
     }
 
     /**
-     * A slot method to inject the required language restriction database fields to the
+     * A event listener to inject the required language restriction database fields to the
      * tables definition string
      *
-     * @param array $sqlString
-     * @return array
+     * @param AlterTableDefinitionStatementsEvent $event
+     * @internal
      */
-    public function addLanguageRestrictionDatabaseSchemaToTablesDefinition(array $sqlString)
+    public function addLanguageRestrictionDatabaseSchema(AlterTableDefinitionStatementsEvent $event): void
     {
         $this->registerDefaultTranslationRestrictableTables();
-        $sqlString[] = $this->getDatabaseTableDefinitions();
-        return ['sqlString' => $sqlString];
+        $event->addSqlData($this->getDatabaseTableDefinitions());
     }
 
     /**
