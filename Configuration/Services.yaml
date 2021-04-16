@@ -1,0 +1,7 @@
+services:
+  Localizationteam\L10nmgr\LanguageRestriction\LanguageRestrictionRegistry:
+    tags:
+      - name: event.listener
+        identifier: 'language-restriction-registry'
+        method: 'addLanguageRestrictionDatabaseSchema'
+        event: TYPO3\CMS\Core\Database\Event\AlterTableDefinitionStatementsEvent
