@@ -38,6 +38,7 @@ use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\PathUtility;
 
 /**
  * Hook for updating translation index
@@ -232,7 +233,6 @@ class Tcemain
      */
     protected function siteRelPath($extensionKey)
     {
-        $path = ExtensionManagementUtility::extPath($extensionKey);
-        return substr($path, strlen(Environment::getPublicPath() . '/'));
+        return PathUtility::stripPathSitePrefix(ExtensionManagementUtility::extPath($extensionKey));
     }
 }
