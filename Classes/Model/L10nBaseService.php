@@ -506,7 +506,9 @@ class L10nBaseService implements LoggerAwareInterface
             // Now, submitting translation data:
             /** @var DataHandler $tce */
             $tce = GeneralUtility::makeInstance(DataHandler::class);
-            $tce->dontProcessTransformations = true;
+            if ((int)$this->extensionConfiguration['import_dontProcessTransformations'] === 1) {
+                $tce->dontProcessTransformations = true;
+            }
             $tce->isImporting = true;
             foreach (array_chunk($TCEmain_data, 100, true) as $dataPart) {
                 $tce->start(
@@ -763,6 +765,9 @@ class L10nBaseService implements LoggerAwareInterface
             $tce = GeneralUtility::makeInstance(DataHandler::class);
             if ($this->extensionConfiguration['enable_neverHideAtCopy'] == 1) {
                 $tce->neverHideAtCopy = true;
+            }
+            if ((int)$this->extensionConfiguration['import_dontProcessTransformations'] === 1) {
+                $tce->dontProcessTransformations = true;
             }
             $tce->isImporting = true;
             if (count($this->TCEmain_cmd)) {
