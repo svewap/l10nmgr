@@ -1269,9 +1269,10 @@ class Tools
      * @param int $pageId Page id
      * @param int $previewLanguage
      * @param bool $sortexports
+     * @param bool $noHidden
      * @return array Array of records from table (with all fields selected)
      */
-    public function getRecordsToTranslateFromTable($table, $pageId, $previewLanguage = 0, $sortexports = false)
+    public function getRecordsToTranslateFromTable($table, $pageId, $previewLanguage = 0, $sortexports = false, $noHidden = false)
     {
         if (!$this->canUserEditRecord('pages', BackendUtility::getRecord('pages', $pageId))) {
             return [];
@@ -1287,6 +1288,9 @@ class Tools
         // Check for disabled field settings
         // print "###".$this->getBackendUser()->uc['moduleData']['xMOD_tx_l10nmgr_cm1']['noHidden']."---";
         if (!empty($this->getBackendUser()->uc['moduleData']['LocalizationManager']['noHidden'])) {
+            $noHidden = true;
+        }
+        if ($noHidden) {
             $queryBuilder->getRestrictions()->add(GeneralUtility::makeInstance(HiddenRestriction::class));
         }
 

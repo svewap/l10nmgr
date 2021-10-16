@@ -67,7 +67,7 @@ class ExcelXmlView extends AbstractExportView implements ExportViewInterface
         if ($this->forcedSourceLanguage) {
             $accumObj->setForcedPreviewLanguage($this->forcedSourceLanguage);
         }
-        $accum = $accumObj->getInfoArray();
+        $accum = $accumObj->getInfoArray($this->modeNoHidden);
         $output = [];
         $sourceColState = '';
         $altSourceColState = '';

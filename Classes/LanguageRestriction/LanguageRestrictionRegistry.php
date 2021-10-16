@@ -5,6 +5,7 @@
  * Date: 25.10.2018
  * Time: 11:34
  */
+
 namespace Localizationteam\L10nmgr\LanguageRestriction;
 
 use InvalidArgumentException;

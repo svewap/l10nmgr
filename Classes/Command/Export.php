@@ -39,7 +39,6 @@ use TYPO3\CMS\Core\Utility\MathUtility;
 
 class Export extends L10nCommand
 {
-
     /**
      * Configure the command by defining the name, options and arguments
      */
@@ -68,7 +67,7 @@ class Export extends L10nCommand
                 "Format for export of translatable data can be:\n CATXML = XML for translation tools (default)\n EXCEL = Microsoft XML format",
                 'CATXML'
             )
-            ->addOption('hidden', null, InputOption::VALUE_NONE, 'Do not export hidden contents')
+            ->addOption('noHidden', null, InputOption::VALUE_NONE, 'Do not export hidden contents')
             ->addOption('new', null, InputOption::VALUE_NONE, 'Export only new contents')
             ->addOption(
                 'srcPID',
@@ -271,8 +270,8 @@ class Export extends L10nCommand
             if ($onlyNew) {
                 $l10nmgrGetXML->setModeOnlyNew();
             }
-            $hidden = $input->getOption('hidden');
-            if ($hidden) {
+            $noHidden = $input->getOption('noHidden');
+            if ($noHidden) {
                 $l10nmgrGetXML->setModeNoHidden();
             }
             $customer = $input->getOption('customer');
