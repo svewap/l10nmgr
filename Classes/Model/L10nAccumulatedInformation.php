@@ -72,6 +72,10 @@ class L10nAccumulatedInformation
      */
     protected $forcedPreviewLanguage;
     /**
+     * @var bool
+     */
+    protected $noHidden;
+    /**
      * @var array Information about collected data for translation
      */
     protected $_accumulatedInformations = [];
@@ -129,10 +133,12 @@ class L10nAccumulatedInformation
      * This way client classes have access to the accumulated array directly.
      * And can read this array in order to create some output...
      *
+     * @param bool $noHidden
      * @return array Complete Information array
      */
-    public function getInfoArray()
+    public function getInfoArray($noHidden = false)
     {
+        $this->noHidden = $noHidden;
         $this->process();
         return $this->_accumulatedInformations;
     }
@@ -262,7 +268,7 @@ class L10nAccumulatedInformation
                                 $this->_increaseInternalCounters($accum[$pageId]['items'][$table][$pageId]['fields']);
                             }
                         } else {
-                            $allRows = $t8Tools->getRecordsToTranslateFromTable($table, $pageId, 0, (bool)$l10ncfg['sortexports']);
+                            $allRows = $t8Tools->getRecordsToTranslateFromTable($table, $pageId, 0, (bool)$l10ncfg['sortexports'], $this->noHidden);
                             if (!is_array($allRows)) {
                                 continue;
                             }
