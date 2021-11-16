@@ -17,9 +17,9 @@ namespace Localizationteam\L10nmgr\Command;
  * The TYPO3 project - inspiring people to share!
  */
 
+use Localizationteam\L10nmgr\Model\Dto\EmConfiguration;
 use Symfony\Component\Console\Command\Command;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
-use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -29,14 +29,11 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 class L10nCommand extends Command
 {
     /**
-     * @var array Extension's configuration as from the EM
-     */
-    protected $extensionConfiguration = [];
-
-    /**
      * @var LanguageService
      */
     private $languageService;
+
+    protected EmConfiguration $emConfiguration;
 
     /**
      * The function loadExtConf loads the extension configuration.
@@ -46,9 +43,11 @@ class L10nCommand extends Command
      */
     protected function getExtConf()
     {
-        return empty($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['l10nmgr'])
-            ? GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('l10nmgr')
-            : $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['l10nmgr'];
+        if (!$this->emConfiguration instanceof EmConfiguration) {
+            $this->emConfiguration = GeneralUtility::makeInstance(EmConfiguration::class);
+        }
+
+        return $this->emConfiguration;
     }
 
     /**

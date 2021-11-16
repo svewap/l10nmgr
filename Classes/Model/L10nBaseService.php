@@ -20,6 +20,7 @@ namespace Localizationteam\L10nmgr\Model;
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+use Localizationteam\L10nmgr\Model\Dto\EmConfiguration;
 use PDO;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
@@ -60,11 +61,6 @@ class L10nBaseService implements LoggerAwareInterface
     protected $importAsDefaultLanguage = false;
 
     /**
-     * @var array Extension's configuration as from the EM
-     */
-    protected $extensionConfiguration = [];
-
-    /**
      * @var array
      */
     protected $TCEmain_cmd = [];
@@ -94,15 +90,14 @@ class L10nBaseService implements LoggerAwareInterface
      */
     protected $flexFormDiffArray;
 
+    protected EmConfiguration $emConfiguration;
+
     /**
      * Check for deprecated configuration throws false positive in extension scanner.
      */
     public function __construct()
     {
-        // Load the extension's configuration
-        $this->extensionConfiguration = empty($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['l10nmgr'])
-            ? unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['l10nmgr'])
-            : $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['l10nmgr'];
+        $this->emConfiguration = GeneralUtility::makeInstance(EmConfiguration::class);
     }
 
     /**
@@ -274,9 +269,7 @@ class L10nBaseService implements LoggerAwareInterface
     {
         /** @var DataHandler $dataHandler */
         $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
-        if ($this->extensionConfiguration['enable_neverHideAtCopy'] == 1) {
-            $dataHandler->neverHideAtCopy = true;
-        }
+        $dataHandler->neverHideAtCopy = $this->emConfiguration->isEnableNeverHideAtCopy();
         $dataHandler->dontProcessTransformations = true;
         $dataHandler->isImporting = true;
         return $dataHandler;
@@ -517,9 +510,7 @@ class L10nBaseService implements LoggerAwareInterface
             // Now, submitting translation data:
             /** @var DataHandler $tce */
             $tce = GeneralUtility::makeInstance(DataHandler::class);
-            if ((int)$this->extensionConfiguration['import_dontProcessTransformations'] === 1) {
-                $tce->dontProcessTransformations = true;
-            }
+            $tce->dontProcessTransformations = $this->emConfiguration->isImportDontProcessTransformations();
             $tce->isImporting = true;
             foreach (array_chunk($TCEmain_data, 100, true) as $dataPart) {
                 $tce->start(
@@ -774,12 +765,8 @@ class L10nBaseService implements LoggerAwareInterface
             // Execute CMD array: Localizing records:
             /** @var DataHandler $tce */
             $tce = GeneralUtility::makeInstance(DataHandler::class);
-            if ($this->extensionConfiguration['enable_neverHideAtCopy'] == 1) {
-                $tce->neverHideAtCopy = true;
-            }
-            if ((int)$this->extensionConfiguration['import_dontProcessTransformations'] === 1) {
-                $tce->dontProcessTransformations = true;
-            }
+            $tce->neverHideAtCopy = $this->emConfiguration->isEnableNeverHideAtCopy();
+            $tce->dontProcessTransformations = $this->emConfiguration->isImportDontProcessTransformations();
             $tce->isImporting = true;
             if (count($this->TCEmain_cmd)) {
                 $tce->start([], $this->TCEmain_cmd);
@@ -849,7 +836,7 @@ class L10nBaseService implements LoggerAwareInterface
                                     }
                                 }
                                 if ($this->childMappingArray[$table][$TdefRecord]) {
-                                    if ($this->extensionConfiguration['enable_neverHideAtCopy'] == 1 &&
+                                    if ($this->emConfiguration->isEnableNeverHideAtCopy() &&
                                         $GLOBALS['TCA'][$table]['ctrl']['enablecolumns'] &&
                                         $GLOBALS['TCA'][$table]['ctrl']['enablecolumns']['disabled']) {
                                         $fields[$GLOBALS['TCA'][$table]['ctrl']['enablecolumns']['disabled']] = 0;
@@ -875,9 +862,7 @@ class L10nBaseService implements LoggerAwareInterface
             // Now, submitting translation data:
             /** @var DataHandler $tce */
             $tce = GeneralUtility::makeInstance(DataHandler::class);
-            if ($this->extensionConfiguration['enable_neverHideAtCopy'] == 1) {
-                $tce->neverHideAtCopy = true;
-            }
+            $tce->neverHideAtCopy = $this->emConfiguration->isEnableNeverHideAtCopy();
             $tce->dontProcessTransformations = true;
             $tce->isImporting = true;
             foreach (array_chunk($TCEmain_data, 100, true) as $dataPart) {

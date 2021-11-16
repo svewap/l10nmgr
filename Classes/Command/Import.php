@@ -104,8 +104,6 @@ class Import extends L10nCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $start = microtime(true);
-        // Load the extension's configuration
-        $this->extensionConfiguration = $this->getExtConf();
 
         // Ensure the _cli_ user is authenticated
         $this->getBackendUser()->backendCheckLogin();
@@ -465,7 +463,7 @@ class Import extends L10nCommand
         $files = [];
         // If no file path was given, try to gather files from FTP
         if (empty($file)) {
-            if (!empty($this->extensionConfiguration['ftp_server'])) {
+            if (!empty($this->getExtConf()->getFtpServer())) {
                 $files = $this->getFilesFromFtp();
             }
             // Get list of files to import from given command-line parameter
@@ -497,23 +495,23 @@ class Import extends L10nCommand
     {
         $files = [];
         // First try connecting and logging in
-        $connection = ftp_connect($this->extensionConfiguration['ftp_server']);
+        $connection = ftp_connect($this->getExtConf()->getFtpServer());
         if ($connection === false) {
             throw new Exception('Could not connect to FTP server', 1322489458);
         }
         if (@ftp_login(
             $connection,
-            $this->extensionConfiguration['ftp_server_username'],
-            $this->extensionConfiguration['ftp_server_password']
+            $this->getExtConf()->getFtpServerUsername(),
+            $this->getExtConf()->getFtpServerPassword()
         )
         ) {
             ftp_pasv($connection, true);
             // If a path was defined, change directory to this path
-            if (!empty($this->extensionConfiguration['ftp_server_downpath'])) {
-                $result = ftp_chdir($connection, $this->extensionConfiguration['ftp_server_downpath']);
+            if (!empty($this->getExtConf()->getFtpServerDownPath())) {
+                $result = ftp_chdir($connection, $this->getExtConf()->getFtpServerDownPath());
                 if ($result === false) {
                     throw new Exception(
-                        'Could not change to directory: ' . $this->extensionConfiguration['ftp_server_downpath'],
+                        'Could not change to directory: ' . $this->getExtConf()->getFtpServerDownPath(),
                         1322489723
                     );
                 }
@@ -649,9 +647,9 @@ class Import extends L10nCommand
     protected function sendMailNotification()
     {
         // Send mail only if notifications are active and at least one file was imported
-        if ($this->extensionConfiguration['enable_notification'] && count($this->filesImported) > 0) {
+        if ($this->getExtConf()->isEnableNotification() && count($this->filesImported) > 0) {
             // If at least a recipient is indeed defined, proceed with sending the mail
-            $recipients = GeneralUtility::trimExplode(',', $this->extensionConfiguration['email_recipient_import']);
+            $recipients = GeneralUtility::trimExplode(',', $this->getExtConf()->getEmailRecipientImport());
             if (count($recipients) > 0) {
                 // First of all get a list of all workspaces and all l10nmgr configurations to use in the reporting
                 /** @var $queryBuilder QueryBuilder */
@@ -735,7 +733,7 @@ class Import extends L10nCommand
                 }
                 // Add signature
                 $message .= "\n\n" . $this->getLanguageService()->getLL('email.goodbye.msg');
-                $message .= "\n" . $this->extensionConfiguration['email_sender_name'];
+                $message .= "\n" . $this->getExtConf()->getEmailSenderName();
                 $subject = sprintf(
                     $this->getLanguageService()->getLL('import.mail.subject'),
                     $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename']
@@ -743,7 +741,7 @@ class Import extends L10nCommand
                 // Instantiate the mail object, set all necessary properties and send the mail
                 /** @var MailMessage $mailObject */
                 $mailObject = GeneralUtility::makeInstance(MailMessage::class);
-                $mailObject->setFrom([$this->extensionConfiguration['email_sender'] => $this->extensionConfiguration['email_sender_name']]);
+                $mailObject->setFrom([$this->getExtConf()->getEmailSender() => $this->getExtConf()->getEmailSenderName()]);
                 $mailObject->setTo($recipients);
                 $mailObject->setSubject($subject);
                 $mailObject->text($message);
