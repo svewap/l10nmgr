@@ -37,9 +37,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 /**
  * baseService class for offering common services like saving translation etc...
  *
- * @authorKasper Skaarhoj <kasperYYYY@typo3.com>
- * @authorDaniel Pötzinger <development@aoemedia.de>
- * @packageTYPO3
+ * @author Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author Daniel Pötzinger <development@aoemedia.de>
  */
 class L10nBaseService implements LoggerAwareInterface
 {

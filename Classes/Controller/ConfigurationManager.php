@@ -40,9 +40,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 /**
  * Translation management tool
  *
- * @authorKasper Skaarhoj <kasperYYYY@typo3.com>
- * @authorJo Hasenau <info@cybercraft.de>
- * @packageTYPO3
+ * @author Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author Jo Hasenau <info@cybercraft.de>
  */
 class ConfigurationManager extends BaseModule
 {

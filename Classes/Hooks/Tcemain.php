@@ -42,8 +42,7 @@ use TYPO3\CMS\Core\Utility\PathUtility;
 /**
  * Hook for updating translation index
  *
- * @authorKasper Skaarhoj <kasperYYYY@typo3.com>
- * @packageTYPO3
+ * @author Kasper Skaarhoj <kasperYYYY@typo3.com>
  */
 class Tcemain
 {

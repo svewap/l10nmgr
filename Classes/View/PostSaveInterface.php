@@ -3,11 +3,10 @@
 namespace Localizationteam\L10nmgr\View;
 
 /**
- * PostSaveInterface $COMMENT$
+ * PostSaveInterface
  *
- * @authorPeter Russ<peter.russ@4many.net>
- * @packageTYPO3
- * @date20150909-2127
+ * @author Peter Russ<peter.russ@4many.net>
+ * @date 20150909-2127
  */
 interface PostSaveInterface
 {

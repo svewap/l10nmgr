@@ -22,7 +22,6 @@ namespace Localizationteam\L10nmgr\Model\Tools;
 
 /**
  * Contains translation tools
- * $Id: class.t3lib_loaddbgroup.php 1816 2006-11-26 00:43:24Z mundaun $
  *
  * @author Kasper Skaarhoj <kasperYYYY@typo3.com>
  */
@@ -50,8 +49,7 @@ use TYPO3\CMS\Core\Utility\MathUtility;
 /**
  * Contains translation tools
  *
- * @authorKasper Skaarhoj <kasperYYYY@typo3.com>
- * @packageTYPO3
+ * @author Kasper Skaarhoj <kasperYYYY@typo3.com>
  */
 class Tools
 {
