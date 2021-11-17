@@ -20,7 +20,7 @@ namespace Localizationteam\L10nmgr\Task;
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use Localizationteam\L10nmgr\Traits\BackendUserTrait;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -39,6 +39,8 @@ use TYPO3\CMS\Scheduler\Task\AbstractTask;
  */
 class L10nmgrAdditionalFieldProvider extends AbstractAdditionalFieldProvider implements AdditionalFieldProviderInterface
 {
+    use BackendUserTrait;
+
     /**
      * @var LanguageService
      */
@@ -142,15 +144,6 @@ class L10nmgrAdditionalFieldProvider extends AbstractAdditionalFieldProvider imp
             $this->languageService->init($this->getBackendUser()->uc['lang']);
         }
         return $this->languageService;
-    }
-
-    /**
-     * Returns the Backend User
-     * @return BackendUserAuthentication
-     */
-    protected function getBackendUser()
-    {
-        return $GLOBALS['BE_USER'];
     }
 
     /**
