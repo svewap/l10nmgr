@@ -6,11 +6,13 @@ parameters:
         # Don't be overly greedy on machines with more CPU's to be a good neighbor especially on CI
         maximumNumberOfProcesses: 5
 
-    level: 0
+    level: 1
 
     bootstrapFiles:
         - .Build/vendor/autoload.php
 
+    scanFiles:
+        - ext_localconf.php
     scanDirectories:
         - public
 

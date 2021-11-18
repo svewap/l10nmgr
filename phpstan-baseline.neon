@@ -1,0 +1,32 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Constant LF not found\\.$#"
+			count: 4
+			path: Classes/Command/Export.php
+
+		-
+			message: "#^Constant CR not found\\.$#"
+			count: 1
+			path: Classes/Model/Tools/XmlTools.php
+
+		-
+			message: "#^Constant LF not found\\.$#"
+			count: 4
+			path: Classes/Model/Tools/XmlTools.php
+
+		-
+			message: "#^Constant LF not found\\.$#"
+			count: 1
+			path: Classes/Model/TranslationDataFactory.php
+
+		-
+			message: "#^Constant LF not found\\.$#"
+			count: 2
+			path: Classes/View/AbstractExportView.php
+
+		-
+			message: "#^Constant LF not found\\.$#"
+			count: 2
+			path: Classes/View/L10nHtmlListView.php
+

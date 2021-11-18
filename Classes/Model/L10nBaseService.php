@@ -128,7 +128,7 @@ class L10nBaseService implements LoggerAwareInterface
         }
         if ($preTranslate) {
             // make sure to translate all pages and content elements that are available on these pages
-            $this->preTranslateAllContent($l10ncfgObj, $translationObj);
+            $this->preTranslateAllContent($translationObj);
         }
         $this->remapInputDataForExistingTranslations($l10ncfgObj, $translationObj);
         $sysLang = $translationObj->getLanguage();

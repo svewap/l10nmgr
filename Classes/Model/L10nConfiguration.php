@@ -127,12 +127,11 @@ class L10nConfiguration
             }
         }
         /** @var $tree PageTreeView */
+        $tree = GeneralUtility::makeInstance(PageTreeView::class);
         if (!empty($treeStartingPoints)) {
             foreach ($treeStartingPoints as $treeStartingPoint) {
                 $treeStartingRecords[] = BackendUtility::getRecordWSOL('pages', $treeStartingPoint);
             }
-            // Initialize tree object:
-            $tree = GeneralUtility::makeInstance(PageTreeView::class);
             $tree->init('AND ' . $this->getBackendUser()->getPagePermsClause(1));
             $tree->addField('l18n_cfg');
             $tree->addField('l10nmgr_configuration');
