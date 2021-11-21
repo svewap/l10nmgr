@@ -164,7 +164,7 @@ class Tools
     {
         $this->t8Tools = GeneralUtility::makeInstance(TranslationConfigurationProvider::class);
         // Find all system languages:
-        /** @var $queryBuilder QueryBuilder */
+        /** @var QueryBuilder $queryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_language');
         $this->sys_languages = $queryBuilder->select('*')->from('sys_language')->execute()->fetchAll();
     }
@@ -655,7 +655,7 @@ class Tools
                 )
             );
         }
-        /** @var $queryBuilder QueryBuilder */
+        /** @var QueryBuilder $queryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
         $queryBuilder->getRestrictions()
             ->removeAll()
@@ -723,9 +723,8 @@ class Tools
     {
         // Initialize (only first time)
         if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['l10nmgr']['indexFilter'])
-            && !is_array(
-                $this->indexFilterObjects[$pageId]
-            )) {
+            && !is_array($this->indexFilterObjects[$pageId])
+        ) {
             $this->indexFilterObjects[$pageId] = [];
             $c = 0;
             foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['l10nmgr']['indexFilter'] as $objArray) {
@@ -738,6 +737,8 @@ class Tools
         // Check record:
         if (is_array($this->indexFilterObjects[$pageId])) {
             foreach ($this->indexFilterObjects[$pageId] as $obj) {
+                // TODO: What kind of filter is here used? Can't find an interface
+                // in the exension
                 if (!$obj->filter($table, $uid)) {
                     return false;
                 }
@@ -965,7 +966,7 @@ class Tools
         $constraintsB = [];
 
         // Look for translations of this record, index by language field value:
-        /** @var $queryBuilder QueryBuilder */
+        /** @var QueryBuilder $queryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
         $queryBuilder->getRestrictions()
             ->removeAll()
@@ -1285,7 +1286,7 @@ class Tools
             return [];
         }
 
-        /** @var $queryBuilder QueryBuilder */
+        /** @var QueryBuilder $queryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
         $queryBuilder->getRestrictions()
             ->removeAll()
@@ -1413,7 +1414,7 @@ class Tools
      */
     protected function updateIndexTable($record)
     {
-        /** @var $databaseConnection Connection */
+        /** @var Connection $databaseConnection */
         $databaseConnection = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getConnectionForTable('tx_l10nmgr_index');
 
@@ -1432,7 +1433,7 @@ class Tools
      */
     public function flushIndexOfWorkspace($ws)
     {
-        /** @var $queryBuilder QueryBuilder */
+        /** @var QueryBuilder $queryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable(
             'tx_l10nmgr_index'
         );

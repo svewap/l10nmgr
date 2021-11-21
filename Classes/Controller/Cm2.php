@@ -20,12 +20,6 @@ namespace Localizationteam\L10nmgr\Controller;
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-/**
- * l10nmgr module cm2
- *
- * @author Kasper Skårhøj <kasperYYYY@typo3.com>
- */
-
 use Localizationteam\L10nmgr\Model\Tools\Tools;
 use PDO;
 use TYPO3\CMS\Backend\Template\DocumentTemplate;
@@ -104,13 +98,9 @@ class Cm2 extends BaseModule
     }
 
     /**
-     * [Describe function...]
-     *
-     * @param $table
-     * @param $uid
-     * @return string [type]...
-     * @internal param $ [type]$table: ...
-     * @internal param $ [type]$uid: ...
+     * @param string $table
+     * @param int $uid
+     * @return string
      */
     protected function moduleContent($table, $uid)
     {
@@ -148,7 +138,7 @@ class Cm2 extends BaseModule
             } else {
                 $uidPid = 'recpid';
             }
-            /** @var $queryBuilder QueryBuilder */
+            /** @var QueryBuilder $queryBuilder */
             $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_l10nmgr_index');
             $records = $queryBuilder->select('*')
                 ->from('tx_l10nmgr_index')
@@ -237,11 +227,8 @@ class Cm2 extends BaseModule
     }
 
     /**
-     * [Describe function...]
-     *
-     * @param $rec
-     * @return string [type]...
-     * @internal param $ [type]$rec: ...
+     * @param array $rec
+     * @return string
      */
     protected function makeTableRow($rec)
     {
@@ -259,6 +246,7 @@ class Cm2 extends BaseModule
         $translationTable = '';
         $translationRecord = false;
         if ($rec['translation_recuid']) {
+            // TODO: getTranslationTable() is not a function in t8Tools.
             $translationTable = $this->l10nMgrTools->t8Tools->getTranslationTable($rec['tablename']);
             $translationRecord = BackendUtility::getRecordWSOL($translationTable, $rec['translation_recuid']);
             $icon = GeneralUtility::makeInstance(IconFactory::class)->getIconForRecord(

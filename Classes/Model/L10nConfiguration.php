@@ -126,7 +126,7 @@ class L10nConfiguration
                 $treeStartingPoints = [(int)$l10ncfg['pid']];
             }
         }
-        /** @var $tree PageTreeView */
+        /** @var PageTreeView $tree */
         $tree = GeneralUtility::makeInstance(PageTreeView::class);
         if (!empty($treeStartingPoints)) {
             foreach ($treeStartingPoints as $treeStartingPoint) {
@@ -187,7 +187,7 @@ class L10nConfiguration
         // Serialize back and save it to record:
         $l10ncfg['flexformdiff'] = serialize($flexFormDiffForAllLanguages);
 
-        /** @var $queryBuilder QueryBuilder */
+        /** @var QueryBuilder $queryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_l10nmgr_cfg');
         $queryBuilder->update('tx_l10nmgr_cfg')
             ->set('flexformdiff', $l10ncfg['flexformdiff'])
