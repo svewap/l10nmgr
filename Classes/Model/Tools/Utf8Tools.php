@@ -34,8 +34,7 @@ class Utf8Tools
      *
      * @see http://www.w3.org/International/questions/qa-forms-utf-8
      *
-     * @param string
-     *
+     * @param string $str
      * @return mixed integer byte index or FALSE if no bad found
      */
     public static function utf8_bad_find($str)
@@ -70,8 +69,7 @@ class Utf8Tools
      *
      * @see http://www.w3.org/International/questions/qa-forms-utf-8
      *
-     * @param string
-     *
+     * @param string $str
      * @return mixed array of integers or FALSE if no bad found
      */
     public static function utf8_bad_findall($str)
@@ -109,8 +107,7 @@ class Utf8Tools
      *
      * @see http://www.w3.org/International/questions/qa-forms-utf-8
      *
-     * @param string
-     *
+     * @param string $str
      * @return string
      */
     public static function utf8_bad_strip($str)
@@ -147,7 +144,6 @@ class Utf8Tools
      *
      * @param string $str String to search
      * @param string $replace String to replace bad bytes with (defaults to '?') - use ASCII
-     *
      * @return string
      */
     public static function utf8_bad_replace($str, $replace = '?')

@@ -155,6 +155,7 @@ class L10nmgrAdditionalFieldProvider extends AbstractAdditionalFieldProvider imp
      */
     public function saveAdditionalFields(array $submittedData, AbstractTask $task)
     {
+        /** @phpstan-ignore-next-line */
         $task->age = (int)$submittedData['l10nmgr_fileGarbageCollection_age'];
     }
 }

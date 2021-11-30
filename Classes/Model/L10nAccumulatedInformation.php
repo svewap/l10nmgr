@@ -115,9 +115,9 @@ class L10nAccumulatedInformation
     /**
      * Check for deprecated configuration throws false positive in extension scanner.
      *
-     * @param $tree
-     * @param $l10ncfg
-     * @param $sysLang
+     * @param PageTreeView $tree
+     * @param array $l10ncfg
+     * @param int $sysLang
      */
     public function __construct($tree, $l10ncfg, $sysLang)
     {
@@ -206,12 +206,10 @@ class L10nAccumulatedInformation
         }
 
         // Traverse tree elements:
-        /**
-         * @var $rootlineUtility RootlineUtility
-         */
         foreach ($tree->tree as $treeElement) {
             $pageId = $treeElement['row']['uid'];
             if ($treeElement['row']['l10nmgr_configuration'] === Constants::L10NMGR_CONFIGURATION_DEFAULT) {
+                /** @var RootlineUtility $rootlineUtility */
                 $rootlineUtility = GeneralUtility::makeInstance(RootlineUtility::class, $pageId);
                 $rootline = $rootlineUtility->get();
                 if (!empty($rootline)) {
@@ -232,6 +230,7 @@ class L10nAccumulatedInformation
                 $this->excludeIndex['pages:' . $pageId] = 1;
             }
             if (!empty($treeElement['row'][Constants::L10NMGR_LANGUAGE_RESTRICTION_FIELDNAME])) {
+                /** @var LanguageRestrictionCollection $languageIsRestricted */
                 $languageIsRestricted = LanguageRestrictionCollection::load(
                     (int)$sysLang,
                     true,
@@ -281,6 +280,7 @@ class L10nAccumulatedInformation
                                     continue;
                                 }
                                 if (!empty($row[Constants::L10NMGR_LANGUAGE_RESTRICTION_FIELDNAME])) {
+                                    /** @var LanguageRestrictionCollection $languageIsRestricted */
                                     $languageIsRestricted = LanguageRestrictionCollection::load(
                                         (int)$sysLang,
                                         true,
@@ -320,7 +320,7 @@ class L10nAccumulatedInformation
                             array_keys(array_flip(GeneralUtility::intExplode(',', $fileList, true)))
                         );
                         if (!empty($fileList)) {
-                            /** @var $queryBuilder QueryBuilder */
+                            /** @var QueryBuilder $queryBuilder */
                             $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_file_metadata');
                             $metaData = $queryBuilder->select('uid')
                                 ->from('sys_file_metadata')
@@ -396,7 +396,7 @@ class L10nAccumulatedInformation
         if ($indexList) {
             $this->includeIndex = array_flip(GeneralUtility::trimExplode(',', $indexList, true));
         }
-        /** @var $queryBuilder QueryBuilder */
+        /** @var QueryBuilder $queryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
         $explicitlyIncludedPages = $queryBuilder->select('uid')
             ->from('pages')
@@ -421,7 +421,7 @@ class L10nAccumulatedInformation
                 }
             }
         }
-        /** @var $queryBuilder QueryBuilder */
+        /** @var QueryBuilder $queryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
         $includingParentPages = $queryBuilder->select('uid')
             ->from('pages')
@@ -452,7 +452,7 @@ class L10nAccumulatedInformation
     {
         $level++;
         if ($uid > 0 && $level < 100) {
-            /** @var $queryBuilder QueryBuilder */
+            /** @var QueryBuilder $queryBuilder */
             $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
             $subPages = $queryBuilder->select('uid', 'pid', 'l10nmgr_configuration', 'l10nmgr_configuration_next_level')
                 ->from('pages')

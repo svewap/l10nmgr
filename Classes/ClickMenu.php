@@ -52,14 +52,10 @@ class ClickMenu
      * Main function
      *
      * @param $backRef
-     * @param $menuItems
-     * @param $table
+     * @param array $menuItems
+     * @param string $table
      * @param $uid
-     * @return array [type]...
-     * @internal param $ [type]$$backRef: ...
-     * @internal param $ [type]$menuItems: ...
-     * @internal param $ [type]$table: ...
-     * @internal param $ [type]$uid: ...
+     * @return array
      */
     public function main($backRef, $menuItems, $table, $uid)
     {

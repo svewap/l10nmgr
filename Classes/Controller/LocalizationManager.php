@@ -166,7 +166,7 @@ class LocalizationManager extends BaseModule
      */
     public function init()
     {
-        $this->getBackendUser()->modAccess($this->MCONF, 1);
+        $this->getBackendUser()->modAccess($this->MCONF);
         parent::init();
     }
 
@@ -420,7 +420,7 @@ return false;
      *
      * @paramL10nConfiguration $l10ncfgObj Localization Configuration record
      *
-     * @param $l10ncfgObj
+     * @param L10nConfiguration $l10ncfgObj
      * @throws ResourceNotFoundException
      * @throws RouteNotFoundException
      */

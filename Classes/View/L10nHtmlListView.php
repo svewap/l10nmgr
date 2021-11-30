@@ -68,6 +68,7 @@ class L10nHtmlListView extends AbstractExportView
 
     /**
      * L10nHtmlListView constructor.
+     *
      * @param L10nConfiguration $l10ncfgObj
      * @param int $sysLang
      */

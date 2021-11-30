@@ -128,7 +128,7 @@ class L10nBaseService implements LoggerAwareInterface
         }
         if ($preTranslate) {
             // make sure to translate all pages and content elements that are available on these pages
-            $this->preTranslateAllContent($l10ncfgObj, $translationObj);
+            $this->preTranslateAllContent($translationObj);
         }
         $this->remapInputDataForExistingTranslations($l10ncfgObj, $translationObj);
         $sysLang = $translationObj->getLanguage();
@@ -290,7 +290,7 @@ class L10nBaseService implements LoggerAwareInterface
         string $orderBy = ''
     ): array {
         if (is_array($GLOBALS['TCA'][$theTable])) {
-            /** @var $queryBuilder QueryBuilder */
+            /** @var QueryBuilder $queryBuilder */
             $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($theTable);
 
             $queryBuilder->getRestrictions()
@@ -631,7 +631,7 @@ class L10nBaseService implements LoggerAwareInterface
                                                     $this->TCEmain_cmd[$table][$elementUid]['localize'] = $Tlang;
                                                     $TCEmain_data[$table][$TuidString]['tablenames'] = 'pages';
                                                 } else {
-                                                    /** @var $queryBuilder QueryBuilder */
+                                                    /** @var QueryBuilder $queryBuilder */
                                                     $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($element['tablenames']);
                                                     $parent = $queryBuilder->select('*')
                                                         ->from($element['tablenames'])
@@ -676,7 +676,7 @@ class L10nBaseService implements LoggerAwareInterface
                                                     continue;
                                                 }
                                                 if ($configuration['foreign_table']) {
-                                                    /** @var $relationHandler RelationHandler */
+                                                    /** @var RelationHandler $relationHandler */
                                                     // integrators have to make sure to configure fields of parent elements properly
                                                     // so they will do translations of their children automatically when translated
                                                     $relationHandler = GeneralUtility::makeInstance(RelationHandler::class);
@@ -810,7 +810,7 @@ class L10nBaseService implements LoggerAwareInterface
                         } else {
                             if ($this->childMappingArray[$table][$TdefRecord]) {
                                 if ($this->childMappingArray[$table][$TdefRecord] === true) {
-                                    /** @var $queryBuilder QueryBuilder */
+                                    /** @var QueryBuilder $queryBuilder */
                                     $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
                                     $queryBuilder->getRestrictions()->removeAll()->add(GeneralUtility::makeInstance(DeletedRestriction::class));
 
@@ -890,6 +890,7 @@ class L10nBaseService implements LoggerAwareInterface
                         unset($_flexFormDiffArray[$key]);
                     }
                 }
+                /** @phpstan-ignore-next-line */
                 $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': autoVersionIdMap: ' . $tce->autoVersionIdMap);
                 $this->logger->debug(__FILE__ . ': ' . __LINE__ . ': _flexFormDiffArray: ' . implode(
                     ', ',
@@ -912,7 +913,7 @@ class L10nBaseService implements LoggerAwareInterface
      */
     protected function getRawRecord(string $table, int $elementUid): array
     {
-        /** @var $queryBuilder QueryBuilder */
+        /** @var QueryBuilder $queryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
         $queryBuilder->getRestrictions()->removeAll()->add(GeneralUtility::makeInstance(DeletedRestriction::class));
 
@@ -932,10 +933,10 @@ class L10nBaseService implements LoggerAwareInterface
     }
 
     /**
-     * @param $element
-     * @param $Tlang
-     * @param $parentField
-     * @param $childrenField
+     * @param array $element
+     * @param int $Tlang
+     * @param string $parentField
+     * @param string $childrenField
      */
     protected function recursivelyCheckForRelationParents($element, $Tlang, $parentField, $childrenField)
     {
@@ -944,7 +945,7 @@ class L10nBaseService implements LoggerAwareInterface
             $this->checkedParentRecords[$parentField][$element['uid']] = true;
             $translatedParent = [];
             if ($element[$parentField] > 0) {
-                /** @var $queryBuilder QueryBuilder */
+                /** @var QueryBuilder $queryBuilder */
                 $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tt_content');
                 $queryBuilder->getRestrictions()->removeAll()->add(GeneralUtility::makeInstance(DeletedRestriction::class));
 
