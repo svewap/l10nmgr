@@ -89,7 +89,10 @@ class L10nBaseService implements LoggerAwareInterface
      */
     protected $flexFormDiffArray;
 
-    protected EmConfiguration $emConfiguration;
+    /**
+     * @var EmConfiguration
+     */
+    protected $emConfiguration;
 
     /**
      * Check for deprecated configuration throws false positive in extension scanner.

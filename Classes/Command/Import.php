@@ -597,7 +597,7 @@ class Import extends L10nCommand
      *
      * @param string $filepath Path to the file
      *
-     * @return bool
+     * @return array
      * @throws Exception
      */
     protected function getXMLFileHead($filepath)

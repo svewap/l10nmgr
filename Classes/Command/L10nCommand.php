@@ -17,10 +17,9 @@ namespace Localizationteam\L10nmgr\Command;
  * The TYPO3 project - inspiring people to share!
  */
 
+use Localizationteam\L10nmgr\Model\Dto\EmConfiguration;
 use Localizationteam\L10nmgr\Traits\BackendUserTrait;
 use Symfony\Component\Console\Command\Command;
-use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
-use Localizationteam\L10nmgr\Model\Dto\EmConfiguration;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -36,13 +35,16 @@ class L10nCommand extends Command
      */
     private $languageService;
 
-    protected EmConfiguration $emConfiguration;
+    /**
+     * @var EmConfiguration
+     */
+    protected $emConfiguration;
 
     /**
      * The function loadExtConf loads the extension configuration.
      * Check for deprecated configuration throws false positive in extension scanner.
      *
-     * @return array
+     * @return EmConfiguration
      */
     protected function getExtConf()
     {

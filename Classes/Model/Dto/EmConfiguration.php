@@ -27,63 +27,138 @@ class EmConfiguration
 
     // Enable settings
 
-    protected bool $enable_hidden_languages = false;
+    /**
+     * @var bool
+     */
+    protected $enable_hidden_languages = false;
 
-    protected bool $enable_notification = false;
+    /**
+     * @var bool
+     */
+    protected $enable_notification = false;
 
-    protected bool $enable_customername = false;
+    /**
+     * @var bool
+     */
+    protected $enable_customername = false;
 
-    protected bool $enable_ftp = false;
+    /**
+     * @var bool
+     */
+    protected $enable_ftp = false;
 
-    protected bool $enable_stat_hook = false;
+    /**
+     * @var bool
+     */
+    protected $enable_stat_hook = false;
 
-    protected bool $enable_neverHideAtCopy = true;
+    /**
+     * @var bool
+     */
+    protected $enable_neverHideAtCopy = true;
 
-    protected string $disallowDoktypes = '255, ---div---';
+    /**
+     * @var string
+     */
+    protected $disallowDoktypes = '255, ---div---';
 
-    protected bool $import_dontProcessTransformations = true;
+    /**
+     * @var bool
+     */
+    protected $import_dontProcessTransformations = true;
 
     // Load L10N manager configration
 
-    protected string $l10nmgr_cfg = '';
+    /**
+     * @var string
+     */
+    protected $l10nmgr_cfg = '';
 
-    protected string $l10nmgr_tlangs = '';
+    /**
+     * @var string
+     */
+    protected $l10nmgr_tlangs = '';
 
     // Define email notification
 
-    protected string $email_recipient = '';
+    /**
+     * @var string
+     */
+    protected $email_recipient = '';
 
-    protected string $email_recipient_import = '';
+    /**
+     * @var string
+     */
+    protected $email_recipient_import = '';
 
-    protected string $email_sender = '';
+    /**
+     * @var string
+     */
+    protected $email_sender = '';
 
-    protected string $email_sender_name = '';
+    /**
+     * @var string
+     */
+    protected $email_sender_name = '';
 
-    protected string $email_sender_organisation = '';
+    /**
+     * @var string
+     */
+    protected $email_sender_organisation = '';
 
-    protected bool $email_attachment = false;
+    /**
+     * @var string
+     */
+    protected $email_attachment = false;
 
     // Define FTP server details
 
-    protected string $ftp_server = '';
+    /**
+     * @var string
+     */
+    protected $ftp_server = '';
 
-    protected string $ftp_server_path = '';
+    /**
+     * @var string
+     */
+    protected $ftp_server_path = '';
 
-    protected string $ftp_server_downpath = '';
+    /**
+     * @var string
+     */
+    protected $ftp_server_downpath = '';
 
-    protected string $ftp_server_username = '';
+    /**
+     * @var string
+     */
+    protected $ftp_server_username = '';
 
-    protected string $ftp_server_password = '';
+    /**
+     * @var string
+     */
+    protected $ftp_server_password = '';
 
     // Import service
 
-    protected int $service_children = 3;
+    /**
+     * @var int
+     */
+    protected $service_children = 3;
 
-    protected string $service_user = '';
+    /**
+     * @var string
+     */
+    protected $service_user = '';
 
-    protected string $service_pwd = '';
+    /**
+     * @var string
+     */
+    protected $service_pwd = '';
 
-    protected string $service_enc = '';
+    /**
+     * @var string
+     */
+    protected $service_enc = '';
 
     public function isEnableHiddenLanguages(): bool
     {

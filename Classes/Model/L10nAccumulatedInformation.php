@@ -29,7 +29,6 @@ use Localizationteam\L10nmgr\Traits\BackendUserTrait;
 use PDO;
 use TYPO3\CMS\Backend\Tree\View\PageTreeView;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
-use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\EventDispatcher\EventDispatcher;
@@ -110,7 +109,10 @@ class L10nAccumulatedInformation
      */
     protected $includeIndex = [];
 
-    protected EmConfiguration $emConfiguration;
+    /**
+     * @var EmConfiguration
+     */
+    protected $emConfiguration;
 
     /**
      * Check for deprecated configuration throws false positive in extension scanner.
@@ -158,7 +160,7 @@ class L10nAccumulatedInformation
 
     protected function process()
     {
-        if ($this->objectStatus != 'processed') {
+        if ($this->objectStatus!='processed') {
             $this->_calculateInternalAccumulatedInformationsArray();
             $event = new L10nAccumulatedInformationIsProcessed($this->_accumulatedInformations, $this->l10ncfg);
             $eventDispatcher = GeneralUtility::makeInstance(EventDispatcher::class);
@@ -187,11 +189,11 @@ class L10nAccumulatedInformation
         /** @var Tools $t8Tools */
         $t8Tools = GeneralUtility::makeInstance(Tools::class);
         $t8Tools->verbose = false; // Otherwise it will show records which has fields but none editable.
-        if ($l10ncfg['incfcewithdefaultlanguage'] == 1) {
+        if ($l10ncfg['incfcewithdefaultlanguage']==1) {
             $t8Tools->includeFceWithDefaultLanguage = true;
         }
         // Set preview language (only first one in list is supported):
-        if ($this->forcedPreviewLanguage != '') {
+        if ($this->forcedPreviewLanguage!='') {
             $previewLanguage = $this->forcedPreviewLanguage;
         } else {
             $previewLanguage = current(
@@ -208,25 +210,25 @@ class L10nAccumulatedInformation
         // Traverse tree elements:
         foreach ($tree->tree as $treeElement) {
             $pageId = $treeElement['row']['uid'];
-            if ($treeElement['row']['l10nmgr_configuration'] === Constants::L10NMGR_CONFIGURATION_DEFAULT) {
+            if ($treeElement['row']['l10nmgr_configuration']===Constants::L10NMGR_CONFIGURATION_DEFAULT) {
                 /** @var RootlineUtility $rootlineUtility */
                 $rootlineUtility = GeneralUtility::makeInstance(RootlineUtility::class, $pageId);
                 $rootline = $rootlineUtility->get();
                 if (!empty($rootline)) {
                     foreach ($rootline as $rootlinePage) {
-                        if ($rootlinePage['l10nmgr_configuration_next_level'] === Constants::L10NMGR_CONFIGURATION_DEFAULT) {
+                        if ($rootlinePage['l10nmgr_configuration_next_level']===Constants::L10NMGR_CONFIGURATION_DEFAULT) {
                             continue;
                         }
-                        if ($rootlinePage['l10nmgr_configuration_next_level'] === Constants::L10NMGR_CONFIGURATION_NONE || $rootlinePage['l10nmgr_configuration_next_level'] === Constants::L10NMGR_CONFIGURATION_INCLUDE) {
+                        if ($rootlinePage['l10nmgr_configuration_next_level']===Constants::L10NMGR_CONFIGURATION_NONE || $rootlinePage['l10nmgr_configuration_next_level']===Constants::L10NMGR_CONFIGURATION_INCLUDE) {
                             break;
                         }
-                        if ($rootlinePage['l10nmgr_configuration_next_level'] === Constants::L10NMGR_CONFIGURATION_EXCLUDE) {
+                        if ($rootlinePage['l10nmgr_configuration_next_level']===Constants::L10NMGR_CONFIGURATION_EXCLUDE) {
                             $this->excludeIndex['pages:' . $pageId] = 1;
                             break;
                         }
                     }
                 }
-            } elseif ($treeElement['row']['l10nmgr_configuration'] === Constants::L10NMGR_CONFIGURATION_EXCLUDE) {
+            } elseif ($treeElement['row']['l10nmgr_configuration']===Constants::L10NMGR_CONFIGURATION_EXCLUDE) {
                 $this->excludeIndex['pages:' . $pageId] = 1;
             }
             if (!empty($treeElement['row'][Constants::L10NMGR_LANGUAGE_RESTRICTION_FIELDNAME])) {
@@ -257,7 +259,7 @@ class L10nAccumulatedInformation
                     $fileList = '';
                     // Only those tables we want to work on:
                     if (GeneralUtility::inList($l10ncfg['tablelist'], $table)) {
-                        if ($table === 'pages') {
+                        if ($table==='pages') {
                             $row = BackendUtility::getRecordWSOL('pages', $pageId);
                             if ($t8Tools->canUserEditRecord($table, $row)) {
                                 $accum[$pageId]['items'][$table][$pageId] = $t8Tools->translationDetails(
@@ -270,7 +272,13 @@ class L10nAccumulatedInformation
                                 $this->_increaseInternalCounters($accum[$pageId]['items'][$table][$pageId]['fields']);
                             }
                         } else {
-                            $allRows = $t8Tools->getRecordsToTranslateFromTable($table, $pageId, 0, (bool)$l10ncfg['sortexports'], $this->noHidden);
+                            $allRows = $t8Tools->getRecordsToTranslateFromTable(
+                                $table,
+                                $pageId,
+                                0,
+                                (bool)$l10ncfg['sortexports'],
+                                $this->noHidden
+                            );
                             if (!is_array($allRows)) {
                                 continue;
                             }
@@ -304,14 +312,14 @@ class L10nAccumulatedInformation
                                     $flexFormDiff,
                                     $previewLanguage
                                 );
-                                if ($table === 'sys_file_reference') {
+                                if ($table==='sys_file_reference') {
                                     $fileList .= $fileList ? ',' . (int)$row['uid_local'] : (int)$row['uid_local'];
                                 }
                                 $this->_increaseInternalCounters($accum[$pageId]['items'][$table][$row['uid']]['fields']);
                             }
                         }
                     }
-                    if ($table === 'sys_file_reference' && !empty($fileList) && GeneralUtility::inList(
+                    if ($table==='sys_file_reference' && !empty($fileList) && GeneralUtility::inList(
                         $l10ncfg['tablelist'],
                         'sys_file_metadata'
                     )) {
@@ -468,10 +476,10 @@ class L10nAccumulatedInformation
 
             if (!empty($subPages)) {
                 foreach ($subPages as $page) {
-                    if ($page['l10nmgr_configuration'] === Constants::L10NMGR_CONFIGURATION_DEFAULT) {
+                    if ($page['l10nmgr_configuration']===Constants::L10NMGR_CONFIGURATION_DEFAULT) {
                         $this->includeIndex['pages:' . $page['uid']] = 1;
                     }
-                    if ($page['l10nmgr_configuration_next_level'] === Constants::L10NMGR_CONFIGURATION_DEFAULT || $page['l10nmgr_configuration_next_level'] === Constants::L10NMGR_CONFIGURATION_INCLUDE) {
+                    if ($page['l10nmgr_configuration_next_level']===Constants::L10NMGR_CONFIGURATION_DEFAULT || $page['l10nmgr_configuration_next_level']===Constants::L10NMGR_CONFIGURATION_INCLUDE) {
                         $this->addSubPagesRecursively($page['uid'], $level);
                     }
                 }

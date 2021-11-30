@@ -116,7 +116,10 @@ class LocalizationManager extends BaseModule
      */
     protected $pageinfo;
 
-    protected EmConfiguration $emConfiguration;
+    /**
+     * @var EmConfiguration
+     */
+    protected $emConfiguration;
 
     /**
      * Constructor
