@@ -31,14 +31,14 @@ class L10nCommand extends Command
     use BackendUserTrait;
 
     /**
-     * @var LanguageService
-     */
-    private $languageService;
-
-    /**
      * @var EmConfiguration
      */
     protected $emConfiguration;
+
+    /**
+     * @var LanguageService
+     */
+    private $languageService;
 
     /**
      * The function loadExtConf loads the extension configuration.

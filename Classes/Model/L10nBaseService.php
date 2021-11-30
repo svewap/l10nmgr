@@ -117,8 +117,11 @@ class L10nBaseService implements LoggerAwareInterface
      * @param TranslationData $translationObj
      * @param bool $preTranslate
      */
-    public function saveTranslation(L10nConfiguration $l10ncfgObj, TranslationData $translationObj, $preTranslate = true)
-    {
+    public function saveTranslation(
+        L10nConfiguration $l10ncfgObj,
+        TranslationData $translationObj,
+        $preTranslate = true
+    ) {
         // Provide a hook for specific manipulations before saving
         if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['l10nmgr']['savePreProcess'])) {
             foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['l10nmgr']['savePreProcess'] as $classReference) {
@@ -624,7 +627,10 @@ class L10nBaseService implements LoggerAwareInterface
                                                     );
                                                 }
                                             }
-                                        } elseif (is_array($inlineTablesConfig = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['l10nmgr']['inlineTablesConfig']) && array_key_exists($table, $inlineTablesConfig)) {
+                                        } elseif (is_array($inlineTablesConfig = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['l10nmgr']['inlineTablesConfig']) && array_key_exists(
+                                            $table,
+                                            $inlineTablesConfig
+                                        )) {
                                             /*
                                              * Special handling for 1:n relations
                                              *

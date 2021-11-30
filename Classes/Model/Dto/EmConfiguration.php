@@ -2,36 +2,18 @@
 
 namespace Localizationteam\L10nmgr\Model\Dto;
 
+use Exception;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class EmConfiguration
 {
-    public function __construct(array $configuration = [])
-    {
-        if (empty($configuration)) {
-            try {
-                $extensionConfiguration = GeneralUtility::makeInstance(ExtensionConfiguration::class);
-                $configuration = $extensionConfiguration->get('l10nmgr');
-            } catch (\Exception $exception) {
-                // do nothing
-            }
-        }
-
-        foreach ($configuration as $key => $value) {
-            if (property_exists(__CLASS__, $key)) {
-                $this->$key = $value;
-            }
-        }
-    }
-
-    // Enable settings
-
     /**
      * @var bool
      */
     protected $enable_hidden_languages = false;
 
+    // Enable settings
     /**
      * @var bool
      */
@@ -67,25 +49,23 @@ class EmConfiguration
      */
     protected $import_dontProcessTransformations = true;
 
-    // Load L10N manager configration
-
     /**
      * @var string
      */
     protected $l10nmgr_cfg = '';
 
+    // Load L10N manager configration
     /**
      * @var string
      */
     protected $l10nmgr_tlangs = '';
-
-    // Define email notification
 
     /**
      * @var string
      */
     protected $email_recipient = '';
 
+    // Define email notification
     /**
      * @var string
      */
@@ -111,13 +91,12 @@ class EmConfiguration
      */
     protected $email_attachment = false;
 
-    // Define FTP server details
-
     /**
      * @var string
      */
     protected $ftp_server = '';
 
+    // Define FTP server details
     /**
      * @var string
      */
@@ -138,13 +117,12 @@ class EmConfiguration
      */
     protected $ftp_server_password = '';
 
-    // Import service
-
     /**
      * @var int
      */
     protected $service_children = 3;
 
+    // Import service
     /**
      * @var string
      */
@@ -159,6 +137,24 @@ class EmConfiguration
      * @var string
      */
     protected $service_enc = '';
+
+    public function __construct(array $configuration = [])
+    {
+        if (empty($configuration)) {
+            try {
+                $extensionConfiguration = GeneralUtility::makeInstance(ExtensionConfiguration::class);
+                $configuration = $extensionConfiguration->get('l10nmgr');
+            } catch (Exception $exception) {
+                // do nothing
+            }
+        }
+
+        foreach ($configuration as $key => $value) {
+            if (property_exists(__CLASS__, $key)) {
+                $this->$key = $value;
+            }
+        }
+    }
 
     public function isEnableHiddenLanguages(): bool
     {
@@ -240,11 +236,6 @@ class EmConfiguration
         return $this->email_attachment;
     }
 
-    public function getFtpServer(): string
-    {
-        return $this->ftp_server;
-    }
-
     public function getFtpServerPath(): string
     {
         return $this->ftp_server_path;
@@ -253,16 +244,6 @@ class EmConfiguration
     public function getFtpServerDownPath(): string
     {
         return $this->ftp_server_downpath;
-    }
-
-    public function getFtpServerUsername(): string
-    {
-        return $this->ftp_server_username;
-    }
-
-    public function getFtpServerPassword(): string
-    {
-        return $this->ftp_server_password;
     }
 
     public function getServiceChildren(): int
@@ -290,7 +271,21 @@ class EmConfiguration
         return
             !empty($this->getFtpServer())
             && !empty($this->getFtpServerUsername())
-            && !empty($this->getFtpServerPassword())
-        ;
+            && !empty($this->getFtpServerPassword());
+    }
+
+    public function getFtpServer(): string
+    {
+        return $this->ftp_server;
+    }
+
+    public function getFtpServerUsername(): string
+    {
+        return $this->ftp_server_username;
+    }
+
+    public function getFtpServerPassword(): string
+    {
+        return $this->ftp_server_password;
     }
 }

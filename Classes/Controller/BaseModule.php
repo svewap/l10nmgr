@@ -219,12 +219,12 @@ class BaseModule
                     $v['ws'],
                     'online'
                 )) || $this->getBackendUser()->workspace === -1 && GeneralUtility::inList(
-                    $v['ws'],
-                    'offline'
-                ) || $this->getBackendUser()->workspace > 0 && GeneralUtility::inList(
-                    $v['ws'],
-                    'custom'
-                )) {
+                            $v['ws'],
+                            'offline'
+                        ) || $this->getBackendUser()->workspace > 0 && GeneralUtility::inList(
+                        $v['ws'],
+                        'custom'
+                    )) {
                     $menuArr[$k] = $this->getLanguageService()->sL($v['title']);
                 }
             }

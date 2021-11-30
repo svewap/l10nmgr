@@ -108,13 +108,19 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
                         }
                         // @DP: Why this check?
                         if ((int)$this->forcedSourceLanguage !== 0 && (!$this->forcedSourceLanguage || !isset($tData['previewLanguageValues'][$this->forcedSourceLanguage]))) {
-                            $this->setInternalMessage($this->getLanguageService()->getLL('export.process.error.empty.message'), $elementUid . '/' . $table . '/' . $key);
+                            $this->setInternalMessage(
+                                $this->getLanguageService()->getLL('export.process.error.empty.message'),
+                                $elementUid . '/' . $table . '/' . $key
+                            );
                             continue;
                         }
 
                         $valueForXml = $this->getValueForXml($tData, $key);
                         if ($valueForXml === null) {
-                            $this->setInternalMessage($this->getLanguageService()->getLL('export.process.error.invalid.message'), $elementUid . '/' . $table . '/' . $key);
+                            $this->setInternalMessage(
+                                $this->getLanguageService()->getLL('export.process.error.invalid.message'),
+                                $elementUid . '/' . $table . '/' . $key
+                            );
                             continue;
                         }
                         $output[] = sprintf(
@@ -182,71 +188,6 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
         $XML .= implode('', $output) . "\n";
         $XML .= '</TYPO3L10N>';
         return $this->saveExportFile($XML);
-    }
-
-    /**
-     * Renders the list of internal message as XML tags
-     *
-     * @return string The XML structure to output
-     */
-    protected function renderInternalMessage()
-    {
-        $messages = '';
-        foreach ($this->internalMessages as $messageInformation) {
-            if (!empty($messages)) {
-                $messages .= "\n\t";
-            }
-            $messages .= "\t\t" . '<t3_skippedItem>' . "\n\t\t\t\t"
-                . '<t3_description>' . $messageInformation['message'] . '</t3_description>' . "\n\t\t\t\t"
-                . '<t3_key>' . $messageInformation['key'] . '</t3_key>' . "\n\t\t\t"
-                . '</t3_skippedItem>' . "\r";
-        }
-        return $messages;
-    }
-
-    /**
-     * Adds keys and values of the JSON encoded meta data field to the XML head section
-     *
-     * @return string The XML to add to the head section
-     */
-    protected function additionalHeaderData()
-    {
-        $additionalHeaderData = '';
-        if (!empty($this->l10ncfgObj->getData('metadata'))) {
-            $additionalHeaderDataArray = json_decode($this->l10ncfgObj->getData('metadata'));
-            if (is_array($additionalHeaderDataArray) && !empty($additionalHeaderDataArray)) {
-                foreach ($additionalHeaderDataArray as $key => $value) {
-                    $additionalHeaderData .= "\t\t" . '<' . $key . '>' . (string)$value . '</' . $key . '>' . "\n";
-                }
-            }
-        }
-        return $additionalHeaderData;
-    }
-
-    /**
-     * Force a new source language to export the content to translate
-     *
-     * @param int $id
-     */
-    public function setForcedSourceLanguage($id)
-    {
-        $this->forcedSourceLanguage = $id;
-    }
-
-    /**
-     * @param string $baseUrl
-     */
-    public function setBaseUrl(string $baseUrl)
-    {
-        $this->baseUrl = $baseUrl;
-    }
-
-    /**
-     * @param array $overrideParams
-     */
-    public function setOverrideParams(array $overrideParams)
-    {
-        $this->overrideParams = $overrideParams;
     }
 
     protected function getValueForXml(array $tData, string $key): ?string
@@ -318,5 +259,70 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
             return '<![CDATA[' . $dataForTranslation . ']]>';
         }
         return null;
+    }
+
+    /**
+     * Renders the list of internal message as XML tags
+     *
+     * @return string The XML structure to output
+     */
+    protected function renderInternalMessage()
+    {
+        $messages = '';
+        foreach ($this->internalMessages as $messageInformation) {
+            if (!empty($messages)) {
+                $messages .= "\n\t";
+            }
+            $messages .= "\t\t" . '<t3_skippedItem>' . "\n\t\t\t\t"
+                . '<t3_description>' . $messageInformation['message'] . '</t3_description>' . "\n\t\t\t\t"
+                . '<t3_key>' . $messageInformation['key'] . '</t3_key>' . "\n\t\t\t"
+                . '</t3_skippedItem>' . "\r";
+        }
+        return $messages;
+    }
+
+    /**
+     * Adds keys and values of the JSON encoded meta data field to the XML head section
+     *
+     * @return string The XML to add to the head section
+     */
+    protected function additionalHeaderData()
+    {
+        $additionalHeaderData = '';
+        if (!empty($this->l10ncfgObj->getData('metadata'))) {
+            $additionalHeaderDataArray = json_decode($this->l10ncfgObj->getData('metadata'));
+            if (is_array($additionalHeaderDataArray) && !empty($additionalHeaderDataArray)) {
+                foreach ($additionalHeaderDataArray as $key => $value) {
+                    $additionalHeaderData .= "\t\t" . '<' . $key . '>' . (string)$value . '</' . $key . '>' . "\n";
+                }
+            }
+        }
+        return $additionalHeaderData;
+    }
+
+    /**
+     * Force a new source language to export the content to translate
+     *
+     * @param int $id
+     */
+    public function setForcedSourceLanguage($id)
+    {
+        $this->forcedSourceLanguage = $id;
+    }
+
+    /**
+     * @param string $baseUrl
+     */
+    public function setBaseUrl(string $baseUrl)
+    {
+        $this->baseUrl = $baseUrl;
+    }
+
+    /**
+     * @param array $overrideParams
+     */
+    public function setOverrideParams(array $overrideParams)
+    {
+        $this->overrideParams = $overrideParams;
     }
 }
