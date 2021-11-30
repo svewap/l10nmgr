@@ -639,11 +639,11 @@ return false;
                 $currentValue,
                 $value
             ) ? ' selected="selected"' : '') . '>' . htmlspecialchars(
-                    $label,
-                    ENT_COMPAT,
-                    'UTF-8',
-                    false
-                ) . '</option>';
+                $label,
+                ENT_COMPAT,
+                'UTF-8',
+                false
+            ) . '</option>';
         }
         if (count($options) > 0) {
             return '
@@ -930,10 +930,10 @@ return false;
         return '<div class="form-section">' .
             (
                 ExtensionManagementUtility::isLoaded('workspaces') ? (
-                '<div class="form-group"><div class="checkbox"><label>' .
+                    '<div class="form-group"><div class="checkbox"><label>' .
                 '<input type="checkbox" value="1" name="make_preview_link" /> ' . $this->getLanguageService()->getLL('import.xml.make_preview_link.title') .
                 '</label></div></div>'
-            ) : ''
+                ) : ''
             ) .
             '<div class="form-group"><div class="checkbox"><label>' .
             '<input type="checkbox" value="1" name="import_delL10N" /> ' . $this->getLanguageService()->getLL('import.xml.delL10N.title') .

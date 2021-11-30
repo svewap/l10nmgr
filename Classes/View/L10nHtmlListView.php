@@ -178,15 +178,15 @@ class L10nHtmlListView extends AbstractExportView
                                         : $data['translationInfo']['uid'];
                                     $editLink = ' - <a href="#" onclick="' . htmlspecialchars(
                                         BackendUtility::editOnClick(
-                                                '&edit[' . $data['translationInfo']['translation_table'] . '][' . $editId . ']=edit',
-                                                $this->module->backPath
-                                            )
+                                            '&edit[' . $data['translationInfo']['translation_table'] . '][' . $editId . ']=edit',
+                                            $this->module->backPath
+                                        )
                                     ) . '"><em>[' . $this->getLanguageService()->getLL('render_overview.clickedit.message') . ']</em></a>';
                                 } else {
                                     $editLink = ' - <a href="' . htmlspecialchars(
                                         BackendUtility::getLinkToDataHandlerAction(
-                                                '&cmd[' . $table . '][' . $data['translationInfo']['uid'] . '][localize]=' . $sysLang
-                                            )
+                                            '&cmd[' . $table . '][' . $data['translationInfo']['uid'] . '][localize]=' . $sysLang
+                                        )
                                     ) . '"><em>[' . $this->getLanguageService()->getLL('render_overview.clicklocalize.message') . ']</em></a>';
                                 }
                             } else {
