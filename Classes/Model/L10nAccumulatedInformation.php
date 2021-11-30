@@ -23,6 +23,7 @@ namespace Localizationteam\L10nmgr\Model;
 use Localizationteam\L10nmgr\Constants;
 use Localizationteam\L10nmgr\Event\L10nAccumulatedInformationIsProcessed;
 use Localizationteam\L10nmgr\LanguageRestriction\Collection\LanguageRestrictionCollection;
+use Localizationteam\L10nmgr\Model\Dto\EmConfiguration;
 use Localizationteam\L10nmgr\Model\Tools\Tools;
 use Localizationteam\L10nmgr\Traits\BackendUserTrait;
 use PDO;
@@ -100,11 +101,6 @@ class L10nAccumulatedInformation
     protected $_wordCount = 0;
 
     /**
-     * @var array Extension's configuration as from the EM
-     */
-    protected $extensionConfiguration = [];
-
-    /**
      * @var array Index of pages to be excluded from translation
      */
     protected $excludeIndex = [];
@@ -114,8 +110,9 @@ class L10nAccumulatedInformation
      */
     protected $includeIndex = [];
 
+    protected EmConfiguration $emConfiguration;
+
     /**
-     * Constructor
      * Check for deprecated configuration throws false positive in extension scanner.
      *
      * @param $tree
@@ -124,11 +121,8 @@ class L10nAccumulatedInformation
      */
     public function __construct($tree, $l10ncfg, $sysLang)
     {
-        // Load the extension's configuration
-        $this->extensionConfiguration = empty($GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['l10nmgr'])
-            ? GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('l10nmgr')
-            : $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['l10nmgr'];
-        $this->disallowDoktypes = GeneralUtility::trimExplode(',', $this->extensionConfiguration['disallowDoktypes']);
+        $this->emConfiguration = GeneralUtility::makeInstance(EmConfiguration::class);
+        $this->disallowDoktypes = GeneralUtility::trimExplode(',', $this->emConfiguration->getDisallowDoktypes());
         $this->tree = $tree;
         $this->l10ncfg = $l10ncfg;
         $this->sysLang = $sysLang;
@@ -157,14 +151,9 @@ class L10nAccumulatedInformation
         return $this->_accumulatedInformations;
     }
 
-    /**
-     * return extension configuration used for accumulated information
-     *
-     * @return array extension configuration
-     */
-    public function getExtensionConfiguration()
+    public function getExtensionConfiguration(): EmConfiguration
     {
-        return $this->extensionConfiguration;
+        return $this->emConfiguration;
     }
 
     protected function process()

@@ -37,8 +37,7 @@ use TYPO3\CMS\Core\Utility\PathUtility;
 /**
  * Context menu processing
  *
- * @authorKasper Skaarhoj <kasperYYYY@typo3.com>
- * @packageTYPO3
+ * @author Kasper Skaarhoj <kasperYYYY@typo3.com>
  */
 class ClickMenu
 {

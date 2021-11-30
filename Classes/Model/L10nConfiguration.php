@@ -35,9 +35,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  * Capsulate a 10ncfg record.
  * Has factory method to get a relevant AccumulatedInformationsObject
  *
- * @authorKasper Skaarhoj <kasperYYYY@typo3.com>
- * @authorDaniel Pötzinger <ext@aoemedia.de>
- * @packageTYPO3
+ * @author Kasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author Daniel Pötzinger <ext@aoemedia.de>
  */
 class L10nConfiguration
 {

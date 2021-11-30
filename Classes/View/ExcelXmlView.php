@@ -27,7 +27,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 /**
  * excelXML: Renders the excel XML
  *
- * @authorKasper Skaarhoj <kasperYYYY@typo3.com>
+ * @author Kasper Skaarhoj <kasperYYYY@typo3.com>
  */
 class ExcelXmlView extends AbstractExportView implements ExportViewInterface
 {

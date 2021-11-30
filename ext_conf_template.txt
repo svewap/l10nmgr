@@ -1,5 +1,3 @@
-# Revision: $Id: ext_conf_template.txt 30653 2009-01-23 15:11:31Z d.zielinski $
-
 # Enable settings
 #
 # cat=basic/enable/10; type=boolean[1]; label=Enable hidden languages: Decide whether to make available hidden system languages for export/import.
