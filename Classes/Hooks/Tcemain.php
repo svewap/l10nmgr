@@ -30,9 +30,9 @@ namespace Localizationteam\L10nmgr\Hooks;
 
 use Localizationteam\L10nmgr\Model\L10nBaseService;
 use Localizationteam\L10nmgr\Model\Tools\Tools;
+use Localizationteam\L10nmgr\Traits\BackendUserTrait;
 use PDO;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
@@ -46,6 +46,8 @@ use TYPO3\CMS\Core\Utility\PathUtility;
  */
 class Tcemain
 {
+    use BackendUserTrait;
+
     /**
      * Hook for updating translation index when records are edited (hooks into TCEmain)
      *
@@ -117,16 +119,6 @@ class Tcemain
             );
         }
         return '';
-    }
-
-    /**
-     * Returns the Backend User
-     *
-     * @return BackendUserAuthentication
-     */
-    protected function getBackendUser()
-    {
-        return $GLOBALS['BE_USER'];
     }
 
     /**

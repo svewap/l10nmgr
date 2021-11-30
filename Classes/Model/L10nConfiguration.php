@@ -20,10 +20,10 @@ namespace Localizationteam\L10nmgr\Model;
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+use Localizationteam\L10nmgr\Traits\BackendUserTrait;
 use PDO;
 use TYPO3\CMS\Backend\Tree\View\PageTreeView;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Imaging\Icon;
@@ -40,6 +40,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class L10nConfiguration
 {
+    use BackendUserTrait;
+
     /**
      * @var array
      */
@@ -163,15 +165,6 @@ class L10nConfiguration
         /** @var L10nAccumulatedInformation $accumObj */
         $accumObj = GeneralUtility::makeInstance(L10nAccumulatedInformation::class, $tree, $l10ncfg, $sysLang);
         return $accumObj;
-    }
-
-    /**
-     * Returns the Backend User
-     * @return BackendUserAuthentication
-     */
-    protected function getBackendUser()
-    {
-        return $GLOBALS['BE_USER'];
     }
 
     /**

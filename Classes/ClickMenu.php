@@ -26,9 +26,9 @@ namespace Localizationteam\L10nmgr;
  * @author Kasper Skårhøj <kasperYYYY@typo3.com>
  */
 
+use Localizationteam\L10nmgr\Traits\BackendUserTrait;
 use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -41,6 +41,8 @@ use TYPO3\CMS\Core\Utility\PathUtility;
  */
 class ClickMenu
 {
+    use BackendUserTrait;
+
     /**
      * @var LanguageService
      */
@@ -166,15 +168,5 @@ class ClickMenu
             $this->languageService->init($this->getBackendUser()->uc['lang']);
         }
         return $this->languageService;
-    }
-
-    /**
-     * Gets the current backend user.
-     *
-     * @return BackendUserAuthentication
-     */
-    protected function getBackendUser()
-    {
-        return $GLOBALS['BE_USER'];
     }
 }

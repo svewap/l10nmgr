@@ -21,8 +21,8 @@ namespace Localizationteam\L10nmgr\Model;
  ***************************************************************/
 
 use Localizationteam\L10nmgr\Model\Tools\XmlTools;
+use Localizationteam\L10nmgr\Traits\BackendUserTrait;
 use PDO;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
@@ -37,6 +37,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class CatXmlImportManager
 {
+    use BackendUserTrait;
+
     /**
      * @var array $headerData headerData of the XML
      */
@@ -127,15 +129,6 @@ class CatXmlImportManager
             $this->languageService->init($this->getBackendUser()->uc['lang']);
         }
         return $this->languageService;
-    }
-
-    /**
-     * Returns the Backend User
-     * @return BackendUserAuthentication
-     */
-    protected function getBackendUser()
-    {
-        return $GLOBALS['BE_USER'];
     }
 
     /**

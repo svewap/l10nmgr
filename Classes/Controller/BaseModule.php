@@ -15,9 +15,9 @@ namespace Localizationteam\L10nmgr\Controller;
  * The TYPO3 project - inspiring people to share!
  */
 
+use Localizationteam\L10nmgr\Traits\BackendUserTrait;
 use TYPO3\CMS\Backend\Template\DocumentTemplate;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Exception;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
@@ -31,6 +31,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class BaseModule
 {
+    use BackendUserTrait;
+
     /**
      * Loaded with the global array $MCONF which holds some module configuration from the conf.php file of backend modules.
      *
@@ -164,15 +166,6 @@ class BaseModule
         $this->perms_clause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
         $this->menuConfig();
         $this->handleExternalFunctionValue();
-    }
-
-    /**
-     * Returns the Backend User
-     * @return BackendUserAuthentication
-     */
-    protected function getBackendUser()
-    {
-        return $GLOBALS['BE_USER'];
     }
 
     /**

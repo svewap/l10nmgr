@@ -17,9 +17,10 @@ namespace Localizationteam\L10nmgr\Command;
  * The TYPO3 project - inspiring people to share!
  */
 
-use Localizationteam\L10nmgr\Model\Dto\EmConfiguration;
+use Localizationteam\L10nmgr\Traits\BackendUserTrait;
 use Symfony\Component\Console\Command\Command;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
+use Localizationteam\L10nmgr\Model\Dto\EmConfiguration;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -28,6 +29,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class L10nCommand extends Command
 {
+    use BackendUserTrait;
+
     /**
      * @var LanguageService
      */
@@ -65,15 +68,5 @@ class L10nCommand extends Command
         }
 
         return $this->languageService;
-    }
-
-    /**
-     * Gets the current backend user.
-     *
-     * @return BackendUserAuthentication
-     */
-    protected function getBackendUser()
-    {
-        return $GLOBALS['BE_USER'];
     }
 }

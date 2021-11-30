@@ -20,7 +20,7 @@ namespace Localizationteam\L10nmgr\Model;
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use Localizationteam\L10nmgr\Traits\BackendUserTrait;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -32,6 +32,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class MkPreviewLinkService
 {
+    use BackendUserTrait;
+
     /**
      * @var array
      */
@@ -83,17 +85,6 @@ class MkPreviewLinkService
             $this->getBackendUser()->user['uid'],
             60 * 60 * $ttlHours
         );
-    }
-
-    /**
-     * Generate single target preview link for CLI
-     * Returns the Backend User
-     *
-     * @return BackendUserAuthentication
-     */
-    protected function getBackendUser()
-    {
-        return $GLOBALS['BE_USER'];
     }
 
     /**

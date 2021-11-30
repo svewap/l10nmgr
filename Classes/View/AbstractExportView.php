@@ -23,9 +23,9 @@ namespace Localizationteam\L10nmgr\View;
  ***************************************************************/
 
 use Localizationteam\L10nmgr\Model\L10nConfiguration;
+use Localizationteam\L10nmgr\Traits\BackendUserTrait;
 use PDO;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
@@ -46,6 +46,8 @@ use TYPO3\CMS\Core\Utility\PathUtility;
  **/
 abstract class AbstractExportView
 {
+    use BackendUserTrait;
+
     /**
      * @var string
      */
@@ -401,16 +403,6 @@ abstract class AbstractExportView
             $this->languageService->init($this->getBackendUser()->uc['lang']);
         }
         return $this->languageService;
-    }
-
-    /**
-     * Returns the Backend User
-     *
-     * @return BackendUserAuthentication
-     */
-    protected function getBackendUser()
-    {
-        return $GLOBALS['BE_USER'];
     }
 
     /**

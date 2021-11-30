@@ -21,8 +21,8 @@ namespace Localizationteam\L10nmgr\View;
  ***************************************************************/
 
 use Localizationteam\L10nmgr\Model\L10nConfiguration;
+use Localizationteam\L10nmgr\Traits\BackendUserTrait;
 use TYPO3\CMS\Backend\Template\DocumentTemplate;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -35,6 +35,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class L10nConfigurationDetailView
 {
+    use BackendUserTrait;
+
     /**
      * @var L10nConfiguration
      */
@@ -127,14 +129,5 @@ class L10nConfigurationDetailView
             $this->languageService->init($this->getBackendUser()->uc['lang']);
         }
         return $this->languageService;
-    }
-
-    /**
-     * Returns the Backend User
-     * @return BackendUserAuthentication
-     */
-    protected function getBackendUser()
-    {
-        return $GLOBALS['BE_USER'];
     }
 }

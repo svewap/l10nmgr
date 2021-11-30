@@ -26,10 +26,10 @@ namespace Localizationteam\L10nmgr\Model\Tools;
  * @author Kasper Skaarhoj <kasperYYYY@typo3.com>
  */
 
+use Localizationteam\L10nmgr\Traits\BackendUserTrait;
 use PDO;
 use TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools;
 use TYPO3\CMS\Core\Database\Connection;
@@ -53,6 +53,8 @@ use TYPO3\CMS\Core\Utility\MathUtility;
  */
 class Tools
 {
+    use BackendUserTrait;
+
     // External:
     /**
      * @var array
@@ -1250,16 +1252,6 @@ class Tools
             $record['tablename'] . ':' . $record['recuid'] . ':' . $record['translation_lang'] . ':' . $record['workspace']
         );
         return $record;
-    }
-
-    /**
-     * Returns the Backend User
-     *
-     * @return BackendUserAuthentication
-     */
-    protected function getBackendUser()
-    {
-        return $GLOBALS['BE_USER'];
     }
 
     /**
