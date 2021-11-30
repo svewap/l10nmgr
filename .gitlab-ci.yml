@@ -1,5 +1,6 @@
 stages:
   - lint
+  - test
 
 # Speed up builds
 cache:
@@ -25,3 +26,11 @@ php-cs-fixer:
     - composer install --prefer-dist --no-ansi --no-interaction --no-progress
   script:
     - composer run ci:php:fixer
+
+unit-tests:
+  stage: test
+  before_script:
+    - export COMPOSER_ALLOW_SUPERUSER=1
+    - composer install --prefer-dist --no-ansi --no-interaction --no-progress
+  script:
+    - composer run ci:tests:unit
