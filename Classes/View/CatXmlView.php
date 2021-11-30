@@ -23,6 +23,7 @@ namespace Localizationteam\L10nmgr\View;
 use Localizationteam\L10nmgr\Model\Tools\Utf8Tools;
 use Localizationteam\L10nmgr\Model\Tools\XmlTools;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -79,7 +80,8 @@ class CatXmlView extends AbstractExportView implements ExportViewInterface
         $output = [];
         $targetIso = '';
         if (empty($this->baseUrl)) {
-            $this->baseUrl = GeneralUtility::getIndpEnv('TYPO3_SITE_URL');
+            $siteFinder = GeneralUtility::makeInstance(SiteFinder::class);
+            $this->baseUrl = (string)$siteFinder->getSiteByPageId($this->l10ncfgObj->getData('pid'))->getRouter()->generateUri(0);
         }
         // Traverse the structure and generate XML output:
         foreach ($accum as $pId => $page) {
