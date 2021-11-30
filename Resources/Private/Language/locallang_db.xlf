@@ -82,6 +82,9 @@
 			<trans-unit id="tx_l10nmgr_cfg.sourceLang" xml:space="preserve">
 				<source>Source language:</source>
 			</trans-unit>
+			<trans-unit id="tx_l10nmgr_cfg.targetLanguages" xml:space="preserve">
+				<source>Allowed target languages for exports:</source>
+			</trans-unit>
 			<trans-unit id="tx_l10nmgr_cfg.translationLang" xml:space="preserve">
 				<source>Target language:</source>
 			</trans-unit>

@@ -1127,11 +1127,21 @@ return false;
             'check_exports' => 1,
             'noHidden' => '',
         ];
-        // Load system languages into menu:
-        /** @var TranslationConfigurationProvider $t8Tools */
+
+        $configurationId = (int)$GLOBALS['TYPO3_REQUEST']->getQueryParams()['exportUID'];
+        $configuration = BackendUtility::getRecord('tx_l10nmgr_cfg', $configurationId);
+        $targetLanguages = [];
+        if (!empty($configuration['targetLanguages'])) {
+            $targetLanguages = array_flip(GeneralUtility::intExplode(',', $configuration['targetLanguages'], true));
+        }
+
+        // Load system languages into menu and check against allowed languages:        /** @var TranslationConfigurationProvider $t8Tools */
         $t8Tools = GeneralUtility::makeInstance(TranslationConfigurationProvider::class);
         $sysL = $t8Tools->getSystemLanguages();
         foreach ($sysL as $sL) {
+            if (!empty($targetLanguages) && !isset($targetLanguages[$sL['uid']])) {
+                continue;
+            }
             if ($sL['uid'] > 0 && $this->getBackendUser()->checkLanguageAccess($sL['uid'])) {
                 if ($this->emConfiguration->isEnableHiddenLanguages()) {
                     $this->MOD_MENU['lang'][$sL['uid']] = $sL['title'];

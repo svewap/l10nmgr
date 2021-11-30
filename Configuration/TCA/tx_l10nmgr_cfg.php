@@ -138,6 +138,17 @@ if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('static_info_ta
                     'maxitems'            => 1,
                 ],
             ],
+            'targetLanguages'           => [
+                'exclude' => 1,
+                'label'   => $l10n . ':tx_l10nmgr_cfg.targetLanguages',
+                'config'  => [
+                    'type'                => 'select',
+                    'renderType'          => 'selectMultipleSideBySide',
+                    'foreign_table'       => 'sys_language',
+                    'size'                => 3,
+                    'minitems'            => 0,
+                ],
+            ],
             'incfcewithdefaultlanguage'    => [
                 'exclude' => 1,
                 'label'   => $l10n . ':tx_l10nmgr_cfg.incfcewithdefaultall',
@@ -172,7 +183,7 @@ if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('static_info_ta
             ],
         ],
         'types'       => [
-            0 => ['showitem' => 'title,filenameprefix, depth, pages, sourceLangStaticId, tablelist, exclude, include, metadata, displaymode, incfcewithdefaultlanguage, pretranslatecontent, overrideexistingtranslations, sortexports'],
+            0 => ['showitem' => 'title,filenameprefix, depth, pages, sourceLangStaticId, targetLanguages, tablelist, exclude, include, metadata, displaymode, incfcewithdefaultlanguage, pretranslatecontent, overrideexistingtranslations, sortexports'],
         ],
         'palettes'    => [
             '1' => ['showitem' => ''],
@@ -302,6 +313,17 @@ if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('static_info_ta
                     'rows'     => 3,
                 ],
             ],
+            'targetLanguages'           => [
+                'exclude' => 1,
+                'label'   => $l10n . ':tx_l10nmgr_cfg.targetLanguages',
+                'config'  => [
+                    'type'                => 'select',
+                    'renderType'          => 'selectMultipleSideBySide',
+                    'foreign_table'       => 'sys_language',
+                    'size'                => 3,
+                    'minitems'            => 0,
+                ],
+            ],
             'incfcewithdefaultlanguage'    => [
                 'exclude' => 1,
                 'label'   => $l10n . ':tx_l10nmgr_cfg.incfcewithdefaultall',
@@ -336,7 +358,7 @@ if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('static_info_ta
             ],
         ],
         'types'       => [
-            0 => ['showitem' => 'title,filenameprefix, depth, pages, tablelist, exclude, include, metadata, displaymode, incfcewithdefaultlanguage, pretranslatecontent, overrideexistingtranslations, sortexports'],
+            0 => ['showitem' => 'title,filenameprefix, depth, pages, targetLanguages, tablelist, exclude, include, metadata, displaymode, incfcewithdefaultlanguage, pretranslatecontent, overrideexistingtranslations, sortexports'],
         ],
         'palettes'    => [
             '1' => ['showitem' => ''],
