@@ -279,8 +279,8 @@ class EmConfigurationTest extends UnitTestCase
     {
         $configuration = [
             'ftp_server' => $input[0],
-            'ftp_server_username' =>  $input[1],
-            'ftp_server_password' =>  $input[2],
+            'ftp_server_username' => $input[1],
+            'ftp_server_password' => $input[2],
         ];
 
         $this->subject = new EmConfiguration($configuration);
