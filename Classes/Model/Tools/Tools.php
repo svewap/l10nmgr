@@ -88,6 +88,11 @@ class Tools
     /**
      * @var bool
      */
+    public $onlyForcedSourceLanguage = false; //if set to true only records that exist also in the forced source language will be exported
+
+    /**
+     * @var bool
+     */
     public $verbose = true; //if set to true also FCE with language setting default will be included (not only All)
 
     /**
@@ -923,11 +928,19 @@ class Tools
                                     $prevLangInfo['translations'][$prevSysUid]['uid']
                                 );
                             } else {
+                                if ($this->onlyForcedSourceLanguage) {
+                                    continue;
+                                }
+                                // Use fallback to default language, if record does not exist in forced source language
                                 $prevLangRec[$prevSysUid] = BackendUtility::getRecordWSOL(
                                     $prevLangInfo['translation_table'],
                                     $row['uid']
                                 );
                             }
+                        }
+                        if (!empty($this->previewLanguages) && empty($prevLangRec)) {
+                            // only forced source language was set, but no translated record was available from that language
+                            break;
                         }
                         $allowedFields = $this->getAllowedFieldsForTable($tInfo['translation_table']);
                         foreach ($GLOBALS['TCA'][$tInfo['translation_table']]['columns'] as $field => $cfg) {

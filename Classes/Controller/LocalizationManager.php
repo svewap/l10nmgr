@@ -90,7 +90,7 @@ class LocalizationManager extends BaseModule
     /**
      * @var int Forced source language to export
      */
-    protected $previewLanguage = '0';
+    public $previewLanguage = '0';
 
     /**
      * ModuleTemplate Container
@@ -202,6 +202,10 @@ return false;
         if ($l10ncfgObj->isLoaded()) {
             // Setting page id
             $this->id = $l10ncfgObj->getData('pid');
+            $forcedSourceLanguage = (int)$l10ncfgObj->getData('forcedSourceLanguage');
+            if ($forcedSourceLanguage > 0) {
+                $this->previewLanguage = (string)$forcedSourceLanguage;
+            }
             $this->perms_clause = $this->getBackendUser()->getPagePermsClause(1);
             $this->pageinfo = BackendUtility::readPageAccess($this->id, $this->perms_clause);
             $access = is_array($this->pageinfo) ? 1 : 0;
@@ -246,7 +250,8 @@ return false;
                         $this->MOD_MENU['lang'],
                         '',
                         '&srcPID=' . rawurlencode(GeneralUtility::_GET('srcPID')) . '&exportUID=' . $l10ncfgObj->getId(),
-                        $this->getLanguageService()->getLL('export.overview.targetlanguage.label')
+                        $this->getLanguageService()->getLL('export.overview.targetlanguage.label'),
+                        $this->previewLanguage
                     ) .
                     '</div><div class="form-section">' .
                     $this->getFuncCheck(
@@ -303,7 +308,8 @@ return false;
         $menuItems,
         $script = '',
         $addParams = '',
-        $label = ''
+        $label = '',
+        $previewLanguage = ''
     ) {
         if (!is_array($menuItems)) {
             return '';
@@ -311,6 +317,9 @@ return false;
         $scriptUrl = self::buildScriptUrl($mainParams, $addParams, $script);
         $options = [];
         foreach ($menuItems as $value => $text) {
+            if ($elementName === 'SET[lang]' && (int)$value === (int)$previewLanguage) {
+                continue;
+            }
             $options[] = '<option value="' . htmlspecialchars($value) . '"' . ((string)$currentValue === (string)$value ? ' selected="selected"' : '') . '>' . htmlspecialchars(
                 $text,
                 ENT_COMPAT,
@@ -526,7 +535,7 @@ return false;
             '</label></div></div>' .
             '</div><div class="form-section"><div class="form-group form-inline">
 <label>' . $this->getLanguageService()->getLL('export.xml.source-language.title') . '</label><br />' .
-            $this->_getSelectField('export_xml_forcepreviewlanguage', '0', $_selectOptions) .
+            $this->_getSelectField('export_xml_forcepreviewlanguage', $this->previewLanguage, $_selectOptions) .
             '</div></div><div class="form-section"><div class="form-group">
 <label>' . $this->getLanguageService()->getLL('general.action.import.upload.title') . '</label><br />' .
             '<input type="file" size="60" name="uploaded_import_file" />' .
@@ -634,6 +643,7 @@ return false;
     protected function _getSelectField($elementName, $currentValue, $menuItems)
     {
         $options = [];
+        $return = '';
         foreach ($menuItems as $value => $label) {
             $options[] = '<option value="' . htmlspecialchars($value) . '"' . (!strcmp(
                 $currentValue,
@@ -646,14 +656,19 @@ return false;
             ) . '</option>';
         }
         if (count($options) > 0) {
-            return '
-	<select class="form-control" name="' . $elementName . '" >
+            $return = '
+	<select class="form-control" name="' . $elementName . '" ' . ($currentValue ? 'disabled="disabled"' : '') . '>
 	' . implode('
 	', $options) . '
 	</select>
 	';
         }
-        return '';
+
+        if ($currentValue) {
+            $return .= '<input type="hidden" name="' . $elementName . '" value="' . $currentValue . '" />';
+        }
+
+        return $return;
     }
 
     /**
@@ -910,7 +925,7 @@ return false;
             '</div><div class="form-section">' .
             '<div class="form-group form-inline">' .
             '<label>' . $this->getLanguageService()->getLL('export.xml.source-language.title') . '</label><br />' .
-            $this->_getSelectField('export_xml_forcepreviewlanguage', '0', $_selectOptions) .
+            $this->_getSelectField('export_xml_forcepreviewlanguage', $this->previewLanguage, $_selectOptions) .
             '</div></div>';
         // Add the option to send to FTP server, if FTP information is defined
         if ($this->emConfiguration->hasFtpCredentials()) {

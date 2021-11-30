@@ -18,6 +18,8 @@ CREATE TABLE tx_l10nmgr_cfg
     flexformdiff                 mediumtext,
     metadata                     text,
     sourceLangStaticId           char(3)                NOT NULL default '',
+    forcedSourceLanguage         text,
+    onlyForcedSourceLanguage     tinyint(4) DEFAULT '0',
     incfcewithdefaultlanguage    int(11)    DEFAULT '0' NOT NULL,
     filenameprefix               tinytext,
     overrideexistingtranslations tinyint(4) DEFAULT '0',

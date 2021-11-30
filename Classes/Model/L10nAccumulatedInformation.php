@@ -199,6 +199,9 @@ class L10nAccumulatedInformation
             );
         }
         if ($previewLanguage) {
+            if ((int)$l10ncfg['onlyForcedSourceLanguage'] === 1) {
+                $t8Tools->onlyForcedSourceLanguage = true;
+            }
             $t8Tools->previewLanguages = [$previewLanguage];
         }
 
@@ -307,6 +310,11 @@ class L10nAccumulatedInformation
                                     $flexFormDiff,
                                     $previewLanguage
                                 );
+                                if (!$accum[$pageId]['items'][$table][$row['uid']]) {
+                                    // if there is no record available anymore, skip to the next row
+                                    // records might be disabled when onlyForcedSourceLanguage is set
+                                    continue;
+                                }
                                 if ($table === 'sys_file_reference') {
                                     $fileList .= $fileList ? ',' . (int)$row['uid_local'] : (int)$row['uid_local'];
                                 }

@@ -138,6 +138,29 @@ if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('static_info_ta
                     'maxitems' => 1,
                 ],
             ],
+            'forcedSourceLanguage' => [
+                'exclude' => 1,
+                'label' => $l10n . ':tx_l10nmgr_cfg.forcedSourceLanguage',
+                'config' => [
+                    'type' => 'select',
+                    'renderType' => 'selectSingle',
+                    'items' => [
+                        ['', 0],
+                    ],
+                    'foreign_table' => 'sys_language',
+                    'size' => 1,
+                    'minitems' => 0,
+                    'maxitems' => 1,
+                ],
+            ],
+            'onlyForcedSourceLanguage' => [
+                'exclude' => 1,
+                'label' => $l10n . ':tx_l10nmgr_cfg.onlyForcedSourceLanguage',
+                'config' => [
+                    'type' => 'check',
+                    'default' => 0,
+                ],
+            ],
             'targetLanguages' => [
                 'exclude' => 1,
                 'label' => $l10n . ':tx_l10nmgr_cfg.targetLanguages',
@@ -183,10 +206,11 @@ if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('static_info_ta
             ],
         ],
         'types' => [
-            0 => ['showitem' => 'title,filenameprefix, depth, pages, sourceLangStaticId, targetLanguages, tablelist, exclude, include, metadata, displaymode, incfcewithdefaultlanguage, pretranslatecontent, overrideexistingtranslations, sortexports'],
+            0 => ['showitem' => 'title,filenameprefix, depth, pages, sourceLangStaticId, --palette--;;forcedSourceLanguageSettings, targetLanguages, tablelist, exclude, include, metadata, displaymode, incfcewithdefaultlanguage, pretranslatecontent, overrideexistingtranslations, sortexports'],
         ],
         'palettes' => [
             '1' => ['showitem' => ''],
+            'forcedSourceLanguageSettings' => ['showitem' => 'forcedSourceLanguage, onlyForcedSourceLanguage'],
         ],
     ];
 }
@@ -313,6 +337,29 @@ if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('static_info_ta
                     'rows' => 3,
                 ],
             ],
+            'forcedSourceLanguage' => [
+                'exclude' => 1,
+                'label' => $l10n . ':tx_l10nmgr_cfg.forcedSourceLanguage',
+                'config' => [
+                    'type' => 'select',
+                    'renderType' => 'selectSingle',
+                    'items' => [
+                        ['', 0],
+                    ],
+                    'foreign_table' => 'sys_language',
+                    'size' => 1,
+                    'minitems' => 0,
+                    'maxitems' => 1,
+                ],
+            ],
+            'onlyForcedSourceLanguage' => [
+                'exclude' => 1,
+                'label' => $l10n . ':tx_l10nmgr_cfg.onlyForcedSourceLanguage',
+                'config' => [
+                    'type' => 'check',
+                    'default' => 0,
+                ],
+            ],
             'targetLanguages' => [
                 'exclude' => 1,
                 'label' => $l10n . ':tx_l10nmgr_cfg.targetLanguages',
@@ -358,9 +405,10 @@ if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('static_info_ta
             ],
         ],
         'types' => [
-            0 => ['showitem' => 'title,filenameprefix, depth, pages, targetLanguages, tablelist, exclude, include, metadata, displaymode, incfcewithdefaultlanguage, pretranslatecontent, overrideexistingtranslations, sortexports'],
+            0 => ['showitem' => 'title,filenameprefix, depth, pages, --palette--;;forcedSourceLanguageSettings, targetLanguages, tablelist, exclude, include, metadata, displaymode, incfcewithdefaultlanguage, pretranslatecontent, overrideexistingtranslations, sortexports'],
         ],
         'palettes' => [
             '1' => ['showitem' => ''],
+            'forcedSourceLanguageSettings' => ['showitem' => 'forcedSourceLanguage, onlyForcedSourceLanguage'],
         ],
     ];
