@@ -1,7 +1,6 @@
 {
   "name": "localizationteam/l10nmgr",
   "type": "typo3-cms-extension",
-  "version" : "10.1.1",
   "description": "Module for managing localization import and export",
   "homepage": "https://docs.typo3.org/typo3cms/extensions/l10nmgr/",
   "license": [
@@ -34,10 +33,6 @@
     "psr-4": {
       "Localizationteam\\L10nmgr\\": "Classes"
     }
-  },
-  "replace": {
-    "localizationteam/l10nmgr": "self.version",
-    "typo3-ter/l10nmgr": "self.version"
   },
   "config": {
     "preferred-install": {
